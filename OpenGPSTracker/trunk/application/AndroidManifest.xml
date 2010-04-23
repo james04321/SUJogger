@@ -1,0 +1,153 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest 
+    xmlns:android="http://schemas.android.com/apk/res/android" 
+    package="edu.stanford.cs.sujogger"
+	android:versionName="0.9.15" android:versionCode="19">
+
+    <uses-sdk android:minSdkVersion="4" android:targetSdkVersion="4"/>
+    <supports-screens
+         android:largeScreens="true"
+         android:normalScreens="true"
+         android:smallScreens="true" />
+
+   <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
+   <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
+   <uses-permission android:name="android.permission.INTERNET" />
+   <uses-permission android:name="android.permission.WAKE_LOCK" />
+   <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+   <uses-permission android:name="android.permission.READ_PHONE_STATE" />
+         
+	<application 
+      android:icon="@drawable/icon" 
+      android:label="@string/app_name"
+      android:description="@string/app_name" 
+      android:allowClearUserData="true" 
+      android:debuggable="false">
+      <meta-data
+         android:name="org.openintents.metadata.COMMENTS"
+         android:value="@string/about_comments" />
+      <meta-data
+         android:name="org.openintents.metadata.COPYRIGHT"
+         android:value="@string/about_copyright" />
+      <meta-data
+         android:name="org.openintents.metadata.AUTHORS"
+         android:resource="@array/about_authors" />
+      <meta-data
+         android:name="org.openintents.metadata.DOCUMENTERS"
+         android:resource="@array/about_documenters" />
+      <meta-data
+         android:name="org.openintents.metadata.TRANSLATORS"
+         android:resource="@array/about_translators" />
+      <meta-data
+         android:name="org.openintents.metadata.ARTISTS"
+         android:resource="@array/about_artists" />
+      <meta-data
+         android:name="org.openintents.metadata.WEBSITE_LABEL"
+         android:value="@string/about_website_label" />
+      <meta-data
+         android:name="org.openintents.metadata.WEBSITE_URL"
+         android:value="@string/about_website_url" />
+      <meta-data
+         android:name="org.openintents.metadata.LICENSE"
+         android:resource="@raw/licence_short" />
+      <meta-data
+         android:name="org.openintents.metadata.EMAIL"
+         android:value="@string/about_email" />
+      <meta-data 
+           android:name="android.app.default_searchable"
+           android:value=".viewer.TrackList" />
+
+		<uses-library android:name="com.google.android.maps" />
+
+		<activity
+            android:label="@string/app_name" 
+            android:name=".viewer.LoggerMap" 
+            android:launchMode="singleTask">
+			<intent-filter>
+				<action android:name="android.intent.action.MAIN" />
+				<category android:name="android.intent.category.LAUNCHER" />
+			</intent-filter>
+            <intent-filter android:label="Show track on map">
+                <action android:name="android.intent.action.VIEW" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:scheme="content" />
+                <data android:host="edu.stanford.cs.sujogger" />
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>
+		</activity>
+		        
+         <activity 
+            android:label="@string/menu_settings" 
+            android:name=".logger.SettingsDialog"/>
+
+         <activity
+            android:label="@string/track_list" 
+            android:name=".viewer.TrackList"
+            android:launchMode="singleTop" >
+            <intent-filter>
+               <action android:name="android.intent.action.SEARCH" />
+               <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+               android:name="android.app.searchable"
+               android:resource="@xml/searchable" />
+         </activity>
+
+         <activity
+             android:name=".viewer.TracksLiveFolder"
+             android:label="@string/track_list"
+             android:icon="@drawable/icon" >
+             <intent-filter>
+                 <action android:name="android.intent.action.CREATE_LIVE_FOLDER" />
+                 <category android:name="android.intent.category.DEFAULT" />
+             </intent-filter>
+         </activity>
+
+		<service android:enabled="true" android:name=".logger.GPSLoggerService">
+			<intent-filter android:label="GPS logger">
+				<action android:name="edu.stanford.cs.sujogger.intent.action.GPSLoggerService"></action>
+			</intent-filter>
+		</service>
+
+		<provider 
+            android:enabled="true" 
+            android:authorities="edu.stanford.cs.sujogger"
+            android:permission="android.permission.ACCESS_FINE_LOCATION"
+			android:name=".db.GPStrackingProvider" >
+            <path-permission android:path="/search_suggest_query"
+                android:readPermission="android.permission.GLOBAL_SEARCH" />
+            <path-permission android:path="/live_folders/tracks"
+                android:readPermission="com.android.launcher.permission.WRITE_SETTINGS" />
+		</provider>
+      
+        <activity android:label="@string/menu_statistics" android:name=".actions.Statistics">
+        </activity> 
+
+		<activity android:label="@string/receive_filewriter" android:name=".actions.ExportGPX">
+			<intent-filter>
+				<action android:name="android.intent.action.RUN" />
+                <category android:name="android.intent.category.DEFAULT" />
+				<data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+			</intent-filter>
+		</activity>
+
+         <activity
+            android:label="@string/receive_gpxsender"
+            android:name=".actions.SendGPX" >
+            <intent-filter>
+               <action android:name="android.intent.action.RUN" />
+               <category android:name="android.intent.category.DEFAULT" />
+               <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>
+         </activity>
+		
+        <activity android:label="@string/receive_kmzfilewriter" android:name=".actions.ExportKMZ">
+            <intent-filter>
+                <action android:name="android.intent.action.RUN" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>
+        </activity>
+      
+    </application>
+</manifest>
