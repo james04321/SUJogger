@@ -145,6 +145,7 @@ public class LoggerMap extends MapActivity
 
    private double mAverageSpeed = 33.33d / 2d;
    private long mTrackId = -1;
+   private boolean statisticsPresent = false;
    private long mLastSegment = -1;
    private long mLastWaypoint = -1;
    private UnitsI18n mUnits;
@@ -160,7 +161,7 @@ public class LoggerMap extends MapActivity
          {
             if( !selfUpdate )
             {
-//               Log.d( TAG, "mTrackSegmentsObserver "+ mTrackId );
+               Log.d( TAG, "mTrackSegmentsObserver "+ mTrackId );
                LoggerMap.this.updateDataOverlays();
             }
             else
@@ -176,7 +177,7 @@ public class LoggerMap extends MapActivity
          {
             if( !selfUpdate  )
             {
-//               Log.d( TAG, "mSegmentWaypointsObserver "+ mLastSegment );
+               Log.d( TAG, "mSegmentWaypointsObserver "+ mLastSegment );
                LoggerMap.this.createSpeedDisplayNumbers();
                if( mLastSegmentOverlay != null )
                {
@@ -198,7 +199,7 @@ public class LoggerMap extends MapActivity
          {
             if( !selfUpdate )
             {
-//               Log.d( TAG, "mTrackMediasObserver "+ mTrackId );
+               Log.d( TAG, "mTrackMediasObserver "+ mTrackId );
                if( mLastSegmentOverlay != null )
                {
                   mLastSegmentOverlay.calculateMedia();
@@ -215,7 +216,7 @@ public class LoggerMap extends MapActivity
       {
          public void onClick( DialogInterface dialog, int which )
          {
-            //            Log.d( TAG, "mNoTrackDialogListener" + which);
+            Log.d( TAG, "mNoTrackDialogListener" + which);
             Intent tracklistIntent = new Intent( LoggerMap.this, TrackList.class );
             tracklistIntent.putExtra( Tracks._ID, LoggerMap.this.mTrackId );
             startActivityForResult( tracklistIntent, MENU_TRACKLIST );
@@ -226,9 +227,12 @@ public class LoggerMap extends MapActivity
          public void onClick( DialogInterface dialog, int which )
          {
             String trackName = mTrackNameView.getText().toString();
+            Log.d( TAG, "mTrackNameDialogListener: " + trackName);
             ContentValues values = new ContentValues();
             values.put( Tracks.NAME, trackName );
-            getContentResolver().update( ContentUris.withAppendedId( Tracks.CONTENT_URI, LoggerMap.this.mTrackId ), values, null, null );
+            Uri uri = ContentUris.withAppendedId( Tracks.CONTENT_URI, LoggerMap.this.mTrackId );
+            getContentResolver().update( uri, values, null, null );
+            getContentResolver().notifyChange(uri, null);
             updateTitleBar();
          }
       };
@@ -258,6 +262,7 @@ public class LoggerMap extends MapActivity
             switch (id)
             {
                case R.id.logcontrol_start:
+            	  Log.d(TAG, "mLoggingControlListener: start GPS logging...");
                   long loggerTrackId = mLoggerServiceManager.startGPSLogging( null );
                   moveToTrack( loggerTrackId, true );
                   showDialog( DIALOG_TRACKNAME );
@@ -294,12 +299,13 @@ public class LoggerMap extends MapActivity
                case R.id.layer_speed:
                   setSpeedOverlay( isChecked );
                   break;
-               case R.id.layer_compass:
+               //TODO: remove unnecessary preferences
+                  /*case R.id.layer_compass:
                   setCompassOverlay( isChecked );
                   break;
                case R.id.layer_location:
                   setLocationOverlay( isChecked );
-                  break;
+                  break;*/
                default:
                   break;
             }
@@ -309,7 +315,9 @@ public class LoggerMap extends MapActivity
       {
          public void onSharedPreferenceChanged( SharedPreferences sharedPreferences, String key )
          {
-            if( key.equals( Constants.TRACKCOLORING ) )
+            //TODO: Clear removed preferences
+        	 /*
+        	 if( key.equals( Constants.TRACKCOLORING ) )
             {
                int trackColoringMethod = new Integer( sharedPreferences.getString( Constants.TRACKCOLORING, "3" ) ).intValue();
                updateSpeedbarVisibility();
@@ -321,19 +329,19 @@ public class LoggerMap extends MapActivity
                      ( (SegmentOverlay) overlay ).setTrackColoringMethod( trackColoringMethod, mAverageSpeed );
                   }
                }
-            }
-            else if( key.equals( Constants.DISABLEBLANKING ) )
-            {
-               updateBlankingBehavior();
-            }
-            else if( key.equals( Constants.SPEED ) )
+            }*/
+            //else if( key.equals( Constants.DISABLEBLANKING ) )
+            //{
+            //   updateBlankingBehavior();
+            //}
+            if( key.equals( Constants.SPEED ) )
             {
                updateSpeedDisplayVisibility();
             }
-            else if( key.equals( Constants.COMPASS ) )
-            {
-               updateCompassDisplayVisibility();
-            }
+            //else if( key.equals( Constants.COMPASS ) )
+            //{
+            //   updateCompassDisplayVisibility();
+            //}
             else if( key.equals( Constants.TRAFFIC ) )
             {
                LoggerMap.this.mMapView.setTraffic( sharedPreferences.getBoolean( key, false ) );
@@ -342,10 +350,10 @@ public class LoggerMap extends MapActivity
             {
                LoggerMap.this.mMapView.setSatellite( sharedPreferences.getBoolean( key, false ) );
             }
-            else if( key.equals( Constants.LOCATION ) )
-            {
-               updateLocationDisplayVisibility();
-            }
+            //else if( key.equals( Constants.LOCATION ) )
+            //{
+            //   updateLocationDisplayVisibility();
+            //}
          }
       };
    private final UnitsI18n.UnitsChangeListener mUnitsChangeListener = new UnitsI18n.UnitsChangeListener()
@@ -419,10 +427,12 @@ public class LoggerMap extends MapActivity
       if( previousInstanceData != null && previousInstanceData instanceof GPSLoggerServiceManager )
       {
          mLoggerServiceManager = (GPSLoggerServiceManager) previousInstanceData;
+         Log.d( TAG, "getting previous GPSLoggerServiceManager" );
       }
       else
       {
          mLoggerServiceManager = new GPSLoggerServiceManager( (Context) this );
+         Log.d( TAG, "creating new GPSLoggerServiceManager" );
       }
       mLoggerServiceManager.startup();
 
@@ -436,13 +446,16 @@ public class LoggerMap extends MapActivity
       mMylocation = new FixedMyLocationOverlay( this, mMapView );
       mMapController = this.mMapView.getController();
       mMapView.setBuiltInZoomControls( true );
+      mMapView.displayZoomControls(true);
       mMapView.setClickable( true );
       mMapView.setStreetView( false );
       mMapView.setSatellite( mSharedPreferences.getBoolean( Constants.SATELLITE, false ) );
       mMapView.setTraffic( mSharedPreferences.getBoolean( Constants.TRAFFIC, false ) );
 
-      TextView[] speeds = { (TextView) findViewById( R.id.speedview05 ), (TextView) findViewById( R.id.speedview04 ), (TextView) findViewById( R.id.speedview03 ),
-            (TextView) findViewById( R.id.speedview02 ), (TextView) findViewById( R.id.speedview01 ), (TextView) findViewById( R.id.speedview00 ) };
+      TextView[] speeds = { 
+    		  (TextView) findViewById( R.id.speedview02 ), 
+    		  (TextView) findViewById( R.id.speedview01 ), 
+    		  (TextView) findViewById( R.id.speedview00 ) };
       mSpeedtexts = speeds;
       mLastGPSSpeedView = (TextView) findViewById( R.id.currentSpeed );
 
@@ -460,7 +473,8 @@ public class LoggerMap extends MapActivity
       }
       if( mTrackId > 0 )
       {
-         ContentResolver resolver = this.getApplicationContext().getContentResolver();
+    	 calculateTrackStatistics();
+    	 ContentResolver resolver = this.getApplicationContext().getContentResolver();
          resolver.unregisterContentObserver( this.mTrackSegmentsObserver );
          resolver.unregisterContentObserver( this.mSegmentWaypointsObserver );
          resolver.unregisterContentObserver( this.mTrackMediasObserver );
@@ -477,8 +491,11 @@ public class LoggerMap extends MapActivity
       updateBlankingBehavior();
       updateSpeedbarVisibility();
       updateSpeedDisplayVisibility();
-      updateCompassDisplayVisibility();
-      updateLocationDisplayVisibility();
+      mMylocation.enableCompass();
+      mMylocation.enableMyLocation();
+      //TODO: remove unnecessary preferences
+      //updateCompassDisplayVisibility();
+      //updateLocationDisplayVisibility();
 
       if( mTrackId >= 0 )
       {
@@ -516,6 +533,7 @@ public class LoggerMap extends MapActivity
       {
          stopService( new Intent( Constants.SERVICENAME ) );
       }
+      
       super.onDestroy();
    }
 
@@ -539,25 +557,26 @@ public class LoggerMap extends MapActivity
    {
       if( load != null )
       {
-//         Log.d( TAG, "Restoring the prevoious map " );
+         Log.d( TAG, "Restoring the previous map " );
          super.onRestoreInstanceState( load );
-      }    
+      }
+      
       Uri data = this.getIntent().getData();
       if( load != null && load.containsKey( "track" ) ) // 1st track from a previous instance of this activity
       {
          long loadTrackId = load.getLong( "track" );
-//         Log.d( TAG, "Moving to restored track "+loadTrackId );
+         Log.d( TAG, "Moving to restored track "+loadTrackId );
          moveToTrack( loadTrackId, false );
       }
       else if( data != null )                           // 2nd track ordered to make
       {
          long loadTrackId = Long.parseLong( data.getLastPathSegment() );
-//         Log.d( TAG, "Moving to intented track "+loadTrackId );
+         Log.d( TAG, "Moving to intented track "+loadTrackId );
          moveToTrack( loadTrackId, true );
       }
       else 
       {
-//         Log.d( TAG, "Moving to last track " );
+         Log.d( TAG, "Moving to last track " );
          moveToLastTrack();                             // 3rd just try the last track
       }
 
@@ -638,7 +657,29 @@ public class LoggerMap extends MapActivity
       }
       return propagate;
    }
-
+   
+   @Override
+   public void finish() {
+	   Log.d(TAG, "finish()");
+	   if (mLoggerServiceManager.getLoggingState() == Constants.LOGGING)
+		   setResult(TrackList.TRACKSTATUS_TRACKING);
+	   else
+		   setResult(TrackList.TRACKSTATUS_IDLE);
+	   
+	   super.finish();
+   }
+   /*
+   @Override
+   public void onBackPressed() {
+	   Log.d(TAG, "onBackPressed");
+	   //if (mLoggerServiceManager.getLoggingState() == Constants.LOGGING)
+		//   setResult(TrackList.TRACKSTATUS_TRACKING);
+	   //else
+		//   setResult(TrackList.TRACKSTATUS_IDLE);
+	   finish();
+	   return;
+   }
+*/
    private void setTrafficOverlay( boolean b )
    {
       Editor editor = mSharedPreferences.edit();
@@ -659,7 +700,8 @@ public class LoggerMap extends MapActivity
       editor.putBoolean( Constants.SPEED, b );
       editor.commit();
    }
-
+   //TODO: remove unnecessary preferences
+/*
    private void setCompassOverlay( boolean b )
    {
       Editor editor = mSharedPreferences.edit();
@@ -673,7 +715,7 @@ public class LoggerMap extends MapActivity
       editor.putBoolean( Constants.LOCATION, b );
       editor.commit();
    }
-   
+   */
    /**
     * Adds items into the main menu (map screen)
     */
@@ -681,25 +723,25 @@ public class LoggerMap extends MapActivity
    public boolean onCreateOptionsMenu( Menu menu )
    {
       boolean result = super.onCreateOptionsMenu( menu );
-
+      Log.d( TAG, "onCreateOptionsMenu()" );
       menu.add( ContextMenu.NONE, MENU_TRACKING, ContextMenu.NONE, R.string.menu_tracking ).setIcon( R.drawable.ic_menu_movie ).setAlphabeticShortcut( 'T' );
       menu.add( ContextMenu.NONE, MENU_LAYERS, ContextMenu.NONE, R.string.menu_showLayers ).setIcon( R.drawable.ic_menu_mapmode ).setAlphabeticShortcut( 'L' );
-      SubMenu notemenu = menu.addSubMenu( ContextMenu.NONE, MENU_NOTE, ContextMenu.NONE, R.string.menu_insertnote ).setIcon( R.drawable.ic_menu_myplaces );
+      //SubMenu notemenu = menu.addSubMenu( ContextMenu.NONE, MENU_NOTE, ContextMenu.NONE, R.string.menu_insertnote ).setIcon( R.drawable.ic_menu_myplaces );
       
       menu.add( ContextMenu.NONE, MENU_STATS, ContextMenu.NONE, R.string.menu_statistics ).setIcon( R.drawable.ic_menu_picture ).setAlphabeticShortcut( 'S' );
       menu.add( ContextMenu.NONE, MENU_SHARE, ContextMenu.NONE, R.string.menu_shareTrack ).setIcon( R.drawable.ic_menu_share ).setAlphabeticShortcut('I');
       // More
 
-      menu.add( ContextMenu.NONE, MENU_TRACKLIST, ContextMenu.NONE, R.string.menu_tracklist ).setIcon( R.drawable.ic_menu_show_list ).setAlphabeticShortcut( 'P' );
+      //menu.add( ContextMenu.NONE, MENU_TRACKLIST, ContextMenu.NONE, R.string.menu_tracklist ).setIcon( R.drawable.ic_menu_show_list ).setAlphabeticShortcut( 'P' );
       menu.add( ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, R.string.menu_settings ).setIcon( R.drawable.ic_menu_preferences ).setAlphabeticShortcut( 'C' );
-      menu.add( ContextMenu.NONE, MENU_ABOUT, ContextMenu.NONE, R.string.menu_about ).setIcon( R.drawable.ic_menu_info_details ).setAlphabeticShortcut( 'A' );
-      
+      //menu.add( ContextMenu.NONE, MENU_ABOUT, ContextMenu.NONE, R.string.menu_about ).setIcon( R.drawable.ic_menu_info_details ).setAlphabeticShortcut( 'A' );
+      /*
       notemenu.add( ContextMenu.NONE, MENU_NAME, ContextMenu.NONE, R.string.menu_notename );
       notemenu.add( ContextMenu.NONE, MENU_TEXT, ContextMenu.NONE, R.string.menu_notetext );
       notemenu.add( ContextMenu.NONE, MENU_VOICE, ContextMenu.NONE, R.string.menu_notespeech );
       notemenu.add( ContextMenu.NONE, MENU_PICTURE, ContextMenu.NONE, R.string.menu_notepicture );
       notemenu.add( ContextMenu.NONE, MENU_VIDEO, ContextMenu.NONE, R.string.menu_notevideo );
-      
+      */
       return result;
    }
    
@@ -710,8 +752,8 @@ public class LoggerMap extends MapActivity
    @Override
    public boolean onPrepareOptionsMenu( Menu menu )
    {
-      MenuItem notemenu = menu.findItem( MENU_NOTE );
-      notemenu.setEnabled( mLoggerServiceManager.isMediaPrepared() );
+      //MenuItem notemenu = menu.findItem( MENU_NOTE );
+      //notemenu.setEnabled( mLoggerServiceManager.isMediaPrepared() );
       MenuItem sharemenu = menu.findItem( MENU_SHARE );
       sharemenu.setEnabled( mTrackId >= 0 );
       return super.onPrepareOptionsMenu( menu );
@@ -830,7 +872,7 @@ public class LoggerMap extends MapActivity
             mTrackNameView = (EditText) view.findViewById( R.id.nameField );
             builder
                .setTitle( R.string.dialog_routename_title )
-               .setMessage( R.string.dialog_routename_message )
+               //.setMessage( R.string.dialog_routename_message )
                .setIcon( android.R.drawable.ic_dialog_alert )
                .setPositiveButton( R.string.btn_okay, mTrackNameDialogListener )
                .setView( view );
@@ -846,10 +888,11 @@ public class LoggerMap extends MapActivity
             mTraffic.setOnCheckedChangeListener( mCheckedChangeListener );
             mSpeed = (CheckBox) view.findViewById( R.id.layer_speed );
             mSpeed.setOnCheckedChangeListener( mCheckedChangeListener );
-            mCompass = (CheckBox) view.findViewById( R.id.layer_compass );
-            mCompass.setOnCheckedChangeListener( mCheckedChangeListener );
-            mLocation = (CheckBox) view.findViewById( R.id.layer_location );
-            mLocation.setOnCheckedChangeListener( mCheckedChangeListener );
+            //TODO: remove unnecessary preferences
+            //mCompass = (CheckBox) view.findViewById( R.id.layer_compass );
+            //mCompass.setOnCheckedChangeListener( mCheckedChangeListener );
+            //mLocation = (CheckBox) view.findViewById( R.id.layer_location );
+            //mLocation.setOnCheckedChangeListener( mCheckedChangeListener );
             builder
                .setTitle( R.string.dialog_layer_title )
                .setIcon( android.R.drawable.ic_dialog_map )
@@ -868,6 +911,7 @@ public class LoggerMap extends MapActivity
             dialog = builder.create();
             return dialog;
          case DIALOG_LOGCONTROL:
+        	Log.d(TAG, "onCreateDialog(): creating log control dialog");
             builder = new AlertDialog.Builder( this );
             factory = LayoutInflater.from( this );
             view = factory.inflate( R.layout.logcontrol, null );
@@ -973,8 +1017,9 @@ public class LoggerMap extends MapActivity
             mSatellite.setChecked( mSharedPreferences.getBoolean( Constants.SATELLITE, false ) );
             mTraffic.setChecked( mSharedPreferences.getBoolean( Constants.TRAFFIC, false ) );
             mSpeed.setChecked( mSharedPreferences.getBoolean( Constants.SPEED, false ) );
-            mCompass.setChecked( mSharedPreferences.getBoolean( Constants.COMPASS, false ) );
-            mLocation.setChecked( mSharedPreferences.getBoolean( Constants.LOCATION, false ) );
+            //TODO: remove unnecessary preferences
+            //mCompass.setChecked( mSharedPreferences.getBoolean( Constants.COMPASS, false ) );
+            //mLocation.setChecked( mSharedPreferences.getBoolean( Constants.LOCATION, false ) );
             break;
          default:
             break;
@@ -1094,7 +1139,8 @@ public class LoggerMap extends MapActivity
 
    private void updateBlankingBehavior()
    {
-      boolean disableblanking = mSharedPreferences.getBoolean( Constants.DISABLEBLANKING, false );
+	  //TODO: remove unnecessary preferences
+      boolean disableblanking = false;//mSharedPreferences.getBoolean( Constants.DISABLEBLANKING, false );
       if( disableblanking )
       {
          if( mWakeLock == null )
@@ -1112,7 +1158,7 @@ public class LoggerMap extends MapActivity
 
    private void updateSpeedbarVisibility()
    {
-      int trackColoringMethod = new Integer( mSharedPreferences.getString( Constants.TRACKCOLORING, "3" ) ).intValue();
+	  //int trackColoringMethod = new Integer( mSharedPreferences.getString( Constants.TRACKCOLORING, "3" ) ).intValue();
       ContentResolver resolver = this.getApplicationContext().getContentResolver();
       Cursor waypointsCursor = null;
       try
@@ -1135,15 +1181,16 @@ public class LoggerMap extends MapActivity
          }
       }
       View speedbar = findViewById( R.id.speedbar );
-      if( trackColoringMethod == SegmentOverlay.DRAW_MEASURED || trackColoringMethod == SegmentOverlay.DRAW_CALCULATED )
-      {
+      //if( trackColoringMethod == SegmentOverlay.DRAW_MEASURED || trackColoringMethod == SegmentOverlay.DRAW_CALCULATED )
+      //{
          drawSpeedTexts( mAverageSpeed );
          speedbar.setVisibility( View.VISIBLE );
          for (int i = 0; i < mSpeedtexts.length; i++)
          {
             mSpeedtexts[i].setVisibility( View.VISIBLE );
          }
-      }
+      //}
+      /*
       else
       {
          speedbar.setVisibility( View.INVISIBLE );
@@ -1151,7 +1198,7 @@ public class LoggerMap extends MapActivity
          {
             mSpeedtexts[i].setVisibility( View.INVISIBLE );
          }
-      }
+      }*/
    }
 
    private void updateSpeedDisplayVisibility()
@@ -1167,7 +1214,7 @@ public class LoggerMap extends MapActivity
          mLastGPSSpeedView.setVisibility( View.INVISIBLE );
       }
    }
-
+/*
    private void updateCompassDisplayVisibility()
    {
       boolean compass = mSharedPreferences.getBoolean( Constants.COMPASS, false );
@@ -1193,7 +1240,7 @@ public class LoggerMap extends MapActivity
          mMylocation.disableMyLocation();
       }
    }
-
+*/
    protected void createSpeedDisplayNumbers()
    {
       ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1234,7 +1281,7 @@ public class LoggerMap extends MapActivity
 
       ContentResolver resolver = this.getApplicationContext().getContentResolver();
       Cursor segments = null;
-      int trackColoringMethod = new Integer( mSharedPreferences.getString( Constants.TRACKCOLORING, "2" ) ).intValue();
+      int trackColoringMethod = SegmentOverlay.DRAW_MEASURED;//new Integer( mSharedPreferences.getString( Constants.TRACKCOLORING, "2" ) ).intValue();
 
       try
       {
@@ -1366,12 +1413,16 @@ public class LoggerMap extends MapActivity
          ContentResolver resolver = this.getApplicationContext().getContentResolver();
          Uri trackUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, trackId );
          Uri mediaUri = ContentUris.withAppendedId( Media.CONTENT_URI, trackId );
-         track = resolver.query( trackUri, new String[] { Tracks.NAME }, null, null, null );
+         track = resolver.query( trackUri, new String[] { Tracks.NAME, Tracks.DURATION, Tracks.DISTANCE }, null, null, null );
          if( track != null && track.moveToFirst() )
          {
             this.mTrackId = trackId;
             mLastSegment = -1;
             mLastWaypoint = -1;
+            if (track.getString(1) != null && track.getString(2) != null)
+            	statisticsPresent = true;
+            else
+            	statisticsPresent = false;
             resolver.unregisterContentObserver( this.mTrackSegmentsObserver );
             resolver.unregisterContentObserver( this.mTrackMediasObserver );
             Uri tracksegmentsUri = Uri.withAppendedPath( Tracks.CONTENT_URI, trackId+"/segments" );
@@ -1494,6 +1545,87 @@ public class LoggerMap extends MapActivity
             track.close();
          }
       }
+   }
+   
+   /**
+    * Calculates track duration, distance, etc. right after we stop tracking
+    */
+   private void calculateTrackStatistics() {
+	   if (statisticsPresent) return;
+	   Log.d(TAG, "calculateTrackStatistics()");
+	   long starttime = 0;
+	   double distanceTraveled = 0f;
+	   long overallduration = 1;
+	   
+	   Uri trackUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, this.mTrackId );
+	   ContentResolver resolver = this.getApplicationContext().getContentResolver();
+	   
+	   Cursor segments = null;
+      Location lastLocation = null;
+      Location currentLocation = null;
+      try
+      {
+         Uri segmentsUri = Uri.withAppendedPath( trackUri, "segments" );
+         segments = resolver.query( segmentsUri, new String[] { Segments._ID }, null, null, null );
+         if( segments.moveToFirst() )
+         {
+            do
+            {
+               long segmentsId = segments.getLong( 0 );
+               Cursor waypoints = null;
+               try
+               {
+                  Uri waypointsUri = Uri.withAppendedPath( segmentsUri, segmentsId + "/waypoints" );
+                  waypoints = resolver.query( waypointsUri, new String[] { Waypoints._ID, Waypoints.TIME, Waypoints.LONGITUDE, Waypoints.LATITUDE }, null, null, null );
+                  if( waypoints.moveToFirst() )
+                  {
+                     do
+                     {
+                        if( starttime == 0 )
+                        {
+                           starttime = waypoints.getLong( 1 );
+                        }
+                        currentLocation = new Location( this.getClass().getName() );
+                        currentLocation.setTime( waypoints.getLong( 1 ) );
+                        currentLocation.setLongitude( waypoints.getDouble( 2 ) );
+                        currentLocation.setLatitude( waypoints.getDouble( 3 ) );
+                        if( lastLocation != null ) {
+                           distanceTraveled += lastLocation.distanceTo( currentLocation );
+                        }
+                        lastLocation = currentLocation;
+
+                     }
+                     while( waypoints.moveToNext() );
+                     overallduration = lastLocation.getTime() - starttime;
+                  }
+               }
+               finally
+               {
+                  if( waypoints != null )
+                  {
+                     waypoints.close();
+                  }
+               }
+               lastLocation = null;
+            }
+            while( segments.moveToNext() );
+         }
+      }
+      finally
+      {
+         if( segments != null )
+         {
+            segments.close();
+         }
+      }
+      
+	   
+	   ContentValues values = new ContentValues();
+       values.put(Tracks.DURATION, new Long(overallduration));
+       values.put(Tracks.DISTANCE, new Double(distanceTraveled));
+	   Log.d(TAG, "calculateTrackStatistics(): overallduration = " + overallduration + "; distanceTraveled" + distanceTraveled);
+       resolver.update( trackUri, values, null, null );
+       //resolver.notifyChange(trackUri, null);
    }
 
    /***

@@ -120,10 +120,11 @@ public class GPSLoggerService extends Service
                requestLocationUpdates();
                setupNotification();
             }
-            else if( key.equals( Constants.SPEEDSANITYCHECK ) )
-            {
-               mSpeedSanityCheck = sharedPreferences.getBoolean( Constants.SPEEDSANITYCHECK, true );
-            }
+            //TODO: eliminated preference
+            //else if( key.equals( Constants.SPEEDSANITYCHECK ) )
+            //{
+            //   mSpeedSanityCheck = sharedPreferences.getBoolean( Constants.SPEEDSANITYCHECK, true );
+            //}
          }
       };
    private LocationListener mLocationListener = new LocationListener()
@@ -241,7 +242,7 @@ public class GPSLoggerService extends Service
       mNoticationManager.cancel( R.layout.map );
 
       SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences( this.mContext );
-      mSpeedSanityCheck = sharedPreferences.getBoolean( Constants.SPEEDSANITYCHECK, true );
+      mSpeedSanityCheck = true;//sharedPreferences.getBoolean( Constants.SPEEDSANITYCHECK, true );
       boolean startImmidiatly = PreferenceManager.getDefaultSharedPreferences( this.mContext ).getBoolean( Constants.LOGATSTARTUP, false );
       //      Log.d( TAG, "Commence logging at startup:"+startImmidiatly );
       crashRestoreState();
@@ -316,7 +317,7 @@ public class GPSLoggerService extends Service
    /**
     * (non-Javadoc)
     * 
-    * @see nl.sogeti.android.gpstracker.IGPSLoggerService#getLoggingState()
+    * @see edu.stanford.cs.sujogger.IGPSLoggerService#getLoggingState()
     */
    protected boolean isLogging()
    {
@@ -331,7 +332,7 @@ public class GPSLoggerService extends Service
    /**
     * (non-Javadoc)
     * 
-    * @see nl.sogeti.android.gpstracker.IGPSLoggerService#startLogging()
+    * @see edu.stanford.cs.sujogger.IGPSLoggerService#startLogging()
     */
    public synchronized long startLogging()
    {
@@ -381,7 +382,7 @@ public class GPSLoggerService extends Service
    /**
     * (non-Javadoc)
     * 
-    * @see nl.sogeti.android.gpstracker.IGPSLoggerService#stopLogging()
+    * @see edu.stanford.cs.sujogger.IGPSLoggerService#stopLogging()
     */
    public synchronized void stopLogging()
    {

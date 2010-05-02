@@ -51,7 +51,7 @@
       android:visibility="invisible"
       android:layout_alignParentTop="true"
       android:layout_alignParentRight="true"
-      android:layout_marginTop="45dp"
+      android:layout_marginTop="50dp"
       android:layout_marginRight="45dp" />
 
    <TextView
@@ -65,58 +65,19 @@
       android:layout_alignParentTop="true"
       android:layout_alignParentRight="true"
       android:layout_marginTop="100dp"
-      android:layout_marginRight="45dp"
- />
-
-   <TextView
-      android:id="@+id/speedview03"
-      android:text=".."
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:textColor="#ff000000"
-      android:background="#80aaaaaa"
-      android:visibility="invisible"
-      android:layout_alignParentTop="true"
-      android:layout_alignParentRight="true"
-      android:layout_marginTop="150dp"
       android:layout_marginRight="45dp" />
-
-   <TextView
-      android:id="@+id/speedview04"
-      android:text=".."
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:textColor="#ff000000"
-      android:background="#80aaaaaa"
-      android:visibility="invisible"
-      android:layout_alignParentTop="true"
-      android:layout_alignParentRight="true"
-      android:layout_marginTop="200dp"
-      android:layout_marginRight="45dp" />
-
-   <TextView
-      android:id="@+id/speedview05"
-      android:text=".."
-      android:layout_width="wrap_content"
-      android:layout_height="wrap_content"
-      android:textColor="#ff000000"
-      android:background="#80aaaaaa"
-      android:visibility="invisible" 
-      android:layout_alignParentTop="true"
-      android:layout_alignParentRight="true"
-      android:layout_marginTop="250dp"
-      android:layout_marginRight="45dp"/>
 
    <ImageView
       android:id="@+id/speedbar"
-      android:layout_height="250dp"
+      android:layout_height="100dp"
       android:layout_width="30dp"
-      android:src="@drawable/speedindexbar"
+      android:src="@drawable/speedindexbar_new"
       android:visibility="invisible" 
       android:layout_alignParentTop="true"
       android:layout_alignParentRight="true"
       android:layout_marginTop="10dp"
       android:layout_marginRight="10dp" />
-      
+   
+   
 
 </RelativeLayout>

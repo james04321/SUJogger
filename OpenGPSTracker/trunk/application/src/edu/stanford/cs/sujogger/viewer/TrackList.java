@@ -28,9 +28,10 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
-import edu.stanford.cs.sujogger.R;
-import edu.stanford.cs.sujogger.actions.Statistics;
-import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,25 +39,37 @@ import android.app.ListActivity;
 import android.app.SearchManager;
 import android.app.AlertDialog.Builder;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
+import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import android.widget.TextView.BufferType;
+import edu.stanford.cs.sujogger.R;
+import edu.stanford.cs.sujogger.actions.Statistics;
+import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
+import edu.stanford.cs.sujogger.util.UnitsI18n;
 
 /**
  * Show a list view of all tracks, also doubles for showing search results
@@ -76,10 +89,19 @@ public class TrackList extends ListActivity
    private static final int DIALOG_RENAME = 23;
    private static final int DIALOG_DELETE = 24;
    private static final int MENU_SEARCH = 0;
-
+   
+   private static final int TRACK_CREATE=0;
+   private static final int TRACK_VIEW=1;
+   
+   public static final int TRACKSTATUS_IDLE=10;
+   public static final int TRACKSTATUS_TRACKING=11;
+   
    private EditText mTrackNameView;
    private Uri mDialogUri;
    private String mDialogCurrentName = "";
+   
+   private List<Map<String,?>> actions;
+   private SimpleCursorAdapter trackAdapter;
 
    private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
       {
@@ -105,7 +127,13 @@ public class TrackList extends ListActivity
    protected void onCreate( Bundle savedInstanceState )
    {
       super.onCreate( savedInstanceState );
+      Log.d(TAG, "onCreate()");
       this.setContentView( R.layout.tracklist );
+      
+      actions = new LinkedList<Map<String,?>>();
+	  actions.add(createItem("New Track", "Record a new track"));
+	  actions.add(createItem("Statistics", "My performance so far"));
+	  
       displayIntent( getIntent() );
 
       // Add the context menu (the long press thing)
@@ -115,9 +143,20 @@ public class TrackList extends ListActivity
    @Override
    public void onNewIntent( Intent newIntent )
    {
-      displayIntent( newIntent );
+	   Log.d(TAG, "onNewIntent()");
+	   displayIntent( newIntent );
    }
-
+   
+   @Override
+   protected void onRestart() {
+	   Log.d(TAG, "onRestart()");
+	   
+	   //trackAdapter.notifyDataSetChanged();
+	   //trackAdapter.notifyDataSetInvalidated();
+	   getListView().invalidateViews();
+	   //displayIntent( getIntent() );
+	   super.onRestart();
+   }
    /*
     * (non-Javadoc)
     * @see android.app.ListActivity#onRestoreInstanceState(android.os.Bundle)
@@ -125,11 +164,12 @@ public class TrackList extends ListActivity
    @Override
    protected void onRestoreInstanceState( Bundle state )
    {
-      mDialogUri = state.getParcelable( "URI" );
+	  Log.v("TrackList", "onRestoreInstanceState");
+	  mDialogUri = state.getParcelable( "URI" );
       mDialogCurrentName = state.getString( "NAME" );
       super.onRestoreInstanceState( state );
    }
-
+   
    /*
     * (non-Javadoc)
     * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
@@ -171,20 +211,35 @@ public class TrackList extends ListActivity
    protected void onListItemClick( ListView l, View v, int position, long id )
    {
       super.onListItemClick( l, v, position, id );
-
-      Intent intent = new Intent();
-      intent.setData( ContentUris.withAppendedId( Tracks.CONTENT_URI, id ) );
       
-      ComponentName caller = this.getCallingActivity();
-      if( caller != null )
-      {
-         setResult( RESULT_OK, intent );
-         finish();
+      Log.v("TrackList", "position = " + position + "; id = " + id);
+      if (position < actions.size() + 1) {
+    	  if (position == 1) {
+    		  Log.v("TrackList", "creating new track");
+    		  Intent intent = new Intent();
+    		  intent.setClass( this, LoggerMap.class );
+    		  startActivityForResult( intent, TRACK_CREATE );
+    	  }
+    	  else if (position == 2) {
+    		  Log.v("TrackList", "pulling up stats");
+    	  }
       }
-      else
-      {
-         intent.setClass( this, LoggerMap.class );
-         startActivity( intent );
+      else if (position > actions.size() + 1){
+	      Intent intent = new Intent();
+	      intent.setData( ContentUris.withAppendedId( Tracks.CONTENT_URI, getTrackIdFromRowPosition(id)) );
+	      
+	      //TODO: eliminate the if statement (no one starts a TrackList activity anymore)
+	      ComponentName caller = this.getCallingActivity();
+	      if( caller != null )
+	      {
+	         setResult( RESULT_OK, intent );
+	         finish();
+	      }
+	      else
+	      {
+	         intent.setClass( this, LoggerMap.class );
+	         startActivity( intent );
+	      }
       }
    }
 
@@ -194,6 +249,7 @@ public class TrackList extends ListActivity
       if( menuInfo instanceof AdapterView.AdapterContextMenuInfo )
       {
          AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
+         if (itemInfo.position < actions.size() + 1) return;
          TextView textView = (TextView) itemInfo.targetView.findViewById( android.R.id.text1 );
          if( textView != null )
          {
@@ -220,45 +276,70 @@ public class TrackList extends ListActivity
          Log.e( TAG, "Bad menuInfo", e );
          return handled;
       }
-
-      Cursor cursor = (Cursor) getListAdapter().getItem( info.position );
-      mDialogUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, cursor.getLong( 0 ) );
-      mDialogCurrentName = cursor.getString( 1 );
-      switch( item.getItemId() )
+      
+      //TODO: cursor is obtained incorrectly
+      long trackId = getTrackIdFromRowPosition(info.position);
+      
+      Uri trackUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, trackId);
+      Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
+      ContentResolver resolver = this.getApplicationContext().getContentResolver();
+      Cursor trackCursor = null;
+      try
       {
-         case MENU_DETELE:
+         trackCursor = resolver.query( trackUri, new String[] { Tracks.NAME }, null, null, null );
+         if( trackCursor != null && trackCursor.moveToLast() )
          {
-            showDialog( DIALOG_DELETE );
-            handled = true;
-            break;
+            String trackName = trackCursor.getString( 0 );
+            this.setTitle( this.getString( R.string.app_name ) + ": " + trackName );
          }
-         case MENU_SHARE:
+         
+       //Cursor cursor = (Cursor) getListAdapter().getItem(  );
+         mDialogUri = trackUri;
+         mDialogCurrentName = trackCursor.getString(0);
+         switch( item.getItemId() )
          {
-            Intent actionIntent = new Intent( Intent.ACTION_RUN );
-            actionIntent.setDataAndType( mDialogUri, Tracks.CONTENT_ITEM_TYPE );
-            actionIntent.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
-            startActivity( Intent.createChooser( actionIntent, getString( R.string.chooser_title ) ) );
-            handled = true;
-            break;
+            case MENU_DETELE:
+            {
+               showDialog( DIALOG_DELETE );
+               handled = true;
+               break;
+            }
+            case MENU_SHARE:
+            {
+               Intent actionIntent = new Intent( Intent.ACTION_RUN );
+               actionIntent.setDataAndType( mDialogUri, Tracks.CONTENT_ITEM_TYPE );
+               actionIntent.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
+               startActivity( Intent.createChooser( actionIntent, getString( R.string.chooser_title ) ) );
+               handled = true;
+               break;
+            }
+            case MENU_RENAME:
+            {
+               showDialog( DIALOG_RENAME );
+               handled = true;
+               break;
+            }
+            case MENU_STATS:
+            {
+               Intent actionIntent = new Intent( this, Statistics.class );
+               actionIntent.setData( mDialogUri );
+               startActivity( actionIntent );
+               handled = true;
+               break;
+            }
+            default:
+               handled = super.onContextItemSelected( item );
+               break;
          }
-         case MENU_RENAME:
-         {
-            showDialog( DIALOG_RENAME );
-            handled = true;
-            break;
-         }
-         case MENU_STATS:
-         {
-            Intent actionIntent = new Intent( this, Statistics.class );
-            actionIntent.setData( mDialogUri );
-            startActivity( actionIntent );
-            handled = true;
-            break;
-         }
-         default:
-            handled = super.onContextItemSelected( item );
-            break;
       }
+      finally
+      {
+         if( trackCursor != null )
+         {
+            trackCursor.close();
+         }
+      }
+      
       return handled;
    }
 
@@ -306,8 +387,14 @@ public class TrackList extends ListActivity
       switch( id )
       {
          case DIALOG_RENAME:
-            mTrackNameView.setText( mDialogCurrentName );
-            mTrackNameView.setSelection( 0, mDialogCurrentName.length() );
+        	if (mDialogCurrentName == null) {
+        		mTrackNameView.setText( "" );
+        		mTrackNameView.setSelection( 0, 0 );
+        	}
+        	else {
+        		mTrackNameView.setText( mDialogCurrentName );
+        		mTrackNameView.setSelection( 0, mDialogCurrentName.length() );
+        	}
             break;
          case DIALOG_DELETE:
             AlertDialog alert = (AlertDialog) dialog;
@@ -317,15 +404,27 @@ public class TrackList extends ListActivity
             break;
       }
    }
+   
+   protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
+       super.onActivityResult(requestCode, resultCode, intent);
+       Log.d(TAG, "onActivityResult()");
+       if (requestCode == TRACK_CREATE) {
+    	   Log.d(TAG, "onActivityResult: TRACK_CREATE");
+    	   //Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME }, null, null, null );
+    	   //displayCursor( tracksCursor, true );
+       }
+   }
 
    private void displayIntent( Intent intent )
    {
-      final String queryAction = intent.getAction();
+      Log.d(TAG, "displayIntent()");
+	   final String queryAction = intent.getAction();
       Cursor tracksCursor = null;
       if( Intent.ACTION_SEARCH.equals( queryAction ) )
       {
          // Got to SEARCH a query for tracks, make a list
          tracksCursor = doSearchWithIntent( intent );
+         displayCursor( tracksCursor, false );
       }
       else if( Intent.ACTION_VIEW.equals( queryAction ) )
       {
@@ -337,27 +436,60 @@ public class TrackList extends ListActivity
       else
       {
          // Got to nothing, make a list of everything
-         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME }, null, null, null );
+         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE }, null, null, null );
+         Log.d(TAG, "displayIntent(): displaying all tracks. count = " + tracksCursor.getCount());
+         displayCursor( tracksCursor, true );
       }
-      displayCursor( tracksCursor );
+      
    }
 
-   private void displayCursor( Cursor tracksCursor )
+   private void displayCursor( Cursor tracksCursor, boolean showGlobal )
    {
-      // Create an array to specify the fields we want to display in the list (only TITLE)
+      Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
+	   // Create an array to specify the fields we want to display in the list (only TITLE)
       // and an array of the fields we want to bind those fields to (in this case just text1)
-      String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME };
-      int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from };
+      String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
+      int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from, R.id.listitem_duration, R.id.listitem_distance };
       // Now create a simple cursor adapter and set it to display
-      SimpleCursorAdapter trackAdapter = new SimpleCursorAdapter( this, R.layout.trackitem, tracksCursor, fromColumns, toItems );
-      setListAdapter( trackAdapter );
+      trackAdapter = new SimpleCursorAdapter( this, 
+    		  R.layout.trackitem, tracksCursor, fromColumns, toItems );
+      //showGlobal = false;
+      if (!showGlobal) {
+    	  setListAdapter( trackAdapter );
+      }
+      else {
+    	  SeparatedListAdapter groupedAdapter = new SeparatedListAdapter(this);
+    	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_complex,
+    			  new String[] { ITEM_TITLE, ITEM_CAPTION }, 
+    			  new int[] { R.id.list_complex_title, R.id.list_complex_caption }));
+    	  
+    	  groupedAdapter.addSection("My Tracks", trackAdapter);
+    	  
+    	  setListAdapter( groupedAdapter );
+      }
    }
+   
+   private long getTrackIdFromRowPosition(long pos) {
+	   pos = pos - (actions.size() + 1);
+	   Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
+	   pos = tracksCursor.getCount() - pos + 1;
+	   return pos;
+   }
+   
+   public final static String ITEM_TITLE = "title";
+   public final static String ITEM_CAPTION = "caption";
+   
+   private Map<String,?> createItem(String title, String caption) {
+		Map<String,String> item = new HashMap<String,String>();
+		item.put(ITEM_TITLE, title);
+		item.put(ITEM_CAPTION, caption);
+		return item;
+	}
 
    private Cursor doSearchWithIntent( final Intent queryIntent )
    {
       final String queryString = queryIntent.getStringExtra( SearchManager.QUERY );
-      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
+      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
       return cursor;
    }
-
 }

@@ -193,7 +193,7 @@ public class GpxCreator extends XmlCreator
       serializer.text( "\n" );
       serializer.startTag( "", "gpx" );
       serializer.attribute( null, "version", "1.1" );
-      serializer.attribute( null, "creator", "nl.sogeti.android.gpstracker" );
+      serializer.attribute( null, "creator", "edu.stanford.cs.sujogger" );
       serializer.attribute( NS_SCHEMA, "schemaLocation", NS_GPX_11 + " http://www.topografix.com/gpx/1/1/gpx.xsd" );
       serializer.attribute( null, "xmlns", NS_GPX_11 );
 

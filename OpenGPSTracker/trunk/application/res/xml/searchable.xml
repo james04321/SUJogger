@@ -3,9 +3,9 @@
      android:searchSettingsDescription="@string/search_description"
      android:hint="@string/search_hint" 
      
-     android:searchSuggestAuthority="nl.sogeti.android.gpstracker"
+     android:searchSuggestAuthority="edu.stanford.cs.sujogger"
      android:searchSuggestSelection="name LIKE ?"
      android:searchSuggestIntentAction="android.intent.action.VIEW" 
-     android:searchSuggestIntentData="content://nl.sogeti.android.gpstracker/tracks"
+     android:searchSuggestIntentData="content://edu.stanford.cs.sujogger/tracks"
      
      android:includeInGlobalSearch="true"/>

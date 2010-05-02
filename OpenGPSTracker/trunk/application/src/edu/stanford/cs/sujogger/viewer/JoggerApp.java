@@ -3,6 +3,7 @@ package edu.stanford.cs.sujogger.viewer;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
+import android.view.Window;
 import android.widget.TabHost;
 
 public class JoggerApp extends TabActivity {

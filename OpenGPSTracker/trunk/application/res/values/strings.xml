@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Open GPS Tracker</string>
+	<string name="app_name">Stanford Jogger</string>
     <string name="service_start">Activating logging service</string>
 	<string name="service_gpsstatus">Logging: %s (%s with %d satellites)</string>
     <string name="service_networkstatus">Logging: %s (%s with cell tower and wifi)</string>
@@ -8,7 +8,7 @@
     <string name="service_gpsenabled">GPS is enabled, commencing logging.</string>
     
     <string name="dialog_tracking_title">Tracking control</string>
-	<string name="dialog_routename_title">Name track</string>
+	<string name="dialog_routename_title">Track Name (Optional)</string>
     <string name="dialog_routename_message">Please enter the name of the track</string>
     <string name="dialog_notrack_title">No track is selected</string>
     <string name="dialog_notrack_message">Please select a track first before exporting</string>
@@ -78,10 +78,10 @@
     <string name="receive_kmzfilewriter">Store to KMZ on SDcard</string>
     <string name="receive_gpxsender">Send GPX file</string>
     <string name="email_chooser">Choose email program</string>
-    <string name="email_subject">Open GPS Tracker - Trackdata</string>
+    <string name="email_subject">SUJogger - Trackdata</string>
     <string name="email_body">Attached is a track in the GPS Exchange Format (GPX) file as described on http://www.topografix.com/gpx.asp</string>
     
-    <string name="opengpstracker_title">Open GPS Tracker</string>
+    <string name="opengpstracker_title">SUJogger</string>
     <string name="opengpstracker_settings">Settings</string>
     <string name="preference_display">Display settings</string>
     <string name="preference_behavior">Run settings</string>
@@ -122,8 +122,9 @@
     
     <string name="track_list">Tracks</string>
     <string name="search_label">Tracks</string>
-    <string name="search_description">Open GPS Tracker track names</string>
+    <string name="search_description">SUJogger track names</string>
     <string name="search_hint">Search tracks</string>
+    
 <!-- ***************************
    About information
    ***************************-->

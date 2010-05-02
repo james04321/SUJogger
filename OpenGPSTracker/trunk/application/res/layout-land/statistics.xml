@@ -83,7 +83,7 @@
             <TextView
                android:text="@string/stat_starttime"
                android:paddingRight="10dp" />
-            <nl.sogeti.android.gpstracker.util.DateView
+            <edu.stanford.cs.sujogger.util.DateView
                android:id="@+id/stat_starttime" />
          </TableRow>
          <TableRow
@@ -93,7 +93,7 @@
             <TextView
                android:text="@string/stat_endtime"
                android:paddingRight="10dp" />
-            <nl.sogeti.android.gpstracker.util.DateView
+            <edu.stanford.cs.sujogger.util.DateView
                android:id="@+id/stat_endtime" />
          </TableRow>
          <TableRow
@@ -125,22 +125,22 @@
         android:id="@+id/flipper"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content">
-      <nl.sogeti.android.gpstracker.actions.utils.GraphCanvas
+      <edu.stanford.cs.sujogger.actions.utils.GraphCanvas
          android:id="@+id/graph_canvas1"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content" />
       />
-      <nl.sogeti.android.gpstracker.actions.utils.GraphCanvas
+      <edu.stanford.cs.sujogger.actions.utils.GraphCanvas
          android:id="@+id/graph_canvas2"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content" />
       />
-      <nl.sogeti.android.gpstracker.actions.utils.GraphCanvas
+      <edu.stanford.cs.sujogger.actions.utils.GraphCanvas
          android:id="@+id/graph_canvas3"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content" />
       />
-      <nl.sogeti.android.gpstracker.actions.utils.GraphCanvas
+      <edu.stanford.cs.sujogger.actions.utils.GraphCanvas
          android:id="@+id/graph_canvas4"
          android:layout_width="fill_parent"
          android:layout_height="wrap_content" />

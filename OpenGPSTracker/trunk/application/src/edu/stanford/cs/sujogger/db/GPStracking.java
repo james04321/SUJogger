@@ -40,7 +40,7 @@ import android.provider.BaseColumns;
 public final class GPStracking
 {
    /** The authority of this provider */
-   public static final String AUTHORITY = "nl.sogeti.android.gpstracker";
+   public static final String AUTHORITY = "edu.stanford.cs.sujogger";
    /** The content:// style URL for this provider */
    public static final Uri CONTENT_URI = Uri.parse( "content://" + GPStracking.AUTHORITY );
    /** The name of the database file */
@@ -56,9 +56,9 @@ public final class GPStracking
    public static final class Tracks extends TracksColumns implements android.provider.BaseColumns
    {
       /** The MIME type of a CONTENT_URI subdirectory of a single track. */
-      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.nl.sogeti.android.track";
+      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.edu.stanford.cs.track";
       /** The MIME type of CONTENT_URI providing a directory of tracks. */
-      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.nl.sogeti.android.track";
+      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.edu.stanford.cs.track";
       /** The content:// style URL for this provider */
       public static final Uri CONTENT_URI = Uri.parse( "content://" + GPStracking.AUTHORITY + "/" + Tracks.TABLE );
 
@@ -68,6 +68,8 @@ public final class GPStracking
          "CREATE TABLE " + Tracks.TABLE + "(" + " " + Tracks._ID           + " " + Tracks._ID_TYPE + 
                                           "," + " " + Tracks.NAME          + " " + Tracks.NAME_TYPE + 
                                           "," + " " + Tracks.CREATION_TIME + " " + Tracks.CREATION_TIME_TYPE + 
+                                          "," + " " + Tracks.DURATION + " " + Tracks.DURATION_TYPE +
+                                          "," + " " + Tracks.DISTANCE + " " + Tracks.DISTANCE_TYPE +
                                           ");";
    }
    
@@ -80,9 +82,9 @@ public final class GPStracking
    {
 
       /** The MIME type of a CONTENT_URI subdirectory of a single segment. */
-      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.nl.sogeti.android.segment";
+      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.edu.stanford.cs.segment";
       /** The MIME type of CONTENT_URI providing a directory of segments. */
-      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.nl.sogeti.android.segment";
+      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.edu.stanford.cs.segment";
 
       /** The name of this table */
       static final String TABLE = "segments";
@@ -101,9 +103,9 @@ public final class GPStracking
    {
 
       /** The MIME type of a CONTENT_URI subdirectory of a single waypoint. */
-      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.nl.sogeti.android.waypoint";
+      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.edu.stanford.cs.waypoint";
       /** The MIME type of CONTENT_URI providing a directory of waypoints. */
-      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.nl.sogeti.android.waypoint";
+      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.edu.stanford.cs.waypoint";
       
       /** The name of this table */
       public static final String TABLE = "waypoints";
@@ -119,6 +121,7 @@ public final class GPStracking
       "," + " " + WaypointsColumns.BEARING   + " " + WaypointsColumns.BEARING_TYPE + 
       ");";
       
+      //TODO: don't need upgrade statement anymore
       static final String[] UPGRADE_STATEMENT_7_TO_8 = 
          {
             "ALTER TABLE " + Waypoints.TABLE + " ADD COLUMN " + WaypointsColumns.ACCURACY + " " + WaypointsColumns.ACCURACY_TYPE +";",
@@ -136,9 +139,9 @@ public final class GPStracking
    {
 
       /** The MIME type of a CONTENT_URI subdirectory of a single media entry. */
-      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.nl.sogeti.android.media";
+      public static final String CONTENT_ITEM_TYPE = "vnd.android.cursor.item/vnd.edu.stanford.cs.media";
       /** The MIME type of CONTENT_URI providing a directory of media entry. */
-      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.nl.sogeti.android.media";
+      public static final String CONTENT_TYPE = "vnd.android.cursor.dir/vnd.edu.stanford.cs.media";
       
       /** The name of this table */
       public static final String TABLE = "media";
@@ -162,8 +165,13 @@ public final class GPStracking
       /** The end time */
       public static final String NAME          = "name";
       public static final String CREATION_TIME = "creationtime";
-      static final String CREATION_TIME_TYPE   = "INTEGER NOT NULL";
+      public static final String DURATION      = "duration";
+      public static final String DISTANCE      = "distance";
+      
       static final String NAME_TYPE            = "TEXT";
+      static final String CREATION_TIME_TYPE   = "INTEGER NOT NULL";
+      static final String DURATION_TYPE        = "INTEGER";
+      static final String DISTANCE_TYPE        = "REAL";
       static final String _ID_TYPE             = "INTEGER PRIMARY KEY AUTOINCREMENT";
    }
    

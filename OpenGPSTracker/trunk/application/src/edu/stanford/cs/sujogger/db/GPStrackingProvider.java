@@ -60,44 +60,44 @@ import android.util.Log;
  * 1 or more segments.
  * <p>
  * For example:<br>
- * <code>content://nl.sogeti.android.gpstracker/tracks</code>
+ * <code>content://edu.stanford.cs.sujogger/tracks</code>
  * is the URI that returns all the stored tracks or starts a new track on insert 
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2</code>
+ * <code>content://edu.stanford.cs.sujogger/tracks/2</code>
  * is the URI string that would return a single result row, the track with ID = 23. 
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments</code> is the URI that returns 
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments</code> is the URI that returns 
  * all the stored segments of a track with ID = 2 or starts a new segment on insert 
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/waypoints</code> is the URI that returns 
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/waypoints</code> is the URI that returns 
  * all the stored waypoints of a track with ID = 2
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments</code> is the URI that returns 
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments</code> is the URI that returns 
  * all the stored segments of a track with ID = 2 
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments/3</code> is
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments/3</code> is
  * the URI string that would return a single result row, the segment with ID = 3 of a track with ID = 2 . 
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments/1/waypoints</code> is the URI that 
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments/1/waypoints</code> is the URI that 
  * returns all the waypoints of a segment 1 of track 2.
  * <p>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments/1/waypoints/52</code> is the URI string that 
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments/1/waypoints/52</code> is the URI string that 
  * would return a single result row, the waypoint with ID = 52
  * <p>
  * Media is stored under a waypoint and may be queried as:<br>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments/3/waypoints/22/media</code>
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments/3/waypoints/22/media</code>
  * <p>
  * All media for a segment can be queried with:<br>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/segments/3/media</code>
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/segments/3/media</code>
  * <p>
  * All media for a track can be queried with:<br>
- * <code>content://nl.sogeti.android.gpstracker/tracks/2/media</code>
+ * <code>content://edu.stanford.cs.sujogger/tracks/2/media</code>
  * <p>
  * The whole set of collected media may be queried as:<br>
- * <code>content://nl.sogeti.android.gpstracker/media</code>
+ * <code>content://edu.stanford.cs.sujogger/media</code>
  * <p>
  * A single media is stored with an ID, for instance ID = 12:<br>
- * <code>content://nl.sogeti.android.gpstracker/media/12</code>
+ * <code>content://edu.stanford.cs.sujogger/media/12</code>
  * 
  * @version $Id: GPStrackingProvider.java 468 2010-03-28 13:47:13Z rcgroot $
  * @author rene (c) Jan 22, 2009, Sogeti B.V.
@@ -347,6 +347,7 @@ public class GPStrackingProvider extends ContentProvider
       {
          case TRACKS:
             tableName = Tracks.TABLE;
+            sortorder = Tracks.CREATION_TIME+" desc";
             break;
          case TRACK_ID:
             tableName = Tracks.TABLE;
@@ -463,13 +464,21 @@ public class GPStrackingProvider extends ContentProvider
             tableName = Tracks.TABLE;
             long trackId = new Long( uri.getLastPathSegment() ).longValue();
             whereclause = Tracks._ID + " = " + trackId;
-            args.put( Tracks.NAME, givenValues.getAsString( Tracks.NAME ) );
+            if (givenValues.getAsString( Tracks.NAME ) != null)
+            	args.put( Tracks.NAME, givenValues.getAsString( Tracks.NAME ) );
+            if (givenValues.getAsString( Tracks.DURATION ) != null)
+            	args.put( Tracks.DURATION, givenValues.getAsString( Tracks.DURATION ) );
+            if (givenValues.getAsString( Tracks.DISTANCE ) != null)
+            	args.put( Tracks.DISTANCE, givenValues.getAsString( Tracks.DISTANCE ) );
             notifyUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, trackId ) ;
             break;
          default:
             Log.e( GPStrackingProvider.TAG, "Unable to come to an action in the query uri" + uri.toString() );
             return -1;
       }
+      
+      if (args.size() == 0)
+    	  return -1;
       
       // Execute the query.
       SQLiteDatabase mDb = this.mDbHelper.getWritableDatabase();
