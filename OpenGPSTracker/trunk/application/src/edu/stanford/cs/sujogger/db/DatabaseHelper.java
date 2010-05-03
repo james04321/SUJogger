@@ -57,7 +57,11 @@ import android.util.Log;
  */
 class DatabaseHelper extends SQLiteOpenHelper
 {
-   private Context mContext;
+   private static String DB_PATH = "/data/data/edu.stanford.cs.sujogger/databases/";
+   private static String DB_NAME = "SUJogger.sqlite";
+   
+	
+	private Context mContext;
    private final static String TAG = "OGT.DatabaseHelper";
 
    public DatabaseHelper(Context context)
