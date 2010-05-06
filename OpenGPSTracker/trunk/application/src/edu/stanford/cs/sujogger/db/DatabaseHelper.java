@@ -63,7 +63,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
  * @version $Id: DatabaseHelper.java 461 2010-03-19 14:15:19Z rcgroot $
  * @author rene (c) Jan 22, 2009, Sogeti B.V.
  */
-class DatabaseHelper extends SQLiteOpenHelper {
+public class DatabaseHelper extends SQLiteOpenHelper {
 	private static String DB_PATH = "/data/data/edu.stanford.cs.sujogger/databases/";
 	private static String DB_NAME = "SUJogger.sqlite";
 	private static int DB_VERSION = 1;
@@ -383,8 +383,8 @@ class DatabaseHelper extends SQLiteOpenHelper {
 		return segmentId;
 	}
 	
-	public int getStatisticInt(long statisticId) {
-		return (int) getStatisticReal(statisticId);
+	public long getStatisticLong(long statisticId) {
+		return (long) getStatisticReal(statisticId);
 	}
 	
 	public double getStatisticReal(long statisticId) {
@@ -420,5 +420,45 @@ class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public void increaseStatisticByOne(long statisticId) {
 		increaseStatistic(statisticId, 1);
+	}
+	
+	public boolean updateAvgSpeed() {
+		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID);
+		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID);
+		if (totalTime != 0)
+			return setStatistic(Stats.AVG_SPEED_ID, totalDist / totalTime);
+		else return true;
+	}
+	
+	public void updateMedDuration() {
+		SQLiteDatabase db = getReadableDatabase();
+		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
+		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
+		Cursor cursor = db.query(Tracks.TABLE, new String[] {Tracks.DURATION}, 
+				null, null, null, null, Tracks.DURATION, String.valueOf(queryLimit));
+		
+		int queryCount = cursor.getCount();
+		if (queryCount > 0) {
+			cursor.moveToPosition(queryCount / 2);
+			setStatistic(Stats.MED_DURATION_ID, cursor.getLong(0));
+		}
+	}
+	
+	public void updateMedDistance() {
+		SQLiteDatabase db = getReadableDatabase();
+		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
+		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
+		Cursor cursor = db.query(Tracks.TABLE, new String[] {Tracks.DISTANCE}, 
+				null, null, null, null, Tracks.DISTANCE, String.valueOf(queryLimit));
+		
+		int queryCount = cursor.getCount();
+		if (queryCount > 0) {
+			cursor.moveToPosition(queryCount / 2);
+			setStatistic(Stats.MED_DURATION_ID, cursor.getDouble(0));
+		}
+	}
+	
+	public void updateAchievements() {
+		
 	}
 }

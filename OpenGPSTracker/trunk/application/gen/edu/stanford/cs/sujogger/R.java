@@ -53,73 +53,77 @@ public final class R {
         public static final int stip2=0x7f020014;
     }
     public static final class id {
-        public static final int LinearLayout01=0x7f090000;
-        public static final int TableRow01=0x7f09002e;
-        public static final int currentSpeed=0x7f090013;
-        public static final int fileNameField=0x7f090001;
-        public static final int flipper=0x7f090027;
-        public static final int graph_canvas1=0x7f090028;
-        public static final int graph_canvas2=0x7f090029;
-        public static final int graph_canvas3=0x7f09002a;
-        public static final int graph_canvas4=0x7f09002b;
-        public static final int graphtype_distancealtitude=0x7f090005;
-        public static final int graphtype_distancespeed=0x7f090003;
-        public static final int graphtype_timealtitude=0x7f090004;
-        public static final int graphtype_timespeed=0x7f090002;
-        public static final int icon=0x7f09001b;
-        public static final int layer_compass=0x7f090009;
-        public static final int layer_location=0x7f09000a;
-        public static final int layer_satellite=0x7f090006;
-        public static final int layer_speed=0x7f090008;
-        public static final int layer_traffic=0x7f090007;
-        public static final int list_complex_caption=0x7f09000c;
-        public static final int list_complex_title=0x7f09000b;
-        public static final int list_header_title=0x7f09000d;
-        public static final int listitem_distance=0x7f090030;
-        public static final int listitem_duration=0x7f09002d;
-        public static final int listitem_from=0x7f09002f;
-        public static final int listitem_name=0x7f09002c;
-        public static final int logcontrol_pause=0x7f09000f;
-        public static final int logcontrol_resume=0x7f090010;
-        public static final int logcontrol_start=0x7f09000e;
-        public static final int logcontrol_stop=0x7f090011;
-        public static final int myMapView=0x7f090012;
-        public static final int nameField=0x7f090018;
-        public static final int notename=0x7f090019;
-        public static final int notetext=0x7f09001a;
-        public static final int progress=0x7f09001c;
-        public static final int progresstext=0x7f09001d;
-        public static final int speedbar=0x7f090017;
-        public static final int speedview00=0x7f090014;
-        public static final int speedview01=0x7f090015;
-        public static final int speedview02=0x7f090016;
-        public static final int stat_averagespeed=0x7f090020;
-        public static final int stat_distance=0x7f09001e;
-        public static final int stat_endtime=0x7f090024;
-        public static final int stat_maximumaltitude=0x7f090026;
-        public static final int stat_maximumspeed=0x7f090021;
-        public static final int stat_minimalaltitide=0x7f090025;
-        public static final int stat_overallaveragespeed=0x7f09001f;
-        public static final int stat_starttime=0x7f090023;
-        public static final int stat_waypoints=0x7f090022;
+        public static final int LinearLayout01=0x7f090002;
+        public static final int TableRow01=0x7f090030;
+        public static final int achievementcat_fraction=0x7f090001;
+        public static final int achievementcat_name=0x7f090000;
+        public static final int currentSpeed=0x7f090015;
+        public static final int fileNameField=0x7f090003;
+        public static final int flipper=0x7f090029;
+        public static final int graph_canvas1=0x7f09002a;
+        public static final int graph_canvas2=0x7f09002b;
+        public static final int graph_canvas3=0x7f09002c;
+        public static final int graph_canvas4=0x7f09002d;
+        public static final int graphtype_distancealtitude=0x7f090007;
+        public static final int graphtype_distancespeed=0x7f090005;
+        public static final int graphtype_timealtitude=0x7f090006;
+        public static final int graphtype_timespeed=0x7f090004;
+        public static final int icon=0x7f09001d;
+        public static final int layer_compass=0x7f09000b;
+        public static final int layer_location=0x7f09000c;
+        public static final int layer_satellite=0x7f090008;
+        public static final int layer_speed=0x7f09000a;
+        public static final int layer_traffic=0x7f090009;
+        public static final int list_complex_caption=0x7f09000e;
+        public static final int list_complex_title=0x7f09000d;
+        public static final int list_header_title=0x7f09000f;
+        public static final int listitem_distance=0x7f090032;
+        public static final int listitem_duration=0x7f09002f;
+        public static final int listitem_from=0x7f090031;
+        public static final int listitem_name=0x7f09002e;
+        public static final int logcontrol_pause=0x7f090011;
+        public static final int logcontrol_resume=0x7f090012;
+        public static final int logcontrol_start=0x7f090010;
+        public static final int logcontrol_stop=0x7f090013;
+        public static final int myMapView=0x7f090014;
+        public static final int nameField=0x7f09001a;
+        public static final int notename=0x7f09001b;
+        public static final int notetext=0x7f09001c;
+        public static final int progress=0x7f09001e;
+        public static final int progresstext=0x7f09001f;
+        public static final int speedbar=0x7f090019;
+        public static final int speedview00=0x7f090016;
+        public static final int speedview01=0x7f090017;
+        public static final int speedview02=0x7f090018;
+        public static final int stat_averagespeed=0x7f090022;
+        public static final int stat_distance=0x7f090020;
+        public static final int stat_endtime=0x7f090026;
+        public static final int stat_maximumaltitude=0x7f090028;
+        public static final int stat_maximumspeed=0x7f090023;
+        public static final int stat_minimalaltitide=0x7f090027;
+        public static final int stat_overallaveragespeed=0x7f090021;
+        public static final int stat_starttime=0x7f090025;
+        public static final int stat_waypoints=0x7f090024;
     }
     public static final class layout {
-        public static final int filenamedialog=0x7f030000;
-        public static final int graphtype=0x7f030001;
-        public static final int layerdialog=0x7f030002;
-        public static final int list_complex=0x7f030003;
-        public static final int list_header=0x7f030004;
-        public static final int logcontrol=0x7f030005;
-        public static final int main=0x7f030006;
-        public static final int map=0x7f030007;
-        public static final int namedialog=0x7f030008;
-        public static final int notenamedialog=0x7f030009;
-        public static final int notetextdialog=0x7f03000a;
-        public static final int savenotificationprogress=0x7f03000b;
-        public static final int settings=0x7f03000c;
-        public static final int statistics=0x7f03000d;
-        public static final int trackitem=0x7f03000e;
-        public static final int tracklist=0x7f03000f;
+        public static final int achievementcatitem=0x7f030000;
+        public static final int achievementcatlist=0x7f030001;
+        public static final int filenamedialog=0x7f030002;
+        public static final int graphtype=0x7f030003;
+        public static final int layerdialog=0x7f030004;
+        public static final int list_complex=0x7f030005;
+        public static final int list_header=0x7f030006;
+        public static final int logcontrol=0x7f030007;
+        public static final int main=0x7f030008;
+        public static final int map=0x7f030009;
+        public static final int namedialog=0x7f03000a;
+        public static final int notenamedialog=0x7f03000b;
+        public static final int notetextdialog=0x7f03000c;
+        public static final int savenotificationprogress=0x7f03000d;
+        public static final int settings=0x7f03000e;
+        public static final int statistics=0x7f03000f;
+        public static final int trackitem=0x7f030010;
+        public static final int tracklist=0x7f030011;
     }
     public static final class raw {
         public static final int conversion_from_meter=0x7f060002;
@@ -128,7 +132,7 @@ public final class R {
         public static final int licence_short=0x7f060000;
     }
     public static final class string {
-        public static final int about_activity_name_extended=0x7f080074;
+        public static final int about_activity_name_extended=0x7f080075;
         /**  ***************************
    About information
    ***************************
@@ -142,13 +146,13 @@ public final class R {
    About information
    ***************************
          */
-        public static final int about_comments=0x7f080073;
-        public static final int about_copyright=0x7f080077;
-        public static final int about_email=0x7f080079;
-        public static final int about_website_label=0x7f08007a;
-        public static final int about_website_url=0x7f080078;
+        public static final int about_comments=0x7f080074;
+        public static final int about_copyright=0x7f080078;
+        public static final int about_email=0x7f08007a;
+        public static final int about_website_label=0x7f08007b;
+        public static final int about_website_url=0x7f080079;
         public static final int app_name=0x7f080000;
-        public static final int app_search=0x7f080076;
+        public static final int app_search=0x7f080077;
         public static final int btn_cancel=0x7f080026;
         public static final int btn_install=0x7f080029;
         public static final int btn_okay=0x7f080025;
@@ -175,8 +179,8 @@ public final class R {
         public static final int dialog_tracking_title=0x7f080006;
         public static final int disableblanking_summary=0x7f080051;
         public static final int disableblanking_title=0x7f080050;
-        public static final int distance_smallunitname=0x7f08007d;
-        public static final int distance_unitname=0x7f08007c;
+        public static final int distance_smallunitname=0x7f08007e;
+        public static final int distance_unitname=0x7f08007d;
         public static final int email_body=0x7f080049;
         public static final int email_chooser=0x7f080047;
         public static final int email_subject=0x7f080048;
@@ -216,7 +220,8 @@ public final class R {
         public static final int menu_statistics=0x7f080035;
         public static final int menu_tracking=0x7f08002c;
         public static final int menu_tracklist=0x7f080031;
-        public static final int no_information_available=0x7f080075;
+        public static final int my_achievements=0x7f080073;
+        public static final int no_information_available=0x7f080076;
         public static final int no_tracks=0x7f08001d;
         public static final int opengpstracker_settings=0x7f08004b;
         public static final int opengpstracker_title=0x7f08004a;
@@ -245,7 +250,7 @@ public final class R {
         public static final int showspeed_title=0x7f08005a;
         public static final int showtraffic_summary=0x7f080059;
         public static final int showtraffic_title=0x7f080058;
-        public static final int speed_unitname=0x7f08007b;
+        public static final int speed_unitname=0x7f08007c;
         public static final int speedsanitycheck_summary=0x7f08005f;
         public static final int speedsanitycheck_title=0x7f08005e;
         public static final int stat_averagespeed=0x7f080069;

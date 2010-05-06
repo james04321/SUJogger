@@ -96,7 +96,7 @@ public final class GPStracking
 			");";
 	}
 	
-	public static final class AchievementCategories implements android.provider.BaseColumns {
+	public static final class AchCategories implements android.provider.BaseColumns {
 		public static final String ACHIEVEMENT_ID = "achievement_id";
 		public static final String CATEGORY_ID = "category_id";
 		
@@ -104,6 +104,26 @@ public final class GPStracking
 		static final String CATEGORY_ID_TYPE = "INTEGER NOT NULL";
 		
 		static final String TABLE = "achievementcategories";
+	}
+	
+	public static final class Categories {
+		public static final int DIFF_EASY = 1;
+		public static final int DIFF_MED = 2;
+		public static final int DIFF_HARD = 3;
+		
+		public static final int TYPE_SPEED = 10;
+		public static final int TYPE_ENDURANCE = 11;
+		public static final int TYPE_DETERMINATION = 12;
+		public static final int TYPE_CHARISMA = 13;
+		public static final int TYPE_EXT = 14;
+		
+		public static final int EXT_5K = 20;
+		public static final int EXT_HALFMARATHON = 21;
+		public static final int EXT_MARATHON = 22;
+		
+		public static final int TEAM = 100;
+		public static final int RECENTLY_EARNED = 101;
+		public static final int RECENTLY_LOST = 102;
 	}
    
    /**

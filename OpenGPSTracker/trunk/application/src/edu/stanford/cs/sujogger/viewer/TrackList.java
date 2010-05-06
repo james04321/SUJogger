@@ -42,7 +42,6 @@ import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
-import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
@@ -50,26 +49,23 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
-import android.util.AttributeSet;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.Window;
 import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
-import android.widget.TextView.BufferType;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
-import edu.stanford.cs.sujogger.util.UnitsI18n;
 
 /**
  * Show a list view of all tracks, also doubles for showing search results
@@ -469,15 +465,8 @@ public class TrackList extends ListActivity
       }
    }
    
-   private long getTrackIdFromRowPosition(long pos) {
-	   pos = pos - (actions.size() + 1);
-	   Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
-	   pos = tracksCursor.getCount() - pos + 1;
-	   return pos;
-   }
-   
-   public final static String ITEM_TITLE = "title";
-   public final static String ITEM_CAPTION = "caption";
+   private final static String ITEM_TITLE = "title";
+   private final static String ITEM_CAPTION = "caption";
    
    private Map<String,?> createItem(String title, String caption) {
 		Map<String,String> item = new HashMap<String,String>();
@@ -485,7 +474,14 @@ public class TrackList extends ListActivity
 		item.put(ITEM_CAPTION, caption);
 		return item;
 	}
-
+   
+   private long getTrackIdFromRowPosition(long pos) {
+	   pos = pos - (actions.size() + 1);
+	   Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
+	   pos = tracksCursor.getCount() - pos + 1;
+	   return pos;
+   }
+   
    private Cursor doSearchWithIntent( final Intent queryIntent )
    {
       final String queryString = queryIntent.getStringExtra( SearchManager.QUERY );

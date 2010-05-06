@@ -1,5 +1,6 @@
 package edu.stanford.cs.sujogger.util;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -102,5 +103,4 @@ public class SeparatedListAdapter extends BaseAdapter {
 	public long getItemId(int position) {
 		return position;
 	}
-
 }
