@@ -28,6 +28,7 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -47,6 +48,7 @@ import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -63,8 +65,8 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
-import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 /**
@@ -96,6 +98,7 @@ public class TrackList extends ListActivity
    private Uri mDialogUri;
    private String mDialogCurrentName = "";
    
+   private DatabaseHelper mDbHelper;
    private List<Map<String,?>> actions;
    private SimpleCursorAdapter trackAdapter;
 
@@ -125,6 +128,8 @@ public class TrackList extends ListActivity
       super.onCreate( savedInstanceState );
       Log.d(TAG, "onCreate()");
       this.setContentView( R.layout.tracklist );
+      
+      mDbHelper = new DatabaseHelper(this);
       
       actions = new LinkedList<Map<String,?>>();
 	  actions.add(createItem("New Track", "Record a new track"));

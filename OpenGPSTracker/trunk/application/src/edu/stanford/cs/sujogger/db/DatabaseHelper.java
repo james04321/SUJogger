@@ -39,6 +39,7 @@ import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -46,6 +47,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
+import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.MediaColumns;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
@@ -64,12 +66,14 @@ import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
  * @author rene (c) Jan 22, 2009, Sogeti B.V.
  */
 public class DatabaseHelper extends SQLiteOpenHelper {
+	private final static String TAG = "OGT.DatabaseHelper";
+	
 	private static String DB_PATH = "/data/data/edu.stanford.cs.sujogger/databases/";
 	private static String DB_NAME = "SUJogger.sqlite";
 	private static int DB_VERSION = 1;
 	
 	private Context mContext;
-	private final static String TAG = "OGT.DatabaseHelper";
+	private SQLiteDatabase mDb;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -96,6 +100,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		boolean dbExist = checkDatabase();
 		
 		if (!dbExist) {
+			Log.d(TAG, "createDatabase(): creating and copying database");
 			this.getReadableDatabase();
 			try {
 				copyDatabase();
@@ -132,9 +137,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		myOutput.close();
 		myInput.close();
 	}
-	/*
-	public void openDatabase() throws SQLException {
-		mDb = SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
+	
+	public SQLiteDatabase openAndGetDb() throws SQLException {
+		if (mDb == null || !mDb.isOpen())
+			mDb = SQLiteDatabase.openDatabase(DB_PATH + DB_NAME, null, SQLiteDatabase.OPEN_READWRITE);
+		return mDb;
 	}
 	
 	@Override
@@ -142,7 +149,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		if (mDb != null) mDb.close();
 		super.close();
 	}
-*/
+	
 	/**
 	 * 
 	 */
@@ -412,10 +419,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
-		
-		db.execSQL("UPDATE ? Set ? = ? + ? WHERE ? = ?", 
-				new Object[] {Stats.TABLE, Stats.VALUE, Stats.VALUE, 
-				new Double(val), Stats._ID, new Long(statisticId)});
+
+		db.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
+				" + ? WHERE " + Stats._ID + " = ?", 
+				new Object[] {new Double(val), new Long(statisticId)});
 	}
 	
 	public void increaseStatisticByOne(long statisticId) {
@@ -458,7 +465,51 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
+	// SELECT achievement._id FROM achievement, statistic WHERE achievement.statistic_id=statistic._id
+	// AND statistic.value >= achievement.condition AND achievement.completed = 0
+	
+	// UPDATE achievements SET completed=1, updated_at=current_time WHERE
+	// _id = 1, 3, 4...
 	public void updateAchievements() {
+		SQLiteDatabase db = getWritableDatabase();
+		Cursor cursor = null;
 		
+		try {
+			String selectClause = Achievements.TABLE + "." + Achievements._ID;
+			String tables = Achievements.TABLE + ", " + Stats.TABLE;
+			cursor = db.rawQuery("SELECT " + selectClause + " FROM " + tables + " WHERE " +
+					Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
+					Stats.TABLE + "." + Stats._ID + " AND " + 
+					Stats.TABLE + "." + Stats.VALUE + ">=" + 
+					Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+					Achievements.TABLE + "." + Achievements.COMPLETED + "=0", 
+					null);
+			
+			int i = 0;
+			String commaDelimitedString = "";
+			while (cursor.moveToNext()) {
+				if (i == 0)
+					commaDelimitedString += cursor.getString(0);
+				else
+					commaDelimitedString += "," + cursor.getString(0);
+			}
+			
+			if (commaDelimitedString != "") {
+				ContentValues updateValues = new ContentValues();
+				updateValues.put(Achievements.COMPLETED, 1);
+				updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
+				
+				db.update(Achievements.TABLE, updateValues, "?=" + commaDelimitedString, 
+						new String[] {Achievements._ID});
+			}
+			
+		}
+		finally {
+			if (cursor != null)
+				cursor.close();
+		}
+		
+		cursor = db.rawQuery("SELECT achievements.completed FROM achievements", null);
+		DatabaseUtils.dumpCursor(cursor);
 	}
 }

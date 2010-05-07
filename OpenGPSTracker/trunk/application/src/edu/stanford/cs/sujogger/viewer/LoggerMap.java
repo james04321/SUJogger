@@ -150,6 +150,7 @@ public class LoggerMap extends MapActivity {
 	private MapController mMapController = null;
 	private SharedPreferences mSharedPreferences;
 	private GPSLoggerServiceManager mLoggerServiceManager;
+	private DatabaseHelper mDbHelper;
 
 	private final ContentObserver mTrackSegmentsObserver = new ContentObserver(new Handler()) {
 		@Override
@@ -248,6 +249,8 @@ public class LoggerMap extends MapActivity {
 				break;
 			case R.id.logcontrol_stop:
 				mLoggerServiceManager.stopGPSLogging();
+				Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
+				calculateTrackStatistics();
 				break;
 			default:
 				break;
@@ -388,7 +391,9 @@ public class LoggerMap extends MapActivity {
 			Log.d(TAG, "creating new GPSLoggerServiceManager");
 		}
 		mLoggerServiceManager.startup();
-
+		
+		mDbHelper = new DatabaseHelper(this);
+		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);
 
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -416,14 +421,16 @@ public class LoggerMap extends MapActivity {
 	}
 
 	protected void onPause() {
-		Log.d(TAG, "onPause()");
 		super.onPause();
+		Log.d(TAG, "onPause()");
+		
+		mDbHelper.close();
+		
 		if (this.mWakeLock != null && this.mWakeLock.isHeld()) {
 			this.mWakeLock.release();
 			Log.w(TAG, "onPause(): Released lock to keep screen on!");
 		}
 		if (mTrackId > 0) {
-			calculateTrackStatistics();
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
 			resolver.unregisterContentObserver(this.mTrackSegmentsObserver);
 			resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
@@ -434,8 +441,9 @@ public class LoggerMap extends MapActivity {
 	}
 
 	protected void onResume() {
-		Log.d(TAG, "onResume");
 		super.onResume();
+		Log.d(TAG, "onResume");
+		mDbHelper.openAndGetDb();
 		updateTitleBar();
 		updateBlankingBehavior();
 		updateSpeedbarVisibility();
@@ -1466,19 +1474,21 @@ public class LoggerMap extends MapActivity {
 		values.put(Tracks.DURATION, new Long(overallduration));
 		values.put(Tracks.DISTANCE, new Double(distanceTraveled));
 		Log.d(TAG, "calculateTrackStatistics(): overallduration = " + overallduration
-				+ "; distanceTraveled" + distanceTraveled);
+				+ "; distanceTraveled = " + distanceTraveled);
 		resolver.update(trackUri, values, null, null);
 		// resolver.notifyChange(trackUri, null);
+		updateUserStats(distanceTraveled, overallduration);
 	}
 	
 	private void updateUserStats(double dist, long duration) {
-		DatabaseHelper dbHelper = new DatabaseHelper(this);
-		dbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
-		dbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
-		dbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID);
-		dbHelper.updateAvgSpeed();
-		dbHelper.updateMedDuration();
-		dbHelper.updateMedDistance();
+		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
+		mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
+		mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
+		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID);
+		mDbHelper.updateAvgSpeed();
+		mDbHelper.updateMedDuration();
+		mDbHelper.updateMedDistance();
+		mDbHelper.updateAchievements();
 	}
 
 	/***

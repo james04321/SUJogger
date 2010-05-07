@@ -1,9 +1,11 @@
 package edu.stanford.cs.sujogger.viewer;
 
+import java.io.IOException;
+
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.Window;
 import android.widget.TabHost;
 
 public class JoggerApp extends TabActivity {
@@ -11,6 +13,13 @@ public class JoggerApp extends TabActivity {
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
+		
+		DatabaseHelper dbHelper = new DatabaseHelper(this);
+		try {
+			dbHelper.createDatabase();
+		} catch (IOException e) {
+			throw new Error("Unable to create database");
+		}
 		
 		TabHost host = getTabHost();
 		host.addTab(host.newTabSpec("tracks").setIndicator("Tracks").

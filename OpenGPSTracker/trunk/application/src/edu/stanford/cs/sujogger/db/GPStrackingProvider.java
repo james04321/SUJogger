@@ -328,23 +328,10 @@ public class GPStrackingProvider extends ContentProvider {
 	 */
 	@Override
 	public boolean onCreate() {
-
 		if (this.mDbHelper == null) {
 			this.mDbHelper = new DatabaseHelper(getContext());
 		}
 		
-		try {
-			mDbHelper.createDatabase();
-		} catch (IOException e) {
-			throw new Error("Unable to create database");
-		}
-		/*
-		try {
-			mDbHelper.openDatabase();
-		} catch (SQLException e) {
-			throw e;
-		}
-		*/
 		return true;
 	}
 
