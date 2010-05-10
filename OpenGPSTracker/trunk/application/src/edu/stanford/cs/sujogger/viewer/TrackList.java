@@ -107,6 +107,7 @@ public class TrackList extends ListActivity
          public void onClick( DialogInterface dialog, int which )
          {
             getContentResolver().delete( mDialogUri, null, null );
+            getListView().invalidateViews();
          }
       };
    private OnClickListener mRenameOnClickListener = new DialogInterface.OnClickListener()
@@ -152,11 +153,20 @@ public class TrackList extends ListActivity
    protected void onRestart() {
 	   Log.d(TAG, "onRestart()");
 	   
-	   //trackAdapter.notifyDataSetChanged();
+	   trackAdapter.notifyDataSetChanged();
 	   //trackAdapter.notifyDataSetInvalidated();
+	   getListView().invalidate();
 	   getListView().invalidateViews();
 	   //displayIntent( getIntent() );
 	   super.onRestart();
+   }
+   
+   @Override
+   protected void onResume() {
+	   trackAdapter.notifyDataSetChanged();
+	   getListView().invalidate();
+	   getListView().invalidateViews();
+	   super.onResume();
    }
    /*
     * (non-Javadoc)

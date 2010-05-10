@@ -106,7 +106,7 @@
          
          <activity
             android:label="@string/my_achievements" 
-            android:name=".viewer.AchievementsActivity"
+            android:name=".viewer.AchievementList"
             android:launchMode="singleTop" >
             <intent-filter>
                <category android:name="android.intent.category.DEFAULT" />

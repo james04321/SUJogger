@@ -64,15 +64,18 @@ import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -87,6 +90,7 @@ import com.google.android.maps.Overlay;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
@@ -1289,7 +1293,7 @@ public class LoggerMap extends MapActivity {
 				this.mTrackId = trackId;
 				mLastSegment = -1;
 				mLastWaypoint = -1;
-				if (track.getString(1) != null && track.getString(2) != null)
+				if (track.getInt(1) != 0 && track.getDouble(2) != 0)
 					statisticsPresent = true;
 				else
 					statisticsPresent = false;
@@ -1415,7 +1419,6 @@ public class LoggerMap extends MapActivity {
 		long starttime = 0;
 		double distanceTraveled = 0f;
 		long duration = 1;
-		long overallduration = 1;
 
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.mTrackId);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1452,7 +1455,6 @@ public class LoggerMap extends MapActivity {
 								lastLocation = currentLocation;
 
 							} while (waypoints.moveToNext());
-							overallduration = lastLocation.getTime() - starttime;
 						}
 					}
 					finally {
@@ -1471,13 +1473,13 @@ public class LoggerMap extends MapActivity {
 		}
 
 		ContentValues values = new ContentValues();
-		values.put(Tracks.DURATION, new Long(overallduration));
+		values.put(Tracks.DURATION, new Long(duration));
 		values.put(Tracks.DISTANCE, new Double(distanceTraveled));
-		Log.d(TAG, "calculateTrackStatistics(): overallduration = " + overallduration
+		Log.d(TAG, "calculateTrackStatistics(): duration = " + duration
 				+ "; distanceTraveled = " + distanceTraveled);
 		resolver.update(trackUri, values, null, null);
 		// resolver.notifyChange(trackUri, null);
-		updateUserStats(distanceTraveled, overallduration);
+		updateUserStats(distanceTraveled, duration);
 	}
 	
 	private void updateUserStats(double dist, long duration) {
@@ -1488,7 +1490,30 @@ public class LoggerMap extends MapActivity {
 		mDbHelper.updateAvgSpeed();
 		mDbHelper.updateMedDuration();
 		mDbHelper.updateMedDistance();
-		mDbHelper.updateAchievements();
+		
+		Cursor newAchCursor = mDbHelper.updateAchievements();
+		if (newAchCursor.getCount() > 0) {
+			int i = 0;
+			
+			// Display up to two achievements in the toast notification
+			while(newAchCursor.moveToNext() && i < 1) {
+				View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
+						(ViewGroup) findViewById(R.id.toast_layout_root));
+				
+				ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
+				image.setImageResource(R.drawable.androidmarker);
+				TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
+				text.setText(Achievements.getTitleForId(newAchCursor.getInt(0)) + " achievement earned!");
+				
+				Toast achToast = new Toast(getApplicationContext());
+				achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+				achToast.setDuration(Toast.LENGTH_LONG);
+				achToast.setView(toastLayout);
+				achToast.show();
+				
+				i++;
+			}
+		}
 	}
 
 	/***

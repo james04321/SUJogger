@@ -29,9 +29,9 @@ public class SeparatedListAdapter extends BaseAdapter {
 
 	public Object getItem(int position) {
 		for(Object section : this.sections.keySet()) {
-			Adapter adapter = sections.get(section);
+			Adapter adapter = sections.get(section);		
 			int size = adapter.getCount() + 1;
-
+			
 			// check if position inside this section
 			if(position == 0) return section;
 			if(position < size) return adapter.getItem(position - 1);

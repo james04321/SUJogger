@@ -181,8 +181,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			throw new IllegalArgumentException("Track and segments may not the less then 0.");
 		}
 
-		SQLiteDatabase sqldb = getWritableDatabase();
-
 		ContentValues args = new ContentValues();
 		args.put(WaypointsColumns.SEGMENT, segmentId);
 		args.put(WaypointsColumns.TIME, location.getTime());
@@ -197,7 +195,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		// DateFormat.getInstance().format(new Date( args.getAsLong(
 		// Waypoints.TIME ) ) ) );
 
-		long waypointId = sqldb.insert(Waypoints.TABLE, null, args);
+		long waypointId = mDb.insert(Waypoints.TABLE, null, args);
 
 		ContentResolver resolver = this.mContext.getContentResolver();
 		resolver.notifyChange(Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments/"
@@ -211,8 +209,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			throw new IllegalArgumentException(
 					"Track, segments and waypoint may not the less then 0.");
 		}
-		SQLiteDatabase sqldb = getWritableDatabase();
-
+		
 		ContentValues args = new ContentValues();
 		args.put(MediaColumns.TRACK, trackId);
 		args.put(MediaColumns.SEGMENT, segmentId);
@@ -221,7 +218,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 		// Log.d( TAG, "Media stored in the datebase: "+mediaUri );
 
-		long mediaId = sqldb.insert(Media.TABLE, null, args);
+		long mediaId = mDb.insert(Media.TABLE, null, args);
 
 		ContentResolver resolver = this.mContext.getContentResolver();
 		Uri notifyUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments/" + segmentId
@@ -240,17 +237,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * @return
 	 */
 	int deleteTrack(long trackId) {
-		SQLiteDatabase sqldb = getWritableDatabase();
 		int affected = 0;
 		Cursor cursor = null;
 		long segmentId = -1;
 
 		try {
-			cursor = sqldb.query(Segments.TABLE, new String[] { Segments._ID }, Segments.TRACK
+			cursor = mDb.query(Segments.TABLE, new String[] { Segments._ID }, Segments.TRACK
 					+ "= ?", new String[] { String.valueOf(trackId) }, null, null, null, null);
 			if (cursor.moveToFirst()) {
 				segmentId = cursor.getLong(0);
-				affected += deleteSegment(sqldb, trackId, segmentId);
+				affected += deleteSegment(mDb, trackId, segmentId);
 			}
 			else {
 				Log.e(TAG, "Did not find the last active segment");
@@ -262,7 +258,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			}
 		}
 
-		affected += sqldb.delete(Tracks.TABLE, Tracks._ID + "= ?", new String[] { String
+		affected += mDb.delete(Tracks.TABLE, Tracks._ID + "= ?", new String[] { String
 				.valueOf(trackId) });
 
 		ContentResolver resolver = this.mContext.getContentResolver();
@@ -280,14 +276,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * @return
 	 */
 	int deleteMedia(long mediaId) {
-		SQLiteDatabase sqldb = getWritableDatabase();
-
 		Cursor cursor = null;
 		long trackId = -1;
 		long segmentId = -1;
 		long waypointId = -1;
 		try {
-			cursor = sqldb.query(Media.TABLE, new String[] { Media.TRACK, Media.SEGMENT,
+			cursor = mDb.query(Media.TABLE, new String[] { Media.TRACK, Media.SEGMENT,
 					Media.WAYPOINT }, Media._ID + "= ?", new String[] { String.valueOf(mediaId) },
 					null, null, null, null);
 			if (cursor.moveToFirst()) {
@@ -305,7 +299,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			}
 		}
 
-		int affected = sqldb.delete(Media.TABLE, Media._ID + "= ?", new String[] { String
+		int affected = mDb.delete(Media.TABLE, Media._ID + "= ?", new String[] { String
 				.valueOf(mediaId) });
 
 		ContentResolver resolver = this.mContext.getContentResolver();
@@ -363,8 +357,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		args.put(TracksColumns.NAME, name);
 		args.put(TracksColumns.CREATION_TIME, currentTime);
 
-		SQLiteDatabase sqldb = getWritableDatabase();
-		long trackId = sqldb.insert(Tracks.TABLE, null, args);
+		long trackId = mDb.insert(Tracks.TABLE, null, args);
 
 		ContentResolver resolver = this.mContext.getContentResolver();
 		resolver.notifyChange(Tracks.CONTENT_URI, null);
@@ -378,11 +371,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * @return
 	 */
 	long toNextSegment(long trackId) {
-		SQLiteDatabase sqldb = getWritableDatabase();
-
 		ContentValues args = new ContentValues();
 		args.put(Segments.TRACK, trackId);
-		long segmentId = sqldb.insert(Segments.TABLE, null, args);
+		long segmentId = mDb.insert(Segments.TABLE, null, args);
 
 		ContentResolver resolver = this.mContext.getContentResolver();
 		resolver.notifyChange(Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments"), null);
@@ -395,32 +386,30 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public double getStatisticReal(long statisticId) {
-		SQLiteDatabase db = getReadableDatabase();
-		Cursor cursor = db.query(true, Stats.TABLE, new String[] {Stats.VALUE}, 
+		double statVal = 0;
+		Cursor cursor = mDb.query(true, Stats.TABLE, new String[] {Stats.VALUE}, 
 				Stats._ID + "=" + statisticId, null, null, null, null, null);
 		if (cursor != null && cursor.getCount() > 0) {
 			cursor.moveToFirst();
-			return cursor.getDouble(0);
+			statVal = cursor.getDouble(0);
 		}
-		else return 0;
+		
+		cursor.close();
+		return statVal;
 	}
 	
-	public boolean setStatistic(long statisticId, double val) {
-		SQLiteDatabase db = getWritableDatabase();
-		
+	public boolean setStatistic(long statisticId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
 		
-		return db.update(Stats.TABLE, args, Stats._ID + "=" + statisticId, null) > 0;
+		return mDb.update(Stats.TABLE, args, Stats._ID + "=" + statisticId, null) > 0;
 	}
 	
-	public void increaseStatistic(long statisticId, double val) {
-		SQLiteDatabase db = getWritableDatabase();
-		
+	public void increaseStatistic(long statisticId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
 
-		db.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
+		mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
 				" + ? WHERE " + Stats._ID + " = ?", 
 				new Object[] {new Double(val), new Long(statisticId)});
 	}
@@ -438,10 +427,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public void updateMedDuration() {
-		SQLiteDatabase db = getReadableDatabase();
 		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
 		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
-		Cursor cursor = db.query(Tracks.TABLE, new String[] {Tracks.DURATION}, 
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {Tracks.DURATION}, 
 				null, null, null, null, Tracks.DURATION, String.valueOf(queryLimit));
 		
 		int queryCount = cursor.getCount();
@@ -449,13 +437,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			cursor.moveToPosition(queryCount / 2);
 			setStatistic(Stats.MED_DURATION_ID, cursor.getLong(0));
 		}
+		
+		cursor.close();
 	}
 	
 	public void updateMedDistance() {
-		SQLiteDatabase db = getReadableDatabase();
 		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
 		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
-		Cursor cursor = db.query(Tracks.TABLE, new String[] {Tracks.DISTANCE}, 
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {Tracks.DISTANCE}, 
 				null, null, null, null, Tracks.DISTANCE, String.valueOf(queryLimit));
 		
 		int queryCount = cursor.getCount();
@@ -463,53 +452,136 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			cursor.moveToPosition(queryCount / 2);
 			setStatistic(Stats.MED_DURATION_ID, cursor.getDouble(0));
 		}
+		
+		cursor.close();
 	}
 	
-	// SELECT achievement._id FROM achievement, statistic WHERE achievement.statistic_id=statistic._id
-	// AND statistic.value >= achievement.condition AND achievement.completed = 0
-	
-	// UPDATE achievements SET completed=1, updated_at=current_time WHERE
-	// _id = 1, 3, 4...
-	public void updateAchievements() {
-		SQLiteDatabase db = getWritableDatabase();
+	public Cursor updateAchievements() {
 		Cursor cursor = null;
 		
-		try {
-			String selectClause = Achievements.TABLE + "." + Achievements._ID;
-			String tables = Achievements.TABLE + ", " + Stats.TABLE;
-			cursor = db.rawQuery("SELECT " + selectClause + " FROM " + tables + " WHERE " +
-					Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
-					Stats.TABLE + "." + Stats._ID + " AND " + 
-					Stats.TABLE + "." + Stats.VALUE + ">=" + 
-					Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
-					Achievements.TABLE + "." + Achievements.COMPLETED + "=0", 
-					null);
-			
-			int i = 0;
-			String commaDelimitedString = "";
-			while (cursor.moveToNext()) {
-				if (i == 0)
-					commaDelimitedString += cursor.getString(0);
-				else
-					commaDelimitedString += "," + cursor.getString(0);
-			}
-			
-			if (commaDelimitedString != "") {
-				ContentValues updateValues = new ContentValues();
-				updateValues.put(Achievements.COMPLETED, 1);
-				updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
-				
-				db.update(Achievements.TABLE, updateValues, "?=" + commaDelimitedString, 
-						new String[] {Achievements._ID});
-			}
-			
-		}
-		finally {
-			if (cursor != null)
-				cursor.close();
+		/**
+		 * SELECT achievements._id, achievements.completed FROM achievements, statistics 
+		 * WHERE achievements.statistic_id=statistics._id
+		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
+		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
+		 */
+		
+		String selectClause = Achievements.TABLE + "." + Achievements._ID;
+		String tables = Achievements.TABLE + ", " + Stats.TABLE;
+		String whereClause = Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
+			Stats.TABLE + "." + Stats._ID + " AND " + 
+			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
+			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
+			Stats.TABLE + "." + Stats.VALUE + "<=" + 
+			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
+		
+		cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + tables + " WHERE " + 
+				whereClause, null);
+		
+		/**
+		 * UPDATE achievements SET completed=1, updated_at=current_time WHERE
+		 * _id = 1 OR _id...
+		 */
+		int i = 0;
+		String updateWhereClause = "";
+		while (cursor.moveToNext()) {
+			if (i == 0)
+				updateWhereClause += Achievements._ID + "=" + cursor.getString(0);
+			else
+				updateWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
+			i++;
 		}
 		
-		cursor = db.rawQuery("SELECT achievements.completed FROM achievements", null);
+		if (updateWhereClause != "") {
+			Log.d(TAG, "whereClause = " + updateWhereClause);
+			ContentValues updateValues = new ContentValues();
+			updateValues.put(Achievements.COMPLETED, 1);
+			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
+			
+			mDb.update(Achievements.TABLE, updateValues, updateWhereClause, null);
+		}
+		
 		DatabaseUtils.dumpCursor(cursor);
+		cursor.moveToPosition(-1);
+		return cursor;
 	}
+	
+	private Cursor getRecentAchievements(int conditionVal) {
+		long timeThreshold = System.currentTimeMillis() - Achievements.RECENT_INTERVAL;
+		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				Achievements.UPDATED_AT + ">=" + timeThreshold + " AND " + Achievements.COMPLETED + "=" + conditionVal, null, null, null, Achievements.UPDATED_AT + " desc");
+		
+		return cursor;
+	}
+	
+	public Cursor getRecentAchievementsEarned() {
+		return getRecentAchievements(1);
+	}
+	
+	public Cursor getRecentAchievementsLost() {
+		return getRecentAchievements(0);
+	}
+	
+	public Cursor getAchievementsInCat(int cat, int bitmask) {
+		Cursor cursor = mDb.query(Achievements.TABLE, 
+				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
+		
+		return cursor;
+	}
+	
+	public int getAchievementCountForCat(int cat, int bitmask) {
+		Cursor cursor = mDb.query(Achievements.TABLE, 
+				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
+		
+		int count = cursor.getCount();
+		cursor.close();
+		
+		return count;
+	}
+	
+	public int getCompletedAchievementCountForCat(int cat, int bitmask) {
+		Cursor cursor = mDb.query(Achievements.TABLE, 
+				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				Achievements.CATEGORY + "&" + bitmask + "=" + cat + " AND " + Achievements.COMPLETED + "=1", null, null, null, null);
+		
+		int count = cursor.getCount();
+		cursor.close();
+		
+		return count;
+	}
+	
+	/**
+	 * SELECT category, count(_id) & 15 AS cat FROM achievements GROUP BY cat UNION
+	 * SELECT category, count(_id) & 240 AS cat FROM achievements GROUP BY cat ORDER BY cat
+	 */
+	
+	public Cursor getAchievementCounts() {
+		Cursor cursor = mDb.rawQuery("SELECT " + Achievements.CATEGORY + ", " +
+				"count(" + Achievements._ID + ") & 15 AS cat FROM " + Achievements.TABLE +
+				" GROUP BY cat UNION SELECT " + Achievements.CATEGORY + ", " +
+				"count(" + Achievements._ID + ") & 240 AS cat FROM " + Achievements.TABLE +
+				" GROUP BY cat ORDER BY cat", null);
+		return cursor;
+	}
+	
+	/**
+	 * SELECT category, count(_id) & 15 AS cat FROM achievements WHERE completed=0 GROUP BY cat UNION
+	 * SELECT category, count(_id) & 240 AS cat FROM achievements WHERE completed=0 GROUP BY cat ORDER BY cat
+	 */
+	
+	public Cursor getUncompletedAchievementCounts() {
+		Cursor cursor = mDb.rawQuery("SELECT " + Achievements.CATEGORY + ", " +
+				"count(" + Achievements._ID + ") & 15 AS cat FROM " + Achievements.TABLE +
+				" WHERE " + Achievements.COMPLETED + "=0 GROUP BY cat UNION SELECT " + Achievements.CATEGORY + ", " +
+				"count(" + Achievements._ID + ") & 240 AS cat FROM " + Achievements.TABLE +
+				" WHERE " + Achievements.COMPLETED + "=0 GROUP BY cat ORDER BY cat", null);
+		return cursor;
+	}
+	
+	
+	
 }

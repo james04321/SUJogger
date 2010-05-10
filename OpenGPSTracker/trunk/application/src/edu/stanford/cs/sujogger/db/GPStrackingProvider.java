@@ -444,7 +444,7 @@ public class GPStrackingProvider extends ContentProvider {
 		}
 
 		// Make the query.
-		SQLiteDatabase mDb = this.mDbHelper.getWritableDatabase();
+		SQLiteDatabase mDb = this.mDbHelper.openAndGetDb();
 		Cursor c = qBuilder.query(mDb, projection, selection, selectionArgs, null, null, sortorder);
 		c.setNotificationUri(getContext().getContentResolver(), uri);
 		return c;
@@ -490,7 +490,7 @@ public class GPStrackingProvider extends ContentProvider {
 			return -1;
 
 		// Execute the query.
-		SQLiteDatabase mDb = this.mDbHelper.getWritableDatabase();
+		SQLiteDatabase mDb = this.mDbHelper.openAndGetDb();
 		updates = mDb.update(tableName, args, whereclause, null);
 
 		ContentResolver resolver = this.getContext().getContentResolver();

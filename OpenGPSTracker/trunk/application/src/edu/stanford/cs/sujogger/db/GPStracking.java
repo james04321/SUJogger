@@ -28,6 +28,7 @@
  */
 package edu.stanford.cs.sujogger.db;
 
+import edu.stanford.cs.sujogger.R;
 import android.net.Uri;
 import android.provider.BaseColumns;
 
@@ -78,12 +79,14 @@ public final class GPStracking
 		public static final String CONDITION = "condition";
 		public static final String COMPLETED = "completed";
 		public static final String UPDATED_AT = "updated_at";
+		public static final String CATEGORY = "category";
 		
 		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
 		static final String GROUP_ID_TYPE = "INTEGER NOT NULL";
 		static final String CONDITION_TYPE = "REAL NOT NULL";
 		static final String COMPLETED_TYPE = "INTEGER NOT NULL";
 		static final String UPDATED_AT_TYPE = "INTEGER NOT NULL";
+		static final String CATEGORY_TYPE = "INTEGER NOT NULL";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		static final String TABLE = "achievements";
@@ -95,9 +98,29 @@ public final class GPStracking
 			", " + Achievements.CONDITION + " " + Achievements.CONDITION_TYPE +
 			", " + Achievements.COMPLETED + " " + Achievements.COMPLETED_TYPE +
 			", " + Achievements.UPDATED_AT + " " + Achievements.UPDATED_AT_TYPE +
+			", " + Achievements.CATEGORY + " " + Achievements.CATEGORY_TYPE +
 			");";
+		
+		public static final int ACH_1ST_RUN = 1;
+		public static final int ACH_2ND_RUN = 2;
+		
+		public static String getTitleForId(int id) {
+			switch(id) {
+			case ACH_1ST_RUN: return "1st Run";
+			case ACH_2ND_RUN: return "2nd Run";
+			default: return "No title found";
+			}
+		}
+		
+		public static int getImageForId(int id) {
+			switch(id) {
+			case ACH_1ST_RUN: return R.drawable.androidmarker;
+			case ACH_2ND_RUN: return R.drawable.androidmarker;
+			default: return R.drawable.androidmarker;
+			}
+		}
 	}
-	
+	/*
 	public static final class AchCategories implements android.provider.BaseColumns {
 		public static final String ACHIEVEMENT_ID = "achievement_id";
 		public static final String CATEGORY_ID = "category_id";
@@ -107,25 +130,42 @@ public final class GPStracking
 		
 		static final String TABLE = "achievementcategories";
 	}
-	
+	*/
 	public static final class Categories {
-		public static final int DIFF_EASY = 1;
-		public static final int DIFF_MED = 2;
-		public static final int DIFF_HARD = 3;
+		public static final int NUM_DIFF_CAT = 3;
+		public static final int NUM_TYPE_CAT = 4;
 		
-		public static final int TYPE_SPEED = 10;
-		public static final int TYPE_ENDURANCE = 11;
-		public static final int TYPE_DETERMINATION = 12;
-		public static final int TYPE_CHARISMA = 13;
-		public static final int TYPE_EXT = 14;
+		public static final int DIFF_EASY = 0x1;
+		public static final int DIFF_MED = 0x2;
+		public static final int DIFF_HARD = 0x3;
 		
-		public static final int EXT_5K = 20;
-		public static final int EXT_HALFMARATHON = 21;
-		public static final int EXT_MARATHON = 22;
+		public static final int EXT_5K = 0x7;
+		public static final int EXT_HALFMARATHON = 0x8;
+		public static final int EXT_MARATHON = 0x9;
 		
-		public static final int TEAM = 100;
-		public static final int RECENTLY_EARNED = 101;
-		public static final int RECENTLY_LOST = 102;
+		public static final int TYPE_SPEED = 0x10;
+		public static final int TYPE_ENDURANCE = 0x20;
+		public static final int TYPE_DETERMINATION = 0x30;
+		public static final int TYPE_CHARISMA = 0x40;
+		public static final int TYPE_EXT = 0x50;
+		
+		public static final int SOLO = 0x100;
+		public static final int TEAM = 0x200;
+		
+		public static int DIFF_MASK = 0xF;
+		public static int TYPE_MASK = 0xF0;
+		
+		public static int difficulty(int cat) {
+			return 0x000F & cat;
+		}
+		
+		public static int type(int cat) {
+			return 0x00F0 & cat;
+		}
+		
+		public static int team(int cat) {
+			return 0x0F00 & cat;
+		}
 	}
    
    /**

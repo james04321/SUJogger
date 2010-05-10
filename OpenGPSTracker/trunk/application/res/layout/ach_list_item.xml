@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/ach_list_item_root"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent"
+	android:orientation="horizontal"
+	android:paddingTop="10dip"
+	android:paddingBottom="8dip"
+	android:paddingLeft="15dip"
+	android:paddingRight="15dip"
+ >
+              
+    <ImageView android:id="@+id/ach_list_item_image"
+               android:layout_width="36dip"
+               android:layout_height="36dip"
+               android:layout_marginRight="10dp"
+    />
+    <TextView android:id="@+id/ach_list_item_title"
+              android:layout_width="wrap_content"
+              android:layout_height="fill_parent"
+              android:textAppearance="?android:attr/textAppearanceLarge"
+    />
+</LinearLayout>
