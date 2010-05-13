@@ -389,10 +389,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		double statVal = 0;
 		Cursor cursor = mDb.query(true, Stats.TABLE, new String[] {Stats.VALUE}, 
 				Stats._ID + "=" + statisticId, null, null, null, null, null);
-		if (cursor != null && cursor.getCount() > 0) {
-			cursor.moveToFirst();
+		if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst())
 			statVal = cursor.getDouble(0);
-		}
 		
 		cursor.close();
 		return statVal;
@@ -418,12 +416,72 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		increaseStatistic(statisticId, 1);
 	}
 	
-	public boolean updateAvgSpeed() {
+	// Updates distances run in the past week / month
+	public void updateDistanceRan() {
+		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, cursor.getDouble(0));
+		cursor.close();
+		
+		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
+		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, cursor.getDouble(0));
+		cursor.close();
+	}
+	
+	// Updates total running time in the past week / month
+	public void updateRunningTime() {
+		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.RUNNING_TIME_WEEK_ID, cursor.getDouble(0));
+		cursor.close();
+		
+		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
+		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.RUNNING_TIME_MONTH_ID, cursor.getDouble(0));
+		cursor.close();
+	}
+	
+	// Updates number of runs in the past week / month
+	public void updateNumRuns() {
+		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.NUM_RUNS_WEEK_ID, cursor.getDouble(0));
+		cursor.close();
+		
+		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
+		cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.NUM_RUNS_MONTH_ID, cursor.getDouble(0));
+		cursor.close();
+	}
+	
+	public void updateAvgSpeed() {
 		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID);
 		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID);
 		if (totalTime != 0)
-			return setStatistic(Stats.AVG_SPEED_ID, totalDist / totalTime);
-		else return true;
+			setStatistic(Stats.AVG_SPEED_ID, totalDist / totalTime);
+		
+		double totalDistWeek = getStatisticReal(Stats.DISTANCE_RAN_WEEK_ID);
+		double totalTimeWeek = getStatisticReal(Stats.RUNNING_TIME_WEEK_ID);
+		if (totalTime != 0)
+			setStatistic(Stats.AVG_SPEED_WEEK_ID, totalDistWeek / totalTimeWeek);
+		
+		double totalDistMonth = getStatisticReal(Stats.DISTANCE_RAN_MONTH_ID);
+		double totalTimeMonth = getStatisticReal(Stats.RUNNING_TIME_MONTH_ID);
+		if (totalTime != 0)
+			setStatistic(Stats.AVG_SPEED_MONTH_ID, totalDistMonth / totalTimeMonth);
 	}
 	
 	public void updateMedDuration() {
@@ -510,7 +568,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	private Cursor getRecentAchievements(int conditionVal) {
 		long timeThreshold = System.currentTimeMillis() - Achievements.RECENT_INTERVAL;
-		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
 				Achievements.UPDATED_AT + ">=" + timeThreshold + " AND " + Achievements.COMPLETED + "=" + conditionVal, null, null, null, Achievements.UPDATED_AT + " desc");
 		
 		return cursor;
@@ -526,7 +584,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public Cursor getAchievementsInCat(int cat, int bitmask) {
 		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
 		
 		return cursor;

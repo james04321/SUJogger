@@ -1418,7 +1418,7 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "calculateTrackStatistics()");
 		long starttime = 0;
 		double distanceTraveled = 0f;
-		long duration = 1;
+		long duration = 0;
 
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.mTrackId);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1484,9 +1484,16 @@ public class LoggerMap extends MapActivity {
 	
 	private void updateUserStats(double dist, long duration) {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
-		mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
-		mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
+		
+		if (dist > 0 && duration > 0) {
+			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
+			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
+			
+			mDbHelper.updateDistanceRan();
+			mDbHelper.updateRunningTime();
+		}
 		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID);
+		mDbHelper.updateNumRuns();
 		mDbHelper.updateAvgSpeed();
 		mDbHelper.updateMedDuration();
 		mDbHelper.updateMedDistance();

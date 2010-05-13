@@ -54,10 +54,27 @@ public final class GPStracking
 		public static final int DISTANCE_RAN_ID = 1;
 		public static final int RUNNING_TIME_ID = 2;
 		public static final int NUM_RUNS_ID = 3;
-		public static final int AVG_SPEED_ID = 4;
-		public static final int MED_DURATION_ID = 5;
-		public static final int MED_DISTANCE_ID = 6;
+		public static final int NUM_PARTNER_RUNS_ID = 4;
+		public static final int AVG_SPEED_ID = 5;
+		public static final int MED_DURATION_ID = 6;
+		public static final int MED_DISTANCE_ID = 7;
 		
+		public static final int DISTANCE_RAN_WEEK_ID = 11;
+		public static final int RUNNING_TIME_WEEK_ID = 12;
+		public static final int NUM_RUNS_WEEK_ID = 13;
+		public static final int NUM_PARTNER_RUNS_WEEK_ID = 14;
+		public static final int AVG_SPEED_WEEK_ID = 15;
+		
+		public static final int DISTANCE_RAN_MONTH_ID = 21;
+		public static final int RUNNING_TIME_MONTH_ID = 22;
+		public static final int NUM_RUNS_MONTH_ID = 23;
+		public static final int NUM_PARTNER_RUNS_MONTH_ID = 24;
+		public static final int AVG_SPEED_MONTH_ID = 25;
+		
+		public static final long WEEK_INTERVAL = 604800000; // milliseconds in a week
+		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month
+		
+		// Table attributes
 		public static final String VALUE = "value";
 		
 		static final String VALUE_TYPE = "REAL NOT NULL";
@@ -80,13 +97,15 @@ public final class GPStracking
 		public static final String COMPLETED = "completed";
 		public static final String UPDATED_AT = "updated_at";
 		public static final String CATEGORY = "category";
+		public static final String ICON_RESOURCE = "icon_resource";
 		
 		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
 		static final String GROUP_ID_TYPE = "INTEGER NOT NULL";
 		static final String CONDITION_TYPE = "REAL NOT NULL";
 		static final String COMPLETED_TYPE = "INTEGER NOT NULL";
 		static final String UPDATED_AT_TYPE = "INTEGER NOT NULL";
-		static final String CATEGORY_TYPE = "INTEGER NOT NULL";
+		static final String CATEGORY_TYPE = "INTEGER NOT NULL DEFAULT 1";
+		static final String ICON_RESOURCE_TYPE = "INTEGER NOT NULL DEFAULT 2130837504";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		static final String TABLE = "achievements";
@@ -120,17 +139,7 @@ public final class GPStracking
 			}
 		}
 	}
-	/*
-	public static final class AchCategories implements android.provider.BaseColumns {
-		public static final String ACHIEVEMENT_ID = "achievement_id";
-		public static final String CATEGORY_ID = "category_id";
-		
-		static final String ACHIEVEMENT_ID_TYPE = "INTEGER NOT NULL";
-		static final String CATEGORY_ID_TYPE = "INTEGER NOT NULL";
-		
-		static final String TABLE = "achievementcategories";
-	}
-	*/
+	
 	public static final class Categories {
 		public static final int NUM_DIFF_CAT = 3;
 		public static final int NUM_TYPE_CAT = 4;
@@ -155,6 +164,8 @@ public final class GPStracking
 		public static int DIFF_MASK = 0xF;
 		public static int TYPE_MASK = 0xF0;
 		
+		public static String TABLE = "categories";
+		
 		public static int difficulty(int cat) {
 			return 0x000F & cat;
 		}
@@ -166,6 +177,66 @@ public final class GPStracking
 		public static int team(int cat) {
 			return 0x0F00 & cat;
 		}
+		
+		public static int getMaskForSingleCat(int cat) {
+			if (difficulty(cat) != 0)
+				return DIFF_MASK;
+			if (type(cat) != 0)
+				return TYPE_MASK;
+			
+			return TYPE_MASK;
+		}
+		
+		public static String getNameForCat(int cat) {
+			switch(cat) {
+			case DIFF_EASY: return "Easy";
+			case DIFF_MED: return "Medium";
+			case DIFF_HARD: return "Hard";
+			case TYPE_SPEED: return "Speed";
+			case TYPE_ENDURANCE: return "Endurance";
+			case TYPE_DETERMINATION: return "Determination";
+			case TYPE_CHARISMA: return "Charisma";
+			default: return "";
+			}
+		}
+	}
+	
+	public static final class Users implements android.provider.BaseColumns {
+		public static final String USER_ID = "user_id";
+		public static final String FB_ID = "fb_id";
+		public static final String FIRST_NAME = "first_name";
+		public static final String LAST_NAME = "last_name";
+		
+		static final String USER_ID_TYPE = "INTEGER NOT NULL";
+		static final String FB_ID_TYPE = "INTEGER NOT NULL";
+		static final String FIRST_NAME_TYPE = "TEXT";
+		static final String LAST_NAME_TYPE = "TEXT";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "users";
+	}
+	
+	public static final class Groups implements android.provider.BaseColumns {
+		public static final String GROUP_ID = "group_id";
+		public static final String NAME = "name";
+		public static final String IS_OWNER = "is_owner";
+		
+		static final String GROUP_ID_TYPE = "INTEGER";
+		static final String NAME_TYPE = "TEXT NOT NULL";
+		static final String IS_OWNER_TYPE = "INTEGER NOT NULL";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "groups";
+	}
+	
+	public static final class GroupsUsers implements android.provider.BaseColumns {
+		public static final String GROUP_ID = "group_id";
+		public static final String USER_ID = "user_id";
+		
+		static final String GROUP_ID_TYPE = "INTEGER NOT NULL";
+		static final String USER_ID_TYPE = "INTEGER NOT NULL";
+		
+		public static final String TABLE = "groups_users";
 	}
    
    /**

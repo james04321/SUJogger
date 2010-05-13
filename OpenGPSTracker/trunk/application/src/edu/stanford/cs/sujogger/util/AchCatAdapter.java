@@ -61,18 +61,18 @@ public class AchCatAdapter extends BaseAdapter {
 		TextView title = (TextView)convertView.findViewById(R.id.achievementcat_name);
 		if (mSection == 0) {
 			switch(position) {
-			case 0: title.setText("Easy"); break;
-			case 1: title.setText("Medium"); break;
-			case 2: title.setText("Hard"); break;
+			case 0: title.setText(Categories.getNameForCat(Categories.DIFF_EASY)); break;
+			case 1: title.setText(Categories.getNameForCat(Categories.DIFF_MED)); break;
+			case 2: title.setText(Categories.getNameForCat(Categories.DIFF_HARD)); break;
 			default: break;
 			}
 		}
 		else if (mSection == 1) {
 			switch(position) {
-			case 0: title.setText("Speed"); break;
-			case 1: title.setText("Endurance"); break;
-			case 2: title.setText("Determination"); break;
-			case 3: title.setText("Charisma"); break;
+			case 0: title.setText(Categories.getNameForCat(Categories.TYPE_SPEED)); break;
+			case 1: title.setText(Categories.getNameForCat(Categories.TYPE_ENDURANCE)); break;
+			case 2: title.setText(Categories.getNameForCat(Categories.TYPE_DETERMINATION)); break;
+			case 3: title.setText(Categories.getNameForCat(Categories.TYPE_CHARISMA)); break;
 			default: break;
 			}
 		}

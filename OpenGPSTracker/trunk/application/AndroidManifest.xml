@@ -106,6 +106,17 @@
          
          <activity
             android:label="@string/my_achievements" 
+            android:name=".viewer.AchievementCatList"
+            android:launchMode="singleTop" >
+            <intent-filter>
+               <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+               android:name="android.app.searchable"
+               android:resource="@xml/searchable" />
+         </activity>
+         
+         <activity
             android:name=".viewer.AchievementList"
             android:launchMode="singleTop" >
             <intent-filter>

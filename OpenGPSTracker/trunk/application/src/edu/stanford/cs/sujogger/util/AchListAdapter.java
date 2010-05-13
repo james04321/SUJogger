@@ -2,6 +2,7 @@ package edu.stanford.cs.sujogger.util;
 
 import android.content.Context;
 import android.database.Cursor;
+import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -26,12 +27,16 @@ public class AchListAdapter extends CursorAdapter {
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 		int achId = cursor.getInt(0);
+		int iconResourceId = cursor.getInt(4);
+		int completed = cursor.getInt(2);
 		
 		TextView achTitle = (TextView)view.findViewById(R.id.ach_list_item_title);
 		achTitle.setText(Achievements.getTitleForId(achId));
+		if (completed == 0)
+			achTitle.setTextColor(Color.GRAY);
 		
 		ImageView achIcon = (ImageView)view.findViewById(R.id.ach_list_item_image);
-		achIcon.setImageResource(Achievements.getImageForId(achId));
+		achIcon.setImageResource(iconResourceId);
 	}
 
 	@Override
