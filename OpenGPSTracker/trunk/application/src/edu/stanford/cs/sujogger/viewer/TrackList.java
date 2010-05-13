@@ -28,7 +28,6 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
-import java.io.IOException;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -48,7 +47,6 @@ import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
-import android.database.sqlite.SQLiteDatabase;
 import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
@@ -65,7 +63,6 @@ import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
-import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
@@ -88,9 +85,6 @@ public class TrackList extends ListActivity
    private static final int DIALOG_DELETE = 24;
    private static final int MENU_SEARCH = 0;
    
-   private static final int TRACK_CREATE=0;
-   private static final int TRACK_VIEW=1;
-   
    public static final int TRACKSTATUS_IDLE=10;
    public static final int TRACKSTATUS_TRACKING=11;
    
@@ -98,7 +92,6 @@ public class TrackList extends ListActivity
    private Uri mDialogUri;
    private String mDialogCurrentName = "";
    
-   private DatabaseHelper mDbHelper;
    private List<Map<String,?>> actions;
    private SimpleCursorAdapter trackAdapter;
 
@@ -130,11 +123,9 @@ public class TrackList extends ListActivity
       Log.d(TAG, "onCreate()");
       this.setContentView( R.layout.tracklist );
       
-      mDbHelper = new DatabaseHelper(this);
-      
       actions = new LinkedList<Map<String,?>>();
-	  actions.add(createItem("New Track", "Record a new track"));
-	  actions.add(createItem("Statistics", "My performance so far"));
+	  actions.add(createItem("New Track"));
+	  actions.add(createItem("Statistics"));
 	  
       displayIntent( getIntent() );
 
@@ -229,7 +220,7 @@ public class TrackList extends ListActivity
     		  Log.v("TrackList", "creating new track");
     		  Intent intent = new Intent();
     		  intent.setClass( this, LoggerMap.class );
-    		  startActivityForResult( intent, TRACK_CREATE );
+    		  startActivity(intent);
     	  }
     	  else if (position == 2) {
     		  Log.v("TrackList", "pulling up stats");
@@ -416,16 +407,6 @@ public class TrackList extends ListActivity
       }
    }
    
-   protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
-       super.onActivityResult(requestCode, resultCode, intent);
-       Log.d(TAG, "onActivityResult()");
-       if (requestCode == TRACK_CREATE) {
-    	   Log.d(TAG, "onActivityResult: TRACK_CREATE");
-    	   //Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME }, null, null, null );
-    	   //displayCursor( tracksCursor, true );
-       }
-   }
-
    private void displayIntent( Intent intent )
    {
       Log.d(TAG, "displayIntent()");
@@ -470,9 +451,9 @@ public class TrackList extends ListActivity
       }
       else {
     	  SeparatedListAdapter groupedAdapter = new SeparatedListAdapter(this);
-    	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_complex,
-    			  new String[] { ITEM_TITLE, ITEM_CAPTION }, 
-    			  new int[] { R.id.list_complex_title, R.id.list_complex_caption }));
+    	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
+    			  new String[] {ITEM_TITLE}, 
+    			  new int[] {R.id.list_simple_title}));
     	  
     	  groupedAdapter.addSection("My Tracks", trackAdapter);
     	  
@@ -483,10 +464,9 @@ public class TrackList extends ListActivity
    private final static String ITEM_TITLE = "title";
    private final static String ITEM_CAPTION = "caption";
    
-   private Map<String,?> createItem(String title, String caption) {
+   private Map<String,?> createItem(String title) {
 		Map<String,String> item = new HashMap<String,String>();
 		item.put(ITEM_TITLE, title);
-		item.put(ITEM_CAPTION, caption);
 		return item;
 	}
    

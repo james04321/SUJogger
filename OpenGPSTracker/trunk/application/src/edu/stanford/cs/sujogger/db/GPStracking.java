@@ -44,8 +44,6 @@ public final class GPStracking
    public static final String AUTHORITY = "edu.stanford.cs.sujogger";
    /** The content:// style URL for this provider */
    public static final Uri CONTENT_URI = Uri.parse( "content://" + GPStracking.AUTHORITY );
-   /** The name of the database file */
-   //static final String DATABASE_NAME = "GPSLOG.db";
    /** The version of the database schema */
    //static final int DATABASE_VERSION = 9;
    
@@ -311,14 +309,6 @@ public final class GPStracking
       "," + " " + WaypointsColumns.ALTITUDE  + " " + WaypointsColumns.ALTITUDE_TYPE + 
       "," + " " + WaypointsColumns.BEARING   + " " + WaypointsColumns.BEARING_TYPE + 
       ");";
-      
-      //TODO: don't need upgrade statement anymore
-      static final String[] UPGRADE_STATEMENT_7_TO_8 = 
-         {
-            "ALTER TABLE " + Waypoints.TABLE + " ADD COLUMN " + WaypointsColumns.ACCURACY + " " + WaypointsColumns.ACCURACY_TYPE +";",
-            "ALTER TABLE " + Waypoints.TABLE + " ADD COLUMN " + WaypointsColumns.ALTITUDE + " " + WaypointsColumns.ALTITUDE_TYPE +";",
-            "ALTER TABLE " + Waypoints.TABLE + " ADD COLUMN " + WaypointsColumns.BEARING  + " " + WaypointsColumns.BEARING_TYPE +";"
-         };
    }
    
    /**

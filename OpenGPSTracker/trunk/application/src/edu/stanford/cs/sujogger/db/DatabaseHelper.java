@@ -48,6 +48,8 @@ import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
+import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.MediaColumns;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
@@ -381,6 +383,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return segmentId;
 	}
 	
+	/**
+	 * Statistics Methods
+	 */
+	
 	public long getStatisticLong(long statisticId) {
 		return (long) getStatisticReal(statisticId);
 	}
@@ -514,6 +520,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		cursor.close();
 	}
 	
+	/**
+	 * Achievements Methods
+	 */
+	
 	public Cursor updateAchievements() {
 		Cursor cursor = null;
 		
@@ -640,6 +650,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return cursor;
 	}
 	
+	/**
+	 * Groups Methods
+	 */
 	
-	
+	public Cursor getGroups() {
+		String selectClause = 
+			Groups.TABLE + "." + Groups._ID + " AS _id, " + 
+			Groups.TABLE + "." + Groups.GROUP_ID + ", " + 
+			Groups.TABLE + "." + Groups.NAME + ", " + 
+			"count(" + GroupsUsers.TABLE + "." + GroupsUsers._ID + ")"; 
+		String tables = Groups.TABLE + ", " + GroupsUsers.TABLE;
+		String whereClause = Groups.TABLE + "." + Groups._ID + "=" + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID;
+		String groupByClause = Groups.TABLE + "." + Groups._ID;
+		Cursor cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + tables + 
+				" WHERE " + whereClause + " GROUP BY " + groupByClause, null);
+		return cursor;
+	}
 }

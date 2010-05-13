@@ -126,6 +126,17 @@
                android:name="android.app.searchable"
                android:resource="@xml/searchable" />
          </activity>
+         
+         <activity
+            android:name=".viewer.GroupList"
+            android:launchMode="singleTop" >
+            <intent-filter>
+               <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+            <meta-data
+               android:name="android.app.searchable"
+               android:resource="@xml/searchable" />
+         </activity>
 
          <activity
              android:name=".viewer.TracksLiveFolder"

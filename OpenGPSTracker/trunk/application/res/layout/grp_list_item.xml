@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:stretchColumns="1"
+    android:paddingTop="10dip"
+	android:paddingBottom="8dip"
+	android:paddingLeft="15dip"
+	android:paddingRight="15dip"
+	>
+	
+	<TableRow>
+		<TextView android:id="@+id/grp_name"
+			android:layout_column="1"
+			android:textAppearance="?android:attr/textAppearanceLarge"
+			android:paddingBottom="3dip"
+			/>
+		<RelativeLayout>
+		<TextView
+			android:id="@+id/grp_indicator"
+			android:gravity="center"
+			android:textStyle="bold"
+			android:textAppearance="?android:attr/textAppearanceSmall"
+			android:layout_width="30dip"
+    		android:layout_height="20dip"
+    		android:layout_marginTop="6dip"
+    		android:background="@+layout/grp_read_counter_bg"
+			/>
+		</RelativeLayout>
+	</TableRow>
+</TableLayout>
