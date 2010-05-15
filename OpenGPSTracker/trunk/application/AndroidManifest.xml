@@ -59,6 +59,12 @@
 
 		<uses-library android:name="com.google.android.maps" />
 		
+		<service android:name="edu.stanford.cs.gaming.sdk.service.GamingService">
+            <intent-filter>
+                <action android:name="edu.stanford.cs.gaming.sdk.service" />
+            </intent-filter>        
+        </service>
+		
 		<activity
             android:label="@string/app_name" 
             android:name=".viewer.JoggerApp" 

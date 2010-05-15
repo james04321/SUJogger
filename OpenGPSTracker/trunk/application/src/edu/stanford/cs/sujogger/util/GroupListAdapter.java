@@ -13,19 +13,21 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 public class GroupListAdapter extends CursorAdapter {
-
+	private Cursor mCursor;
+	
 	public GroupListAdapter(Context context, Cursor c) {
 		super(context, c);
-		// TODO Auto-generated constructor stub
+		mCursor = c;
 	}
 
 	public GroupListAdapter(Context context, Cursor c, boolean autoRequery) {
 		super(context, c, autoRequery);
-		// TODO Auto-generated constructor stub
+		mCursor = c;
 	}
 	
 	public Object getItem(int position) {
-		return null;
+		mCursor.moveToPosition(position);
+		return mCursor.getInt(0);
 	}
 
 	@Override

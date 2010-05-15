@@ -24,6 +24,8 @@
     <string name="dialog_notetext_message">Enter a text note for the current location</string>
     <string name="dialog_notenametitle">Mark</string>
     <string name="dialog_notename_message">Enter the name of this location</string>
+    <string name="dialog_newgrpname_title">New Group</string>
+    <string name="dialog_newgrpname_hint">Enter a group name</string>
     
     <string name="layer_satellite">Satellite</string>
     <string name="layer_traffic">Traffic</string>
@@ -41,7 +43,7 @@
     <string name="error_buildxml"> reason: Error building XML</string>
     <string name="error_writesdcard"> reason: Error writing to SD card</string>
     
-	<string name="btn_okay">OK</string>
+	<string name="btn_okay">Ok</string>
 	<string name="btn_cancel">Cancel</string>
 	<string name="btn_save">Save</string>
 	<string name="btn_selecttrack">Select track</string>
