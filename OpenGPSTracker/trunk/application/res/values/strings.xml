@@ -43,7 +43,7 @@
     <string name="error_buildxml"> reason: Error building XML</string>
     <string name="error_writesdcard"> reason: Error writing to SD card</string>
     
-	<string name="btn_okay">Ok</string>
+	<string name="btn_okay">OK</string>
 	<string name="btn_cancel">Cancel</string>
 	<string name="btn_save">Save</string>
 	<string name="btn_selecttrack">Select track</string>
@@ -130,6 +130,15 @@
     <string name="fp_search_hint">Search for a friend</string>
     <string name="fp_clearbutton">Clear</string>
     <string name="fp_addbutton">Add</string>
+    
+    <!-- Feed Tab -->
+    <string name="feed_filter_all">All</string>
+    <string name="feed_filter_msg">Messages</string>
+    <string name="feed_filter_bcast">Broadcasts</string>
+    
+    <string name="feed_menu_filter">Filter</string>
+    <string name="feed_menu_compose">Compose</string>
+    <string name="feed_menu_refresh">Refresh</string>
     
     <string name="my_achievements">My Achievements</string>
     

@@ -1,0 +1,16 @@
+<RadioGroup
+	xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="fill_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:id="@+id/filter_menu">
+    <RadioButton
+        android:text="@string/feed_filter_all"
+        android:id="@+id/filter_menu_all" />
+    <RadioButton
+        android:text="@string/feed_filter_msg"
+        android:id="@+id/filter_menu_msg" />
+    <RadioButton
+        android:text="@string/feed_filter_bcast"
+        android:id="@+id/filter_menu_bcast" />
+</RadioGroup>

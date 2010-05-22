@@ -125,18 +125,6 @@ public class MessageSender extends Activity {
 		subjectText = (EditText) findViewById(R.id.msg_subject);
 		bodyText = (EditText) findViewById(R.id.msg_body);
 		
-		msgRecipientText = (TextView)findViewById(R.id.msg_to);
-		if (mGroupId > 0) {
-			Cursor groupInfo = mDbHelper.getGroupWithId(mGroupId);
-			String groupName = null;
-			if (groupInfo.moveToFirst())
-				groupName = groupInfo.getString(2);
-			groupInfo.close();
-			
-			msgRecipientText.setText("To: " + groupName);
-			addButton.setVisibility(View.GONE);
-		}
-		
 		final Calendar c = Calendar.getInstance();
 		mYear = c.get(Calendar.YEAR);
 		mMonth = c.get(Calendar.MONTH);
@@ -171,6 +159,18 @@ public class MessageSender extends Activity {
 				
 			}
 		});
+		
+		msgRecipientText = (TextView)findViewById(R.id.msg_to);
+		if (mGroupId > 0) {
+			Cursor groupInfo = mDbHelper.getGroupWithId(mGroupId);
+			String groupName = null;
+			if (groupInfo.moveToFirst())
+				groupName = groupInfo.getString(2);
+			groupInfo.close();
+			
+			msgRecipientText.setText("To: " + groupName);
+			addButton.setVisibility(View.GONE);
+		}
 		
 		updateDateTime();
 	}
