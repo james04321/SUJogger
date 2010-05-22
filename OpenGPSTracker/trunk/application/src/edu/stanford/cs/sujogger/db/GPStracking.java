@@ -204,11 +204,13 @@ public final class GPStracking
 		public static final String FB_ID = "fb_id";
 		public static final String FIRST_NAME = "first_name";
 		public static final String LAST_NAME = "last_name";
+		public static final String IMG_URL = "img_url";
 		
 		static final String USER_ID_TYPE = "INTEGER NOT NULL";
 		static final String FB_ID_TYPE = "INTEGER NOT NULL";
 		static final String FIRST_NAME_TYPE = "TEXT";
 		static final String LAST_NAME_TYPE = "TEXT";
+		static final String IMG_URL_TYPE = "TEXT";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		public static final String TABLE = "users";
@@ -235,6 +237,30 @@ public final class GPStracking
 		static final String USER_ID_TYPE = "INTEGER NOT NULL";
 		
 		public static final String TABLE = "groups_users";
+	}
+	
+	public static final class Messages implements android.provider.BaseColumns {
+		public static final String FROM_GROUP = "from_group"; //0 if from self
+		public static final String TO_GROUP = "to_group"; //0 if not applicable
+		public static final String TYPE = "type";
+		public static final String SUBJECT = "subject";
+		public static final String BODY = "body";
+		
+		static final String FROM_GROUP_TYPE = "INTEGER NOT NULL";
+		static final String TO_GROUP_TYPE = "INTEGER";
+		static final String TYPE_TYPE = "INTEGER NOT NULL";
+		static final String SUBJECT_TYPE = "TEXT NOT NULL";
+		static final String BODY_TYPE = "TEXT";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "messages";
+		
+		//Message types
+		public static final int TYPE_GENERIC = 0;
+		public static final int TYPE_INVITE = 1;
+		public static final int TYPE_CHALLENGE = 2;
+		
+		public static String[] types = {"Generic message", "Invite", "Challenge"};		
 	}
    
    /**

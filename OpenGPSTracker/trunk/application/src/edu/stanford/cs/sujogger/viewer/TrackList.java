@@ -28,7 +28,6 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +63,7 @@ import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 /**
@@ -124,8 +124,8 @@ public class TrackList extends ListActivity
       this.setContentView( R.layout.tracklist );
       
       actions = new LinkedList<Map<String,?>>();
-	  actions.add(createItem("New Track"));
-	  actions.add(createItem("Statistics"));
+	  actions.add(Common.createItem("New Track"));
+	  actions.add(Common.createItem("Statistics"));
 	  
       displayIntent( getIntent() );
 
@@ -452,7 +452,7 @@ public class TrackList extends ListActivity
       else {
     	  SeparatedListAdapter groupedAdapter = new SeparatedListAdapter(this);
     	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
-    			  new String[] {ITEM_TITLE}, 
+    			  new String[] {Common.ITEM_TITLE}, 
     			  new int[] {R.id.list_simple_title}));
     	  
     	  groupedAdapter.addSection("My Tracks", trackAdapter);
@@ -460,15 +460,6 @@ public class TrackList extends ListActivity
     	  setListAdapter( groupedAdapter );
       }
    }
-   
-   private final static String ITEM_TITLE = "title";
-   private final static String ITEM_CAPTION = "caption";
-   
-   private Map<String,?> createItem(String title) {
-		Map<String,String> item = new HashMap<String,String>();
-		item.put(ITEM_TITLE, title);
-		return item;
-	}
    
    private long getTrackIdFromRowPosition(long pos) {
 	   pos = pos - (actions.size() + 1);

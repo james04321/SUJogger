@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:orientation="vertical">
+	
+	<RelativeLayout 
+		android:layout_width="fill_parent"
+		android:layout_height="wrap_content" 
+		android:id="@+id/fp_top_control_bar">
+		
+		<EditText 
+			android:id="@+id/friendpicker_search" 
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:hint="@string/fp_search_hint"/>
+	</RelativeLayout>
+	
+	<LinearLayout 
+		android:id="@+id/fp_bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal">
+		
+		<Button 
+			android:id="@+id/fp_clearbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="@string/fp_clearbutton" 
+			android:enabled="false"
+			android:layout_weight="1"/>
+		<Button 
+			android:id="@+id/fp_addbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="@string/fp_addbutton" 
+			android:enabled="false"
+			android:layout_weight="1"/>
+	</LinearLayout>
+	
+	<ListView 
+		android:id="@android:id/list" 
+		android:layout_width="fill_parent"
+		android:layout_height="0dip" 
+		android:choiceMode="multipleChoice"
+		android:layout_below="@id/fp_top_control_bar" 
+		android:layout_above="@id/fp_bottom_control_bar"/>
+</RelativeLayout>

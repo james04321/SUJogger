@@ -144,7 +144,7 @@ public class LoggerMap extends MapActivity {
 	private EditText mNoteNameView;
 	private EditText mNoteTextView;
 
-	private double mAverageSpeed = 33.33d / 2d;
+	private double mAverageSpeed = 4.4704;
 	private long mTrackId = -1;
 	private boolean statisticsPresent = false;
 	private long mLastSegment = -1;
@@ -1073,6 +1073,7 @@ public class LoggerMap extends MapActivity {
 	private void updateSpeedbarVisibility() {
 		// int trackColoringMethod = new Integer( mSharedPreferences.getString(
 		// Constants.TRACKCOLORING, "3" ) ).intValue();
+		/*
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor waypointsCursor = null;
 		try {
@@ -1091,6 +1092,7 @@ public class LoggerMap extends MapActivity {
 				waypointsCursor.close();
 			}
 		}
+		*/
 		View speedbar = findViewById(R.id.speedbar);
 		// if( trackColoringMethod == SegmentOverlay.DRAW_MEASURED ||
 		// trackColoringMethod == SegmentOverlay.DRAW_CALCULATED )
@@ -1266,12 +1268,21 @@ public class LoggerMap extends MapActivity {
 	 */
 	private void drawSpeedTexts(double avgSpeed) {
 		avgSpeed = mUnits.conversionFromMetersPerSecond(avgSpeed);
+		Log.d(TAG, "drawSpeedTexts(): avgSpeed = " + avgSpeed);
+		
+		mSpeedtexts[0].setVisibility(View.VISIBLE);
+		mSpeedtexts[0].setText(String.format("%.0f %s", 0d, mUnits.getSpeedUnit()));
+		mSpeedtexts[1].setVisibility(View.VISIBLE);
+		mSpeedtexts[1].setText(String.format("%.0f %s", avgSpeed, mUnits.getSpeedUnit()));
+		mSpeedtexts[2].setVisibility(View.VISIBLE);
+		mSpeedtexts[2].setText(String.format("%.0f %s", avgSpeed*2, mUnits.getSpeedUnit()));
+		/*
 		for (int i = 0; i < mSpeedtexts.length; i++) {
 			mSpeedtexts[i].setVisibility(View.VISIBLE);
 			double speed = ((avgSpeed * 2d) / 5d) * i;
 			String speedText = String.format("%.0f %s", speed, mUnits.getSpeedUnit());
 			mSpeedtexts[i].setText(speedText);
-		}
+		}*/
 	}
 
 	/**
@@ -1348,8 +1359,9 @@ public class LoggerMap extends MapActivity {
 				microLongitude = (int) (locationCoarse.getLongitude() * 1E6d);
 			}
 			if (locationCoarse == null || microLatitude == 0 || microLongitude == 0) {
-				microLatitude = 51985105;
-				microLongitude = 5106132;
+				//default location to Stanford, CA, USA
+				microLatitude = 37424166;
+				microLongitude = -122165000;
 			}
 		}
 		GeoPoint geoPoint = new GeoPoint(microLatitude, microLongitude);

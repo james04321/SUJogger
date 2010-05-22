@@ -1,6 +1,5 @@
 package edu.stanford.cs.sujogger.viewer;
 
-import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -23,17 +22,20 @@ import android.view.View;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.TextView;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GroupListAdapter;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 public class GroupList extends ListActivity {
 	private static final String TAG = "OGT.GroupList";
-	private final static String ITEM_TITLE = "title";
 	
 	private static final int DIALOG_GRPNAME = 1;
 	
@@ -45,6 +47,9 @@ public class GroupList extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private GroupListReceiver mReceiver;
 	
+	//Request IDs
+	private static final int GRP_CREATE_RID = 1;
+	
 	//Views
 	private EditText mGroupNameView;
 	
@@ -53,11 +58,10 @@ public class GroupList extends ListActivity {
 		public void onClick(DialogInterface dialog, int which) {
 			String groupName = mGroupNameView.getText().toString();
 			Log.d(TAG, "mGroupNameDialogListener: " + groupName);
-			//ContentValues values = new ContentValues();
-			//values.put(Groups.NAME, groupName);
+			GroupList.this.toggleNewGroupItemState();
 			
 			try {
-				mGameCon.createGroup(1, new Group(groupName));
+				mGameCon.createGroup(GRP_CREATE_RID, new Group(groupName));
 			}
 			catch (RemoteException e) {
 				
@@ -68,13 +72,14 @@ public class GroupList extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.achievementcatlist);
+		this.setContentView(R.layout.list_simple);
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 		
 		mReceiver = new GroupListReceiver(); 
-		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 1, "", GroupList.class.toString());
+		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
+				Constants.APP_ID, Constants.APP_API_KEY, GroupList.class.toString());
 		mGameCon.bind();
 
 		// Create cursors
@@ -82,16 +87,10 @@ public class GroupList extends ListActivity {
 		startManagingCursor(mGroupsCursor);
 		
 		actions = new LinkedList<Map<String,?>>();
-		actions.add(createItem("New group"));
+		actions.add(Common.createItem("New group"));
 
 		fillData();
 		registerForContextMenu(getListView());
-	}
-	
-	private Map<String,?> createItem(String title) {
-		Map<String,String> item = new HashMap<String,String>();
-		item.put(ITEM_TITLE, title);
-		return item;
 	}
 	
 	@Override
@@ -99,6 +98,7 @@ public class GroupList extends ListActivity {
 		Log.d(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
+		mGroupAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
 	}
 
@@ -115,10 +115,17 @@ public class GroupList extends ListActivity {
 		Log.d(TAG, "onResume(): dumping groups cursor");
 		DatabaseUtils.dumpCursor(mGroupsCursor);
 	}
+	
+	@Override
+	protected void onStop() {
+		
+		super.onStop();
+	}
 
 	@Override
 	protected void onDestroy() {
 		mDbHelper.close();
+		mGameCon.unbind();
 		super.onDestroy();
 	}
 	
@@ -135,10 +142,8 @@ public class GroupList extends ListActivity {
 			Object item = mGroupAdapter.getItem(position);
 			if (item.getClass() == Integer.class) {
 				Log.d(TAG, "starting GroupDetail for group_id = " + (Integer)item);
-				
-				//Intent i = new Intent(this, AchievementList.class);
-		        //i.putExtra(Categories.TABLE, (Integer)item);
-		        //startActivity(i);
+				long groupId = ((Integer)item).longValue();
+				startGroupDetail(groupId);
 			}
 		}
 	}
@@ -178,11 +183,32 @@ public class GroupList extends ListActivity {
 		}
 	}
 	
+	private void startGroupDetail(long groupId) {
+		Intent i = new Intent(this, GroupDetail.class);
+		i.putExtra(Groups.TABLE, groupId);
+		startActivity(i);
+	}
+	
+	private void toggleNewGroupItemState() {
+		View newGroupItem = getListView().getChildAt(1);
+		TextView title = (TextView)newGroupItem.findViewById(R.id.newtrack_title);
+		View progressBar = newGroupItem.findViewById(R.id.newtrack_progress);
+		
+		if (progressBar.getVisibility() == View.INVISIBLE) {
+			title.setText("Creating new group...");
+			progressBar.setVisibility(View.VISIBLE);
+		}
+		else {
+			title.setText("New group");
+			progressBar.setVisibility(View.INVISIBLE);
+		}
+	}
+	
 	private void fillData() {
 		mGroupAdapter = new SeparatedListAdapter(this);
 		
 		mGroupAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.new_track_item,
-  			  new String[] {ITEM_TITLE}, new int[] {R.id.newtrack_title}));
+  			  new String[] {Common.ITEM_TITLE}, new int[] {R.id.newtrack_title}));
 		
 		mGroupAdapter.addSection("My Groups", new GroupListAdapter(this, mGroupsCursor, true));
 		
@@ -193,10 +219,21 @@ public class GroupList extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			try {
 				AppResponse appResponse = null;
-				if ((appResponse = mGameCon.getNextPendingNotification()) != null) {
+				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					//Integer groupId = (Integer)appResponse.object;
-					//Log.d(TAG, "onReceive(): groupId = " + groupId);
+					switch(appResponse.request_id) {
+					case GRP_CREATE_RID:
+						GroupList.this.toggleNewGroupItemState();
+						Integer groupId = (Integer)(appResponse.object);
+						Group newGroup = (Group)(appResponse.appRequest.object);
+						Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = " + newGroup.name);
+						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
+						GroupList.this.mGroupsCursor.requery();
+						GroupList.this.mGroupAdapter.notifyDataSetChanged();
+						GroupList.this.getListView().invalidateViews();
+						break;
+					default: break;
+					}
 				}
 			}
 			catch (Exception e) {
@@ -204,5 +241,4 @@ public class GroupList extends ListActivity {
 			}
 		}
 	}
-	
 }

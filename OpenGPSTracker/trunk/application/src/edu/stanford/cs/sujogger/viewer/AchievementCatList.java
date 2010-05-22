@@ -26,7 +26,7 @@ public class AchievementCatList extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.achievementcatlist);
+		this.setContentView(R.layout.list_simple);
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();

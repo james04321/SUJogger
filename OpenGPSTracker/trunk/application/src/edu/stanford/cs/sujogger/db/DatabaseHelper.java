@@ -56,6 +56,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.TracksColumns;
+import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
 
@@ -655,16 +656,93 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 */
 	
 	public Cursor getGroups() {
+		/**
+		 * SELECT groups._id, groups.group_id, groups.name, ifnull(subtotal.count,0) 
+		 * FROM groups LEFT JOIN 
+		 * (SELECT groups.*, count(groups_users._id) AS count FROM groups, groups_users 
+		 * WHERE groups._id=groups_users.group_id) subtotal ON groups._id=subtotal._id;		
+		 */
+		
 		String selectClause = 
 			Groups.TABLE + "." + Groups._ID + " AS _id, " + 
 			Groups.TABLE + "." + Groups.GROUP_ID + ", " + 
 			Groups.TABLE + "." + Groups.NAME + ", " + 
-			"count(" + GroupsUsers.TABLE + "." + GroupsUsers._ID + ")"; 
-		String tables = Groups.TABLE + ", " + GroupsUsers.TABLE;
-		String whereClause = Groups.TABLE + "." + Groups._ID + "=" + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID;
-		String groupByClause = Groups.TABLE + "." + Groups._ID;
-		Cursor cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + tables + 
-				" WHERE " + whereClause + " GROUP BY " + groupByClause, null);
+			"ifnull(subtotal.count,0)";
+		String outerCondition = Groups.TABLE + "." + Groups._ID + "=subtotal._id";
+		
+		String innerSelectClause = Groups.TABLE + 
+			".*, count(" + GroupsUsers.TABLE + "." + GroupsUsers._ID + ") AS count";
+		String innerTables = Groups.TABLE + ", " + GroupsUsers.TABLE;
+		String innerWhereClause = Groups.TABLE + "." + Groups._ID + "=" + 
+			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID;
+		String innerQuery = "SELECT " + innerSelectClause + " FROM " + innerTables + 
+			" WHERE " + innerWhereClause;
+		
+		Cursor cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + Groups.TABLE + 
+				" LEFT JOIN (" + innerQuery + ") subtotal ON " + outerCondition, null);
 		return cursor;
+	}
+	
+	public boolean addGroup(long groupIdServer, String groupName, long isOwner) {
+		ContentValues values = new ContentValues();
+		values.put(Groups.GROUP_ID, groupIdServer);
+		values.put(Groups.NAME, groupName);
+		values.put(Groups.IS_OWNER, isOwner);
+		return mDb.insert(Groups.TABLE, null, values) >= 0;
+	}
+	
+	public Cursor getGroupWithId(long groupId) {
+		Cursor cursor = mDb.query(Groups.TABLE, 
+				new String[] {Groups._ID, Groups.GROUP_ID, Groups.NAME, Groups.IS_OWNER}, 
+				Groups._ID + "=" + groupId, null, null, null, null);
+		return cursor;
+	}
+	
+	public Cursor getUsersForGroup(long groupId) {
+		/**
+		 * SELECT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
+		 * AND groups_users.group_id=groupId
+		 */
+		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
+		String whereClause = Users.TABLE + "." + Users._ID + "=" +
+			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
+			" AND " + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId;
+		Cursor cursor = mDb.rawQuery("SELECT " + Users.TABLE + ".* FROM " + tables + 
+				" WHERE " + whereClause, null);
+		return cursor;
+	}
+	
+	public Cursor getAllUsersExcludingGroup(long groupId) {
+		/**
+		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
+		 * AND users._id NOT IN 
+		 * (SELECT groups_users.user_id FROM groups_users WHERE groups_users.group_id=groupId)
+		 */
+		String subQuery = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
+			GroupsUsers.TABLE + " WHERE " + 
+			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId + ")";
+		
+		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
+		String whereClause = Users.TABLE + "." + Users._ID + "=" +
+			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
+			" AND " + Users.TABLE + "." + Users._ID + " NOT IN " + subQuery;
+		Cursor cursor = mDb.rawQuery("SELECT DISTINCT " + Users.TABLE + ".* FROM " + tables + 
+				" WHERE " + whereClause, null);
+		return cursor;
+	}
+	
+	public void addUsersToGroup(long groupId, long[] users) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < users.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(GroupsUsers.GROUP_ID, groupId);
+				values.put(GroupsUsers.USER_ID, users[i]);
+				mDb.insert(GroupsUsers.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 	}
 }

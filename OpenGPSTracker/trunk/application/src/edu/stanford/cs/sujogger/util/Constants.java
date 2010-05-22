@@ -35,4 +35,7 @@ public class Constants
    public static final String EXTERNAL_DIR = "/OpenGPSTracker/";
    public static final String TMPICTUREFILE_PATH = EXTERNAL_DIR+"media_tmp";
    public static final Uri NAME_URI = Uri.parse( "content://" + GPStracking.AUTHORITY+".string" );
+   
+   public static final int APP_ID = 1;
+   public static final String APP_API_KEY = "";
 }

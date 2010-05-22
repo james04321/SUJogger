@@ -23,7 +23,7 @@ public class AchievementList extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.achievementcatlist);
+		setContentView(R.layout.list_simple);
 
 		mCat = savedInstanceState != null ? savedInstanceState.getInt(Categories.TABLE) : 0;
 
