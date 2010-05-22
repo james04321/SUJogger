@@ -6,9 +6,9 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckedTextView;
 import android.widget.CursorAdapter;
 import android.widget.TextView;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.R;
 
 public class UserListAdapter extends CursorAdapter {
@@ -69,13 +69,31 @@ public class UserListAdapter extends CursorAdapter {
 		numChecked = 0;
 	}
 	
-	public long[] getCheckedUsers() {
+	public long[] getCheckedUserIds() {
 		long[] checkedUsers = new long[numChecked];
 		int pos = 0;
 		for (int i = 0; i < checkmarks.length; i++) {
 			if (checkmarks[i]) {
 				mCursor.moveToPosition(i);
 				checkedUsers[pos] = mCursor.getLong(0);
+				pos++;
+			}
+		}
+		return checkedUsers;
+	}
+	
+	public User[] getCheckedUsers() {
+		User[] checkedUsers = new User[numChecked];
+		int pos = 0;
+		for (int i = 0; i < checkmarks.length; i++) {
+			if (checkmarks[i]) {
+				mCursor.moveToPosition(i);
+				User newUser = new User();
+				newUser.id = mCursor.getInt(1);
+				newUser.fb_id = mCursor.getInt(2);
+				newUser.first_name = mCursor.getString(3);
+				newUser.last_name = mCursor.getString(4);
+				checkedUsers[pos] = newUser;
 				pos++;
 			}
 		}

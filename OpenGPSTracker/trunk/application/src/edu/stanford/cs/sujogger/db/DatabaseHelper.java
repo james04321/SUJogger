@@ -47,6 +47,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
@@ -730,6 +731,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				" WHERE " + whereClause, null);
 		return cursor;
 	}
+	
 	
 	public void addUsersToGroup(long groupId, long[] users) {
 		mDb.beginTransaction();
