@@ -374,11 +374,15 @@ public final class GPStracking
       public static final String CREATION_TIME = "creationtime";
       public static final String DURATION      = "duration";
       public static final String DISTANCE      = "distance";
+      public static final String TRACK_ID      = "track_id";
+      public static final String USER_ID       = "user_id";
       
       static final String NAME_TYPE            = "TEXT";
       static final String CREATION_TIME_TYPE   = "INTEGER NOT NULL";
       static final String DURATION_TYPE        = "INTEGER";
       static final String DISTANCE_TYPE        = "REAL";
+      static final String TRACK_ID_TYPE        = "INTEGER";
+      static final String USER_ID_TYPE         = "INTEGER NOT NULL DEFAULT 0";
       static final String _ID_TYPE             = "INTEGER PRIMARY KEY AUTOINCREMENT";
    }
    
