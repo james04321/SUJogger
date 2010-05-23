@@ -1044,7 +1044,7 @@ public class LoggerMap extends MapActivity {
 					this.mTrackId), new String[] { Tracks.NAME }, null, null, null);
 			if (trackCursor != null && trackCursor.moveToLast()) {
 				String trackName = trackCursor.getString(0);
-				this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
+				this.setTitle(trackName);
 			}
 		}
 		finally {

@@ -18,16 +18,32 @@ public class UserListAdapter extends CursorAdapter {
 	private int numChecked;
 	private Cursor mCursor;
 	
-	public UserListAdapter(Context context, Cursor c, boolean showCheckBoxes) {
-		this(context, c, true, showCheckBoxes);
+	public UserListAdapter(Context context, Cursor c, boolean showCheckBoxes, long[] initialUserIds) {
+		this(context, c, true, showCheckBoxes, initialUserIds);
 	}
 
-	public UserListAdapter(Context context, Cursor c, boolean autoRequery, boolean showCheckBoxes) {
+	public UserListAdapter(Context context, Cursor c, boolean autoRequery, boolean showCheckBoxes, long[] initialUserIds) {
 		super(context, c, autoRequery);
 		mCursor = c;
 		if (showCheckBoxes) {
 			checkmarks = new boolean[c.getCount()];
-			clearAllChecked();
+			
+			if (initialUserIds == null)
+				clearAllChecked();
+			else {
+				int initPos = 0, cursorPos = 0;
+				mCursor.moveToPosition(-1);
+				while(mCursor.moveToNext() && initPos < initialUserIds.length) {
+					if (mCursor.getLong(0) != initialUserIds[initPos])
+						checkmarks[cursorPos] = false;
+					else {
+						checkmarks[cursorPos] = true;
+						initPos++;
+					}
+					cursorPos++;
+				}
+				numChecked = initialUserIds.length;
+			}
 		}
 		else
 			checkmarks = null;

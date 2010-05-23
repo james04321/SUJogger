@@ -21,14 +21,19 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.UserListAdapter;
-import edu.stanford.cs.sujogger.viewer.GroupList.GroupListReceiver;
 
 public class FriendPicker extends ListActivity {
 	private static final String TAG = "OGT.FriendPicker";
+	public static final String MODE_KEY = "mode";
+	public static final int MODE_ADD = 0;
+	public static final int MODE_RECIPIENT = 1;
 	
+	private int mMode;
 	private long mGroupId;
+	private long[] mInitialUserIds;
 	private int mGroupIdServer;
 	private DatabaseHelper mDbHelper;
 	private Cursor mUsers;
@@ -51,11 +56,11 @@ public class FriendPicker extends ListActivity {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.friendpicker);
 		
-		mGroupId = savedInstanceState != null ? savedInstanceState.getLong(Groups.TABLE) : 0;
-		if (mGroupId == 0) {
-			Bundle extras = getIntent().getExtras();
-			mGroupId = extras != null ? extras.getLong(Groups.TABLE) : 0;
-		}
+		
+		Bundle extras = getIntent().getExtras();
+		mGroupId = extras != null ? extras.getLong(Groups.TABLE) : 0;
+		mInitialUserIds = extras != null ? extras.getLongArray(Users.TABLE) : null;
+		mMode = extras != null ? extras.getInt(MODE_KEY) : MODE_ADD;
 		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
@@ -69,10 +74,12 @@ public class FriendPicker extends ListActivity {
 		
 		Log.d(TAG, "onCreate(): groupId = " + mGroupId + "; groupIdServer = " + mGroupIdServer);
 		
-		mReceiver = new FriendPickerReceiver(); 
-		mGameCon = new GamingServiceConnection(this, mReceiver, 
-				Constants.APP_ID, Constants.APP_API_KEY, FriendPicker.class.toString());
-		mGameCon.bind();
+		if (mMode == MODE_ADD) {
+			mReceiver = new FriendPickerReceiver(); 
+			mGameCon = new GamingServiceConnection(this, mReceiver, 
+					Constants.APP_ID, Constants.APP_API_KEY, FriendPicker.class.toString());
+			mGameCon.bind();
+		}
 		
 		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId);
 		startManagingCursor(mUsers);
@@ -91,12 +98,22 @@ public class FriendPicker extends ListActivity {
 		addButton = (Button)findViewById(R.id.fp_addbutton);
 		addButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
-				User[] checkedUsers = mUserAdapter.getCheckedUsers();
-				try {
-					mGameCon.addGroupUsers(GRP_ADDUSER_RID, mGroupIdServer, checkedUsers);
-				} catch (RemoteException e) {}
-				//
-				//finish();
+				
+				if (mMode == MODE_ADD) {
+					User[] checkedUsers = mUserAdapter.getCheckedUsers();
+					try {
+						mGameCon.addGroupUsers(GRP_ADDUSER_RID, mGroupIdServer, checkedUsers);
+					} catch (RemoteException e) {}
+				}
+				else {
+					long[] checkedUserIds = mUserAdapter.getCheckedUserIds();
+					Bundle bundle = new Bundle();
+					bundle.putLongArray(Users.TABLE, checkedUserIds);
+					Intent i = new Intent();
+					i.putExtras(bundle);
+					setResult(1, i);
+					finish();
+				}
 			}
 		});
 		
@@ -121,7 +138,7 @@ public class FriendPicker extends ListActivity {
 	@Override
 	protected void onDestroy() {
 		mDbHelper.close();
-		mGameCon.unbind();
+		if (mMode == MODE_ADD) mGameCon.unbind();
 		super.onDestroy();
 	}
 
@@ -157,7 +174,7 @@ public class FriendPicker extends ListActivity {
 	}
 	
 	private void fillData() {
-		mUserAdapter = new UserListAdapter(this, mUsers, true);
+		mUserAdapter = new UserListAdapter(this, mUsers, true, mInitialUserIds);
 		setListAdapter(mUserAdapter);
 	}
 	

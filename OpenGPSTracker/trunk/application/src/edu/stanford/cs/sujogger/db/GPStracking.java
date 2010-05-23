@@ -239,28 +239,50 @@ public final class GPStracking
 		public static final String TABLE = "groups_users";
 	}
 	
-	public static final class Messages implements android.provider.BaseColumns {
-		public static final String FROM_GROUP = "from_group"; //0 if from self
-		public static final String TO_GROUP = "to_group"; //0 if not applicable
+	public static final class GameMessages implements android.provider.BaseColumns {
+		public static final String FROM_USER = "from_user";
 		public static final String TYPE = "type";
+		public static final String SEND_TIME = "send_time";
+		public static final String PROPOSED_TIME = "proposed_time";
+		public static final String ORIG_SEND_TIME = "orig_send_time";
 		public static final String SUBJECT = "subject";
 		public static final String BODY = "body";
 		
-		static final String FROM_GROUP_TYPE = "INTEGER NOT NULL";
-		static final String TO_GROUP_TYPE = "INTEGER";
+		static final String FROM_USER_TYPE = "INTEGER NOT NULL";
 		static final String TYPE_TYPE = "INTEGER NOT NULL";
+		static final String SEND_TIME_TYPE = "INTEGER NOT NULL";
+		static final String PROPOSED_TIME_TYPE = "INTEGER";
+		static final String ORIG_SEND_TIME_TYPE = "INTEGER NOT NULL";
 		static final String SUBJECT_TYPE = "TEXT NOT NULL";
 		static final String BODY_TYPE = "TEXT";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
-		public static final String TABLE = "messages";
+		public static final String TABLE = "game_messages";
 		
-		//Message types
-		public static final int TYPE_GENERIC = 0;
-		public static final int TYPE_INVITE = 1;
-		public static final int TYPE_CHALLENGE = 2;
+		//GameMessage types
+		public static final int TYPE_INVITE = 0;
+		public static final int TYPE_CHALLENGE = 1;
+		public static final int TYPE_GENERIC = 2;
 		
-		public static String[] types = {"Generic message", "Invite", "Challenge"};		
+		public static String[] types = {"Invite", "Challenge", "Generic message"};
+	}
+	
+	public static final class GMRecipients implements android.provider.BaseColumns {
+		public static final String GM_ID = "gm_id";
+		public static final String USER_ID = "user_id"; //user_id_server
+		
+		static final String GM_ID_TYPE = "INTEGER NOT NULL";
+		static final String USER_ID_TYPE = "INTEGER NOT NULL";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "gm_recipients";
+	}
+	
+	public static class Messages {
+		
+		//Types
+		public static final int TYPE_GM = 0;
+		public static final int TYPE_NOTIFICATION = 1;
 	}
    
    /**

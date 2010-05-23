@@ -168,7 +168,7 @@ public class GroupDetail extends ListActivity {
 				new String[] {Common.ITEM_TITLE}, new int[] {R.id.list_simple_title}));
 		mGroupedAdapter.addSection("Info", new SimpleAdapter(this, mInfo, R.layout.list_item_simple,
 				new String[] {Common.ITEM_TITLE}, new int[] {R.id.list_simple_title}));
-		mGroupedAdapter.addSection("Members", new UserListAdapter(this, mUsers, true, false));
+		mGroupedAdapter.addSection("Members", new UserListAdapter(this, mUsers, true, false, null));
 		
 		setListAdapter(mGroupedAdapter);
 	}

@@ -14,12 +14,24 @@
 			android:id="@+id/msg_to"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content"
-			android:text="To:"
+			android:text="To: All"
 			android:layout_weight="1"
 		/>
 		<Button
-			android:id="@+id/msg_to_add"
-			android:text="Add"
+			android:id="@+id/msg_to_all"
+			android:text="All"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+		/>
+		<Button
+			android:id="@+id/msg_to_group"
+			android:text="Group"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+		/>
+		<Button
+			android:id="@+id/msg_to_friends"
+			android:text="Friends"
 			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 		/>

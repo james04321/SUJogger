@@ -22,10 +22,12 @@ import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.util.Constants;
 
 public class Feed extends ListActivity {
 	private static final String TAG = "OGT.Feed";
+	private static final String FILTER_MODE_KEY = "filter_mode";
 	private static final int FILTER_MODE_ALL = 0;
 	private static final int FILTER_MODE_MSG = 1;
 	private static final int FILTER_MODE_BCAST = 2;
@@ -37,13 +39,15 @@ public class Feed extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private FeedReceiver mReceiver;
 	
+	
+	
 	//Views
 	private RadioGroup mFilterOptions;
 	
 	//Options menu items
-	private static final int MENU_FILTER = 1;
-	private static final int MENU_COMPOSE = 2;
-	private static final int MENU_REFRESH = 3;
+	private static final int MENU_FILTER = 0;
+	private static final int MENU_COMPOSE = 1;
+	private static final int MENU_REFRESH = 2;
 	
 	//Dialogs
 	private static final int DIALOG_FILTER = 1;
@@ -54,7 +58,21 @@ public class Feed extends ListActivity {
 			
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
 				Log.d(TAG, "checkedId = " + checkedId);
+				switch(checkedId) {
+				case R.id.filter_menu_all:
+					mFilterMode = FILTER_MODE_ALL;
+					break;
+				case R.id.filter_menu_msg: 
+					mFilterMode = FILTER_MODE_MSG;
+					break;
+				case R.id.filter_menu_bcast: 
+					mFilterMode = FILTER_MODE_BCAST;
+					break;
+				default: break;
+				}
+				
 				Feed.this.dismissDialog(DIALOG_FILTER);
+				updateFiltering();
 			}
 		};
 	
@@ -64,7 +82,13 @@ public class Feed extends ListActivity {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
 		this.setContentView(R.layout.list_simple);
-
+		
+		mFilterMode = savedInstanceState != null ? savedInstanceState.getInt(FILTER_MODE_KEY) : -1;
+		if (mFilterMode == -1) {
+			Bundle extras = getIntent().getExtras();
+			mFilterMode = extras != null ? extras.getInt(FILTER_MODE_KEY) : 0;
+		}
+		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 		
@@ -132,9 +156,12 @@ public class Feed extends ListActivity {
 			handled = true;
 			break;
 		case MENU_COMPOSE:
+			Intent i = new Intent(this, MessageSender.class);
+			startActivity(i);
 			handled = true;
 			break;
 		case MENU_REFRESH:
+			refresh();
 			handled = true;
 			break;
 		default:
@@ -155,11 +182,25 @@ public class Feed extends ListActivity {
 			builder = new AlertDialog.Builder(this);
 			view = LayoutInflater.from(this).inflate(R.layout.feed_filter_menu, null);
 			mFilterOptions = (RadioGroup)view.findViewById(R.id.filter_menu);
+			switch(mFilterMode) {
+			case FILTER_MODE_ALL: mFilterOptions.check(R.id.filter_menu_all); break;
+			case FILTER_MODE_MSG: mFilterOptions.check(R.id.filter_menu_msg); break;
+			case FILTER_MODE_BCAST: mFilterOptions.check(R.id.filter_menu_bcast); break;
+			default: break;
+			}
 			mFilterOptions.setOnCheckedChangeListener(mFilterOptionsListener);
 			builder.setTitle("Filter").setView(view);
 			return builder.create();
 		default: return super.onCreateDialog(id);
 		}
+	}
+	
+	private void updateFiltering() {
+		
+	}
+	
+	private void refresh() {
+		
 	}
 	
 	class FeedReceiver extends BroadcastReceiver {
