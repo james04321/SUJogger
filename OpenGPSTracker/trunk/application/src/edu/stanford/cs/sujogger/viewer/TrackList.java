@@ -87,6 +87,10 @@ public class TrackList extends ListActivity
    
    public static final int TRACKSTATUS_IDLE=10;
    public static final int TRACKSTATUS_TRACKING=11;
+   public static final int PUBLISH_TRACK=100;
+   public static final int DOWNLOAD_TRACK=101;
+   
+   
    
    private EditText mTrackNameView;
    private Uri mDialogUri;

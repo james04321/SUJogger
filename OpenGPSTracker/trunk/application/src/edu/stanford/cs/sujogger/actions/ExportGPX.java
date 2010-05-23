@@ -124,7 +124,7 @@ public class ExportGPX extends Activity
 
    protected void exportGPX( String chosenBaseFileName )
    {
-      GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, new ProgressListener() );
+      GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, new ProgressListener(), null, false );
       mGpxCreator.start();
       this.finish();
    }

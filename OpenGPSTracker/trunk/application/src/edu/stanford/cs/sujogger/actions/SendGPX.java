@@ -69,7 +69,8 @@ public class SendGPX extends Activity
 
    protected void exportGPX( String chosenFileName )
    {
-      edu.stanford.cs.sujogger.actions.utils.GpxCreator mGpxCreator = new edu.stanford.cs.sujogger.actions.utils.GpxCreator( this, getIntent(), chosenFileName, new ProgressListener() );
+	   
+      edu.stanford.cs.sujogger.actions.utils.GpxCreator mGpxCreator = new edu.stanford.cs.sujogger.actions.utils.GpxCreator( this, getIntent(), chosenFileName, new ProgressListener(), null, false );
       mGpxCreator.start();
       this.finish();
    }

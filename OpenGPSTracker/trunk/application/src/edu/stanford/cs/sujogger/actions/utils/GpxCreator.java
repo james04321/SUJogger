@@ -14,6 +14,7 @@ package edu.stanford.cs.sujogger.actions.utils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -30,6 +31,9 @@ import java.util.zip.ZipOutputStream;
 
 import org.xmlpull.v1.XmlSerializer;
 
+import edu.stanford.cs.gaming.sdk.model.Obj;
+import edu.stanford.cs.gaming.sdk.model.ObjProperty;
+import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.GPStracking;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
@@ -37,6 +41,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.viewer.TrackList;
 
 import android.content.ContentResolver;
 import android.content.Context;
@@ -66,15 +71,19 @@ public class GpxCreator extends XmlCreator
    private Intent mIntent;
    private XmlCreationProgressListener mProgressListener;
    private Context mContext;
+   private boolean mPublish;
    private String TAG = "OGT.GpxCreator";
+   private GamingServiceConnection mGamingServiceConn;
 
 
-   public GpxCreator(Context context, Intent intent, String chosenBaseFileName, XmlCreationProgressListener listener)
+   public GpxCreator(Context context, Intent intent, String chosenBaseFileName, XmlCreationProgressListener listener, GamingServiceConnection gamingServiceConn, boolean publish)
    {
       mChosenBaseFileName = chosenBaseFileName;
       mContext = context;
       mIntent = intent;
       mProgressListener = listener;
+      mGamingServiceConn = gamingServiceConn;
+      mPublish = publish;
    }
 
    public void run()
@@ -106,81 +115,131 @@ public class GpxCreator extends XmlCreator
             }
          }
       }
+      if (mPublish) {
+    	  try {
+ 	         Log.d(TAG, "Object publishing to server");
+    		  
+    	      if( mProgressListener != null )
+    	      {
+    	         mProgressListener.startNotification( fileName );
+    	         mProgressListener.updateNotification( getProgress(), getGoal() );
+    	      }
+    	      
+ 	         XmlSerializer serializer = Xml.newSerializer();
+ 	         ByteArrayOutputStream baos = new ByteArrayOutputStream();
+	         BufferedOutputStream buf = new BufferedOutputStream(baos, 8192 );
+	         serializer.setOutput( buf, "UTF-8" );
+	         serializeTrack( trackUri, serializer );
+	         Obj obj = new Obj();
+	         obj.obj_type = "track";
+	         obj.object_properties = new ObjProperty[3];
+	         ObjProperty nameProp = new ObjProperty();
+	         nameProp.name = "name";
+	         nameProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         nameProp.string_val = fileName;
+	         obj.object_properties[0] = nameProp;
+	         
+	         ObjProperty trackProp = new ObjProperty();
+	         trackProp.name = "gpx";
+	         trackProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         trackProp.string_val = baos.toString();
+	         obj.object_properties[1] = trackProp;
+	         
+	         ObjProperty idProp = new ObjProperty();
+	         idProp.name = "trackUri";
+	         idProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         idProp.string_val = trackUri.toString();
+	         obj.object_properties[2] = idProp;
+	         
+	         mGamingServiceConn.createObj(TrackList.PUBLISH_TRACK, obj);
+	         Log.d(TAG, "Object published to server");
+    	  } catch (Exception e) {
+    		  e.printStackTrace();
+    	  } finally {
+	         if( mProgressListener != null )
+	         {
+	            mProgressListener.endNotification( fileName );
+	         }
+	         Looper.loop();
+	      }
+    	  
+      } else {
+    	  if( !( fileName.endsWith( ".gpx" ) || fileName.endsWith( ".xml" ) ) )
+    	  {
+    		  setExportDirectoryPath( Environment.getExternalStorageDirectory() + Constants.EXTERNAL_DIR + fileName );
+    		  setXmlFileName( fileName + ".gpx" );
+    	  }
+    	  else
+    	  {
+    		  setExportDirectoryPath( Environment.getExternalStorageDirectory() + Constants.EXTERNAL_DIR + fileName.substring( 0, fileName.length() - 4 ) );
+    		  setXmlFileName( fileName );
+    	  }
+    	  new File( getExportDirectoryPath() ).mkdirs();
 
-      if( !( fileName.endsWith( ".gpx" ) || fileName.endsWith( ".xml" ) ) )
-      {
-         setExportDirectoryPath( Environment.getExternalStorageDirectory() + Constants.EXTERNAL_DIR + fileName );
-         setXmlFileName( fileName + ".gpx" );
-      }
-      else
-      {
-         setExportDirectoryPath( Environment.getExternalStorageDirectory() + Constants.EXTERNAL_DIR + fileName.substring( 0, fileName.length() - 4 ) );
-         setXmlFileName( fileName );
-      }
-      new File( getExportDirectoryPath() ).mkdirs();
-
-      String xmlFilePath = getExportDirectoryPath() + "/" + getXmlFileName();
-      if( mProgressListener != null )
-      {
-         mProgressListener.startNotification( fileName );
-         mProgressListener.updateNotification( getProgress(), getGoal() );
-      }
-
-      String resultFilename = xmlFilePath;
-      try
-      {
-         XmlSerializer serializer = Xml.newSerializer();
-         BufferedOutputStream buf = new BufferedOutputStream( new FileOutputStream( xmlFilePath ), 8192 );
-         serializer.setOutput( buf, "UTF-8" );
-
-         serializeTrack( trackUri, serializer );
-
-         if( isNeedsBundling() )
-         {
-            resultFilename = bundlingMediaAndXml( fileName, ".zip" );
-         }
-
-         fileName = new File( resultFilename ).getName();
-
-         CharSequence text = mContext.getString( R.string.ticker_stored ) + "\"" + fileName + "\"";
-         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_SHORT );
-         toast.show();
-      }
-      catch( FileNotFoundException e )
-      {
-         Log.e( TAG, "Unable to save " + e );
-         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_filenotfound );
-         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
-         toast.show();
-      }
-      catch( IllegalArgumentException e )
-      {
-         Log.e( TAG, "Unable to save " + e );
-         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_filename );
-         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
-         toast.show();
-      }
-      catch( IllegalStateException e )
-      {
-         Log.e( TAG, "Unable to save " + e );
-         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_buildxml );
-         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
-         toast.show();
-      }
-      catch( IOException e )
-      {
-         Log.e( TAG, "Unable to save " + e );
-         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_writesdcard );
-         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
-         toast.show();
-      }
-      finally
-      {
-         if( mProgressListener != null )
-         {
-            mProgressListener.endNotification( resultFilename );
-         }
-         Looper.loop();
+    	  String xmlFilePath = getExportDirectoryPath() + "/" + getXmlFileName();
+      
+	      if( mProgressListener != null )
+	      {
+	         mProgressListener.startNotification( fileName );
+	         mProgressListener.updateNotification( getProgress(), getGoal() );
+	      }
+	
+	      String resultFilename = xmlFilePath;
+	      try
+	      {
+	         XmlSerializer serializer = Xml.newSerializer();
+	         BufferedOutputStream buf = new BufferedOutputStream( new FileOutputStream( xmlFilePath ), 8192 );
+	         serializer.setOutput( buf, "UTF-8" );
+	
+	         serializeTrack( trackUri, serializer );
+	
+	         if( isNeedsBundling() )
+	         {
+	            resultFilename = bundlingMediaAndXml( fileName, ".zip" );
+	         }
+	
+	         fileName = new File( resultFilename ).getName();
+	
+	         CharSequence text = mContext.getString( R.string.ticker_stored ) + "\"" + fileName + "\"";
+	         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_SHORT );
+	         toast.show();
+	      }
+	      catch( FileNotFoundException e )
+	      {
+	         Log.e( TAG, "Unable to save " + e );
+	         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_filenotfound );
+	         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
+	         toast.show();
+	      }
+	      catch( IllegalArgumentException e )
+	      {
+	         Log.e( TAG, "Unable to save " + e );
+	         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_filename );
+	         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
+	         toast.show();
+	      }
+	      catch( IllegalStateException e )
+	      {
+	         Log.e( TAG, "Unable to save " + e );
+	         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_buildxml );
+	         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
+	         toast.show();
+	      }
+	      catch( IOException e )
+	      {
+	         Log.e( TAG, "Unable to save " + e );
+	         CharSequence text = mContext.getString( R.string.ticker_failed ) + "\"" + xmlFilePath + "\"" + mContext.getString( R.string.error_writesdcard );
+	         Toast toast = Toast.makeText( mContext.getApplicationContext(), text, Toast.LENGTH_LONG );
+	         toast.show();
+	      }
+	      finally
+	      {
+	         if( mProgressListener != null )
+	         {
+	            mProgressListener.endNotification( resultFilename );
+	         }
+	         Looper.loop();
+	      }
       }
 
    }

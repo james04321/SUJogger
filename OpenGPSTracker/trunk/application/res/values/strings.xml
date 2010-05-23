@@ -149,4 +149,5 @@
    <string name="about_activity_name_extended">About %s</string>
    <string name="no_information_available">No information available.</string>
    
+<string name="receive_gpxpublish">Publish and share with others</string>
 </resources>
