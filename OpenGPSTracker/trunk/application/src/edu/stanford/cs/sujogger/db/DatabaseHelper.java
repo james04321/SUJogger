@@ -713,6 +713,51 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return cursor;
 	}
 	
+	public Cursor getUsersForUserIds(long[] userIds) {
+		/**
+		 * SELECT users.* FROM users WHERE users._id IN (1,2,...)
+		 */
+		String idString = "";
+		for (int i = 0; i < userIds.length; i++) {
+			if (i == 0) 
+				idString += userIds[i];
+			else 
+				idString += "," + userIds[i];
+		}
+		String whereClause = Users.TABLE + "." + Users._ID + 
+			" IN (" + idString + ")";
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + 
+				" WHERE " + whereClause, null);
+		return cursor;
+	}
+	
+	public User[] getUserArrayForUserIds(long[] userIds) {
+		Cursor cursor = getUsersForUserIds(userIds);
+		if (cursor == null) return null;
+		else {
+			if (cursor.getCount() == 0) {
+				cursor.close();
+				return null;
+			}
+			else {
+				User[] users = new User[cursor.getCount()];
+				int pos = 0;
+				while(cursor.moveToNext()) {
+					User newUser = new User();
+					newUser.id = cursor.getInt(1);
+					newUser.fb_id = cursor.getInt(2);
+					newUser.first_name = cursor.getString(3);
+					newUser.last_name = cursor.getString(4);
+					users[pos] = newUser;
+					pos++;
+				}
+				cursor.close();
+				return users;
+				
+			}
+		}
+	}
+	
 	public Cursor getAllUsersExcludingGroup(long groupId) {
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
