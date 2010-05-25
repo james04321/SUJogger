@@ -240,13 +240,14 @@ public final class GPStracking
 	}
 	
 	public static final class GameMessages implements android.provider.BaseColumns {
-		public static final String FROM_USER = "from_user";
+		public static final String FROM_USER = "from_user"; //user_id_server
 		public static final String TYPE = "type";
 		public static final String SEND_TIME = "send_time";
 		public static final String PROPOSED_TIME = "proposed_time";
 		public static final String ORIG_SEND_TIME = "orig_send_time";
 		public static final String SUBJECT = "subject";
 		public static final String BODY = "body";
+		public static final String IS_BCAST = "is_bcast";
 		
 		static final String FROM_USER_TYPE = "INTEGER NOT NULL";
 		static final String TYPE_TYPE = "INTEGER NOT NULL";
@@ -255,6 +256,7 @@ public final class GPStracking
 		static final String ORIG_SEND_TIME_TYPE = "INTEGER NOT NULL";
 		static final String SUBJECT_TYPE = "TEXT NOT NULL";
 		static final String BODY_TYPE = "TEXT";
+		static final String IS_BCAST_TYPE = "INTEGER NOT NULL DEFAULT 0";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		public static final String TABLE = "game_messages";

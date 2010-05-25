@@ -23,6 +23,7 @@ import android.widget.EditText;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
@@ -37,11 +38,12 @@ import edu.stanford.cs.sujogger.util.MessageObject;
 
 public class MessageSender extends Activity {
 	private static final String TAG = "OGT.MessageSender";
-	private static final int MSG_SEND_RID = 1;
+	public static final int MSG_SEND_RID = 1;
 	
 	private long mGroupId;
 	private long[] mUserIds;
 	private User[] mUsers;
+	private int mMessageType;
 	private DatabaseHelper mDbHelper;
 	
 	private GamingServiceConnection mGameCon;
@@ -74,7 +76,7 @@ public class MessageSender extends Activity {
 			mYear = year;
 			mMonth = monthOfYear;
 			mDay = dayOfMonth;
-			updateDateTime();
+			updateDateTimeSubject();
 		}
 	};
 
@@ -83,7 +85,7 @@ public class MessageSender extends Activity {
 		public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
 			mHour = hourOfDay;
 			mMinute = minute;
-			updateDateTime();
+			updateDateTimeSubject();
 		}
 	};
 
@@ -114,8 +116,9 @@ public class MessageSender extends Activity {
 		
 		mReceiver = new MessageSenderReceiver(); 
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
-				Constants.APP_ID, Constants.APP_API_KEY, Feed.class.toString());
+				Constants.APP_ID, Constants.APP_API_KEY, MessageSender.class.toString());
 		mGameCon.bind();
+		mGameCon.setUserId(6);
 
 		setTitle("New Message");
 		
@@ -138,25 +141,28 @@ public class MessageSender extends Activity {
 				Log.d(TAG, "spinner position = " + pos);
 				switch(pos) {
 				case GameMessages.TYPE_GENERIC: 
+					mMessageType = GameMessages.TYPE_GENERIC;
 					datetimeLayout.setVisibility(View.GONE);
 					subjectText.setEnabled(true);
 					subjectText.setHint("Subject");
 					subjectText.requestFocus();
 					break;
 				case GameMessages.TYPE_INVITE:
+					mMessageType = GameMessages.TYPE_INVITE;
 					datetimeLayout.setVisibility(View.VISIBLE);
 					subjectText.setEnabled(false);
-					subjectText.setHint("Someone invites you to a run");
 					bodyText.requestFocus();
 					break;
 				case GameMessages.TYPE_CHALLENGE: 
+					mMessageType = GameMessages.TYPE_CHALLENGE;
 					datetimeLayout.setVisibility(View.VISIBLE);
 					subjectText.setEnabled(false);
-					subjectText.setHint("Someone challenges you to a run");
 					bodyText.requestFocus();
 					break;
 				default: break;
 				}
+				
+				updateDateTimeSubject();
 			}
 			
 			public void onNothingSelected(AdapterView<?> parent) {}
@@ -232,7 +238,7 @@ public class MessageSender extends Activity {
 		msgRecipientText = (TextView)findViewById(R.id.msg_to);
 		updateRecipients();
 		
-		updateDateTime();
+		updateDateTimeSubject();
 	}
 
 	@Override
@@ -301,53 +307,65 @@ public class MessageSender extends Activity {
 		}
 	}
 
-	private void updateDateTime() {
+	private void updateDateTimeSubject() {
 		dateButton.setText(new StringBuilder()
-			.append(mMonth+1).append("-")
-			.append(mDay).append("-")
+			.append(mMonth+1).append("/")
+			.append(mDay).append("/")
 			.append(mYear));
 		
-		int hour12 = mHour;
-		String ampm = "AM";
-		if (hour12 >= 12) {
-			ampm = "PM";
-			if (hour12 > 12)
-				hour12 -= 12;
+		String timeString = Common.timeString(mHour, mMinute);
+		timeButton.setText(timeString);
+		
+		switch(mMessageType) {
+		case GameMessages.TYPE_INVITE:
+			subjectText.setText("Run Invite: " + new StringBuilder()
+			.append(mMonth+1).append("/")
+			.append(mDay).toString() + " at " + timeString);
+			break;
+		case GameMessages.TYPE_CHALLENGE:
+			subjectText.setText("Run Challenge: " + new StringBuilder()
+			.append(mMonth+1).append("/")
+			.append(mDay).toString() + " at " + timeString);
+			break;
+		case GameMessages.TYPE_GENERIC:
+			subjectText.setText("");
+		default: break;
 		}
-		else if (hour12 == 0)
-			hour12 = 12;
-		timeButton.setText(new StringBuilder()
-			.append(hour12).append(":")
-			.append(pad(mMinute)).append(" ")
-			.append(ampm));
 	}
 	
 	private User[] getArrayOfRecipients() {
-		if (mUsers == null) {
-			
+		if (mUsers == null && mGroupId == 0) return null;
+		else if (mUsers == null) {
+			User[] recipients = mDbHelper.getUserArrayForUserCursor(
+					mDbHelper.getUsersForGroup(mGroupId));
+			return recipients;
 		}
 		else return mUsers;
-		return null;
 	}
 	
 	private void sendMessage() {
+		Log.d(TAG, "sendMessage(): sending message...");
 		Calendar c = Calendar.getInstance();
 		c.set(mYear, mMonth, mDay, mHour, mMinute);
 		long now = System.currentTimeMillis();
-		MessageObject msgObject= new MessageObject(now, c.getTimeInMillis(), 
+		MessageObject msgObject= new MessageObject(msgSpinner.getSelectedItemPosition(), now, c.getTimeInMillis(), 
 				subjectText.getText().toString(), bodyText.getText().toString());
+		User[] recipients = getArrayOfRecipients();
+		
+		//mDbHelper.insertGameMessage(Common.getRegisteredUser(), recipients, now, msgObject);
+		
+		
 		try {
 			mGameCon.sendMessage(MSG_SEND_RID, msgObject, Messages.TYPE_GM, 
-					Common.getRegisteredUser(), null, mUsers, now);	
+					Common.getRegisteredUser(), null, recipients, now, Feed.class.toString());	
 		} catch (RemoteException e) {}
+		
+		
+		Toast toast = Toast.makeText(MessageSender.this, 
+				"Message sent", Toast.LENGTH_SHORT);
+		toast.show();
+		finish();
 	}
-	
-	private static String pad(int c) {
-        if (c >= 10)
-            return String.valueOf(c);
-        else
-            return "0" + String.valueOf(c);
-    }
 	
 	@Override
     protected void onActivityResult(int requestCode, int resultCode, Intent intent) {
@@ -359,12 +377,14 @@ public class MessageSender extends Activity {
 		case ACTIVITY_GROUPPICKER: 
 			mGroupId = extras.getLong(Groups.TABLE);
 			Log.d(TAG, "onActivityResult(): groupId = " + mGroupId);
+			mUsers = null;
 			updateRecipients();
 			break;
 		case ACTIVITY_FRIENDPICKER: 
 			mUserIds = extras.getLongArray(Users.TABLE);
 			Log.d(TAG, "onActivityResult(): groupIds = " + Arrays.toString(mUserIds));
 			mUsers = mDbHelper.getUserArrayForUserIds(mUserIds);
+			mGroupId = 0;
 			updateRecipients();
 			break;
 		default: break;
