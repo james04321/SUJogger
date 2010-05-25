@@ -49,6 +49,8 @@ import android.net.Uri;
 import android.util.Log;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
+import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
+import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
@@ -60,6 +62,8 @@ import edu.stanford.cs.sujogger.db.GPStracking.TracksColumns;
 import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
+import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.MessageObject;
 
 /**
  * Class to hold bare-metal database operations exposed as functionality blocks
@@ -714,6 +718,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getUsersForUserIds(long[] userIds) {
+		if (userIds == null) return null;
 		/**
 		 * SELECT users.* FROM users WHERE users._id IN (1,2,...)
 		 */
@@ -731,31 +736,37 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return cursor;
 	}
 	
-	public User[] getUserArrayForUserIds(long[] userIds) {
-		Cursor cursor = getUsersForUserIds(userIds);
-		if (cursor == null) return null;
+	public User[] getUserArrayForUserCursor(Cursor userCursor) {
+		if (userCursor == null) return null;
 		else {
-			if (cursor.getCount() == 0) {
-				cursor.close();
+			if (userCursor.getCount() == 0) {
+				userCursor.close();
 				return null;
 			}
 			else {
-				User[] users = new User[cursor.getCount()];
+				User[] users = new User[userCursor.getCount()];
 				int pos = 0;
-				while(cursor.moveToNext()) {
+				while(userCursor.moveToNext()) {
 					User newUser = new User();
-					newUser.id = cursor.getInt(1);
-					newUser.fb_id = cursor.getInt(2);
-					newUser.first_name = cursor.getString(3);
-					newUser.last_name = cursor.getString(4);
+					newUser.id = userCursor.getInt(1);
+					newUser.fb_id = userCursor.getInt(2);
+					newUser.first_name = userCursor.getString(3);
+					newUser.last_name = userCursor.getString(4);
 					users[pos] = newUser;
 					pos++;
 				}
-				cursor.close();
+				userCursor.close();
 				return users;
 				
 			}
 		}
+	}
+	
+	public User[] getUserArrayForUserIds(long[] userIds) {
+		Cursor cursor = getUsersForUserIds(userIds);
+		User[] userArray = getUserArrayForUserCursor(cursor);
+		cursor.close();
+		return userArray;
 	}
 	
 	public Cursor getAllUsersExcludingGroup(long groupId) {
@@ -792,4 +803,109 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 	}
+	
+	/**
+	 * GameMessage Methods
+	 */
+	
+	public Cursor getAllMessages() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + GameMessages.TABLE + 
+				" ORDER BY " + GameMessages.SEND_TIME + " DESC", null);
+		return cursor;
+	}
+	
+	public Cursor getAllMessagesWithFromUsers() {
+		String tables = GameMessages.TABLE + ", " + Users.TABLE;
+		String whereClause = GameMessages.TABLE + "." + GameMessages.FROM_USER + "=" +
+			Users.TABLE + "." + Users.USER_ID;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause + 
+				" ORDER BY " + GameMessages.TABLE + "." + GameMessages.SEND_TIME + " DESC", null);
+		return cursor;
+	}
+	
+	public Cursor getMessagesWithFromUsers(boolean isBcast) {
+		String tables = GameMessages.TABLE + ", " + Users.TABLE;
+		String whereClause = GameMessages.TABLE + "." + GameMessages.FROM_USER + "=" +
+			Users.TABLE + "." + Users.USER_ID + " AND " +
+			GameMessages.TABLE + "." + GameMessages.IS_BCAST + "=" + (isBcast ? 1 : 0);
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause + 
+				" ORDER BY " + GameMessages.TABLE + "." + GameMessages.SEND_TIME + " DESC", null);
+		return cursor;
+	}
+	/*
+	public Cursor getMessagesWithFromUsers(int type) {
+		String tables = GameMessages.TABLE + ", " + Users.TABLE;
+		String whereClause = GameMessages.TABLE + "." + GameMessages.FROM_USER + "=" +
+			Users.TABLE + "." + Users.USER_ID + " AND " + 
+			GameMessages.TABLE + "." + GameMessages.TYPE + "=" + type;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause + 
+				" ORDER BY " + GameMessages.TABLE + "." + GameMessages.SEND_TIME + " DESC", null);
+		return cursor;
+	}
+	*/
+	public Cursor getUsersForMessage(long gmId) {
+		
+		return null;
+	}
+	
+	public void insertGameMessage(User fromUser, User[] recipients,	
+			long sendTime, MessageObject msgObject) {
+		//Insert unseen users
+		insertUser(fromUser);
+		if (recipients != null) {
+			mDb.beginTransaction();
+			try {
+				for (int i = 0; i < recipients.length; i++) {
+					insertUser(recipients[i]);
+				}
+				mDb.setTransactionSuccessful();
+			} finally {
+				mDb.endTransaction();
+			}
+		}
+		
+		//Insert GameMessage
+		ContentValues msgValues = new ContentValues();
+		msgValues.put(GameMessages.FROM_USER, fromUser.id);
+		msgValues.put(GameMessages.TYPE, msgObject.mType);
+		msgValues.put(GameMessages.SEND_TIME, sendTime);
+		msgValues.put(GameMessages.ORIG_SEND_TIME, msgObject.mOrigSendTime);
+		msgValues.put(GameMessages.SUBJECT, msgObject.mSubject);
+		msgValues.put(GameMessages.BODY, msgObject.mBody);
+		if (recipients != null)
+			msgValues.put(GameMessages.IS_BCAST, 0);
+		else
+			msgValues.put(GameMessages.IS_BCAST, 1);
+		long messageId = mDb.insert(GameMessages.TABLE, null, msgValues);
+		
+		if (messageId == -1) return;
+		
+		//Insert GMRecipients
+		if (recipients != null) {
+			mDb.beginTransaction();
+			try {
+				for (int i = 0; i < recipients.length; i++) {
+					ContentValues rValues = new ContentValues();
+					rValues.put(GMRecipients.GM_ID, messageId);
+					rValues.put(GMRecipients.USER_ID, recipients[i].id);
+					mDb.insert(GMRecipients.TABLE, null, rValues);
+				}
+				mDb.setTransactionSuccessful();
+			} finally {
+				mDb.endTransaction();
+			}
+		}
+	}
+	
+	public void insertUser(User user) {
+		ContentValues values = new ContentValues();
+		values.put(Users.USER_ID, user.id);
+		values.put(Users.FB_ID, user.fb_id);
+		values.put(Users.FIRST_NAME, user.first_name);
+		values.put(Users.LAST_NAME, user.last_name);
+		values.put(Users.IMG_URL, user.fb_photo);
+		mDb.insert(Users.TABLE, null, values);
+	}
+	
+	
 }

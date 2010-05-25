@@ -43,4 +43,27 @@ public class Common {
 		
 		return user;
 	}
+	
+	public static String pad(int c) {
+        if (c >= 10)
+            return String.valueOf(c);
+        else
+            return "0" + String.valueOf(c);
+    }
+	
+	public static String timeString(int hour, int minute) {
+		int hour12 = hour;
+		String ampm = "AM";
+		if (hour12 >= 12) {
+			ampm = "PM";
+			if (hour12 > 12)
+				hour12 -= 12;
+		}
+		else if (hour12 == 0)
+			hour12 = 12;
+		return new StringBuilder()
+			.append(hour12).append(":")
+			.append(Common.pad(minute)).append(" ")
+			.append(ampm).toString();
+	}
 }

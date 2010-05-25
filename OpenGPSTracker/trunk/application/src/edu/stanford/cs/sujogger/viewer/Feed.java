@@ -6,7 +6,6 @@ import android.app.ListActivity;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
@@ -19,11 +18,13 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.RadioGroup;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.Message;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.util.GameMessageAdapter;
 
 public class Feed extends ListActivity {
 	private static final String TAG = "OGT.Feed";
@@ -33,8 +34,9 @@ public class Feed extends ListActivity {
 	private static final int FILTER_MODE_BCAST = 2;
 	
 	private DatabaseHelper mDbHelper;
-	private Cursor mGroupsCursor;
+	private Cursor mMessages;
 	private int mFilterMode;
+	private GameMessageAdapter mAdapter;
 	
 	private GamingServiceConnection mGameCon;
 	private FeedReceiver mReceiver;
@@ -59,15 +61,9 @@ public class Feed extends ListActivity {
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
 				Log.d(TAG, "checkedId = " + checkedId);
 				switch(checkedId) {
-				case R.id.filter_menu_all:
-					mFilterMode = FILTER_MODE_ALL;
-					break;
-				case R.id.filter_menu_msg: 
-					mFilterMode = FILTER_MODE_MSG;
-					break;
-				case R.id.filter_menu_bcast: 
-					mFilterMode = FILTER_MODE_BCAST;
-					break;
+				case R.id.filter_menu_all: mFilterMode = FILTER_MODE_ALL; break;
+				case R.id.filter_menu_msg: mFilterMode = FILTER_MODE_MSG; break;
+				case R.id.filter_menu_bcast: mFilterMode = FILTER_MODE_BCAST; break;
 				default: break;
 				}
 				
@@ -91,13 +87,16 @@ public class Feed extends ListActivity {
 		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
+		mMessages = null;
 		
 		mReceiver = new FeedReceiver(); 
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, Feed.class.toString());
 		mGameCon.bind();
+		mGameCon.setUserId(3);
 		
-		//registerForContextMenu(getListView());
+		updateFiltering();
+		fillData();
 	}
 	
 	@Override
@@ -105,7 +104,6 @@ public class Feed extends ListActivity {
 		Log.d(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
-		getListView().invalidateViews();
 	}
 
 	@Override
@@ -118,8 +116,9 @@ public class Feed extends ListActivity {
 	protected void onResume() {
 		Log.d(TAG, "onResume()");
 		super.onResume();
-		Log.d(TAG, "onResume(): dumping groups cursor");
-		DatabaseUtils.dumpCursor(mGroupsCursor);
+		mAdapter.notifyDataSetChanged();
+		getListView().invalidateViews();
+		DatabaseUtils.dumpCursor(mMessages);
 	}
 	
 	@Override
@@ -133,6 +132,13 @@ public class Feed extends ListActivity {
 		mDbHelper.close();
 		mGameCon.unbind();
 		super.onDestroy();
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		Log.d(TAG, "onSaveInstnaceState()");
+		super.onSaveInstanceState(outState);
+		outState.putInt(FILTER_MODE_KEY, mFilterMode);
 	}
 	
 	@Override
@@ -196,11 +202,34 @@ public class Feed extends ListActivity {
 	}
 	
 	private void updateFiltering() {
+		if (mMessages != null) mMessages.close();
 		
+		switch(mFilterMode) {
+		case FILTER_MODE_ALL:
+			mMessages = mDbHelper.getAllMessagesWithFromUsers();
+			break;
+		case FILTER_MODE_MSG: 
+			mMessages = mDbHelper.getMessagesWithFromUsers(false);
+			break;
+		case FILTER_MODE_BCAST: 
+			mMessages = mDbHelper.getMessagesWithFromUsers(true);
+			break;
+		default: break;
+		}
+		
+		startManagingCursor(mMessages);
+		if (mAdapter != null)
+			mAdapter.changeCursor(mMessages);
 	}
 	
 	private void refresh() {
 		
+	}
+	
+	private void fillData() {
+		Log.d(TAG, "fillData()");
+		mAdapter = new GameMessageAdapter(this, mMessages);
+		setListAdapter(mAdapter);
 	}
 	
 	class FeedReceiver extends BroadcastReceiver {
@@ -210,17 +239,10 @@ public class Feed extends ListActivity {
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
 					switch(appResponse.request_id) {
-					/*
-					case GRP_CREATE_RID:
-						GroupList.this.toggleNewGroupItemState();
-						Integer groupId = (Integer)(appResponse.object);
-						Group newGroup = (Group)(appResponse.appRequest.object);
-						Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = " + newGroup.name);
-						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
-						GroupList.this.mGroupsCursor.requery();
-						GroupList.this.mGroupAdapter.notifyDataSetChanged();
-						GroupList.this.getListView().invalidateViews();
-						break;*/
+					case MessageSender.MSG_SEND_RID:
+						Message msg = (Message)appResponse.object;
+						Log.d(TAG, "onReceive(): sender name = " + msg.fromUser.first_name + " " + msg.fromUser.last_name);
+						break;
 					default: break;
 					}
 				}
