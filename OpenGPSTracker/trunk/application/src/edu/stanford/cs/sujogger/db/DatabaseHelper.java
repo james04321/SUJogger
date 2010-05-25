@@ -161,6 +161,32 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void onUpgrade(SQLiteDatabase db, int current, int targetVersion) {
 
 	}
+	
+	//ASLAI
+	public void updateTrackRemoteId(int _id, int track_id) {
+		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, cursor.getDouble(0));
+		cursor.close();
+		
+		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
+		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, cursor.getDouble(0));
+		cursor.close();
+		/*
+	
+		public boolean setStatistic(long statisticId, double val) {		
+			ContentValues args = new ContentValues();
+			args.put(Stats.VALUE, val);
+			
+			return mDb.update(Stats.TABLE, args, Stats._ID + "=" + statisticId, null) > 0;
+		}	
+		*/	
+	}
 
 	/**
 	 * Creates a waypoint under the current track segment with the current time

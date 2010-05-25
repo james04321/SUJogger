@@ -30,10 +30,13 @@ package edu.stanford.cs.sujogger.actions;
 
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.utils.GpxCreator;
 import edu.stanford.cs.sujogger.actions.utils.XmlCreationProgressListener;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.viewer.GroupList;
 import edu.stanford.cs.sujogger.viewer.LoggerMap;
@@ -78,16 +81,20 @@ public class PublishGPX extends Activity
    
    private PublishGPXReceiver mReceiver;
    private GamingServiceConnection mGamingServiceConn;
-
+   private DatabaseHelper mDbHelper;
+    
 	class PublishGPXReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGamingServiceConn.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					switch(appResponse.request_id) {
+					Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id:" + appResponse.request_id);
 					
+					switch(appResponse.request_id) {
 					case 100:
+						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
+						
 						/*
 						GroupList.this.toggleNewGroupItemState();
 						Integer groupId = (Integer)(appResponse.object);
@@ -99,6 +106,15 @@ public class PublishGPX extends Activity
 						GroupList.this.getListView().invalidateViews();
 						*/
 						break;
+					case 101:
+						Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id: " + appResponse.request_id);
+						Log.d(TAG, "Response is: " + appResponse);
+						Obj[] objArray = (Obj[]) appResponse.object;
+						for (int i =0; i < objArray.length; i++) {
+							for (int j=0; j < objArray[i].object_properties.length; j++) {
+							Log.d(TAG, "STRING_VAL IS: " + objArray[i].object_properties[j].string_val);
+							}
+						}
 					default: break;
 					}
 				}
@@ -131,10 +147,13 @@ public class PublishGPX extends Activity
       setVisible( false );
       super.onCreate( savedInstanceState );
       showDialog( DIALOG_FILENAME );
+		mDbHelper = new DatabaseHelper(this);
+		mDbHelper.openAndGetDb();      
 	  mReceiver = new PublishGPXReceiver(); 
-	  mGamingServiceConn = new GamingServiceConnection(this.getParent(), mReceiver, 
-				Constants.APP_ID, Constants.APP_API_KEY, GroupList.class.toString());
+	  mGamingServiceConn = new GamingServiceConnection(this, mReceiver, 
+				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
 	  mGamingServiceConn.bind();
+	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
 	  
    }
 
@@ -171,7 +190,8 @@ public class PublishGPX extends Activity
    {
       GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, new ProgressListener(), mGamingServiceConn, true );
       mGpxCreator.start();
-      this.finish();
+      
+//      this.finish();
    }
    
    class ProgressListener implements XmlCreationProgressListener
