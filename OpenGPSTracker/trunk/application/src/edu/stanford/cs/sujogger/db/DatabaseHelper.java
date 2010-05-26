@@ -796,10 +796,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getAllUsersExcludingGroup(long groupId) {
+		//TODO: also exclude self from results
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
 		 * AND users._id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users WHERE groups_users.group_id=groupId)
+		 * UNION
+		 * SELECT users.* FROM users WHERE users._id NOT IN 
+		 * (SELECT groups_users.user_id FROM groups_users)
+		 * ORDER BY users.last_name, users.first_name
 		 */
 		String subQuery = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
 			GroupsUsers.TABLE + " WHERE " + 
@@ -809,8 +814,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String whereClause = Users.TABLE + "." + Users._ID + "=" +
 			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
 			" AND " + Users.TABLE + "." + Users._ID + " NOT IN " + subQuery;
+		String subQuery2 = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
+			GroupsUsers.TABLE + ")";
+		String whereClause2 = Users.TABLE + "." + Users._ID + " NOT IN " + subQuery2;
 		Cursor cursor = mDb.rawQuery("SELECT DISTINCT " + Users.TABLE + ".* FROM " + tables + 
-				" WHERE " + whereClause, null);
+				" WHERE " + whereClause + " UNION" +
+				" SELECT " + Users.TABLE + ".* FROM " + Users.TABLE + " WHERE " + whereClause2 +
+				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
+				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
 	
@@ -833,6 +844,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	/**
 	 * GameMessage Methods
 	 */
+	
+	public Cursor getMessageWithId(long gmId) {
+		String tables = GameMessages.TABLE + ", " + Users.TABLE;
+		String whereClause = GameMessages.TABLE + "." + GameMessages.FROM_USER + "=" +
+			Users.TABLE + "." + Users.USER_ID + " AND " +
+			GameMessages.TABLE + "." + GameMessages._ID + "=" + gmId;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause, null);
+		return cursor;
+	}
 	
 	public Cursor getAllMessages() {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + GameMessages.TABLE + 
@@ -869,9 +889,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return cursor;
 	}
 	*/
-	public Cursor getUsersForMessage(long gmId) {
+	public Cursor getUsersForMessage(long gmId, long senderId) {
+		/**
+		 * SELECT * FROM users WHERE user_id=senderId UNION
+		 * SELECT users.* FROM gm_recipients, users WHERE 
+		 * gm_recipients.user_id=users.user_id AND gm_recipients.gm_id=gmId
+		 */
+		String query1 = "SELECT * FROM " + Users.TABLE + " WHERE " + Users.USER_ID + "=" + senderId;
 		
-		return null;
+		String tables = GMRecipients.TABLE + "," + Users.TABLE;
+		String whereClause = GMRecipients.TABLE + "." + GMRecipients.USER_ID + "=" + 
+			Users.TABLE + "." + Users.USER_ID + " AND " +
+			GMRecipients.TABLE + "." + GMRecipients.GM_ID + "=" + gmId;
+		String query2 = "SELECT " + Users.TABLE + ".* FROM " + tables + " WHERE " + whereClause;
+		
+		Cursor cursor = mDb.rawQuery(query1 + " UNION " + query2, null);
+		return cursor;
 	}
 	
 	public void insertGameMessage(User fromUser, User[] recipients,	

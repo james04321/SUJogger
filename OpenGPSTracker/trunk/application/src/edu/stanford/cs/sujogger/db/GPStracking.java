@@ -266,7 +266,7 @@ public final class GPStracking
 		public static final int TYPE_CHALLENGE = 1;
 		public static final int TYPE_GENERIC = 2;
 		
-		public static String[] types = {"Invite", "Challenge", "Generic message"};
+		public static String[] types = {"Invite", "Challenge", "Message"};
 	}
 	
 	public static final class GMRecipients implements android.provider.BaseColumns {

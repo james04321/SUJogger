@@ -16,13 +16,15 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ListView;
 import android.widget.RadioGroup;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Message;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
-import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
 
@@ -142,6 +144,17 @@ public class Feed extends ListActivity {
 	}
 	
 	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		super.onListItemClick(l, v, position, id);
+		Log.v(TAG, "position = " + position + "; id = " + id);
+		
+		long gmId = (Long)mAdapter.getItem(position);
+		Intent i = new Intent(this, GameMessageDetail.class);
+		i.putExtra(GameMessages.TABLE, gmId);
+		startActivity(i);
+	}
+	
+	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
@@ -228,12 +241,13 @@ public class Feed extends ListActivity {
 	
 	private void fillData() {
 		Log.d(TAG, "fillData()");
-		mAdapter = new GameMessageAdapter(this, mMessages);
+		mAdapter = new GameMessageAdapter(this, mMessages, false);
 		setListAdapter(mAdapter);
 	}
 	
 	class FeedReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
+			Log.d(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
@@ -241,7 +255,9 @@ public class Feed extends ListActivity {
 					switch(appResponse.request_id) {
 					case MessageSender.MSG_SEND_RID:
 						Message msg = (Message)appResponse.object;
-						Log.d(TAG, "onReceive(): sender name = " + msg.fromUser.first_name + " " + msg.fromUser.last_name);
+						User fromUser = msg.fromUser;
+						Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
+						Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
 						break;
 					default: break;
 					}
