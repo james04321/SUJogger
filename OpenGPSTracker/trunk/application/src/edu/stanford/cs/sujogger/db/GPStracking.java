@@ -73,8 +73,14 @@ public final class GPStracking
 		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month
 		
 		// Table attributes
+		public static final String STATISTIC_ID = "statistic_id";
+		public static final String SCOREBOARD_ID = "scoreboard_id";
+		public static final String GROUP_ID = "group_id"; //group_id_server; 0 if self
 		public static final String VALUE = "value";
 		
+		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
+		static final String SCOREBOARD_ID_TYPE = "INTEGER NOT NULL";
+		static final String GROUP_ID_TYPE = "INTEGER NOT NULL DEFAULT 0";
 		static final String VALUE_TYPE = "REAL NOT NULL";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		

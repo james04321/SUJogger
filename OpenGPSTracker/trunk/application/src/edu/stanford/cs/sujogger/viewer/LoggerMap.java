@@ -1498,13 +1498,13 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		
 		if (dist > 0 && duration > 0) {
-			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
-			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
+			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, 0, dist);
+			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, 0, (double) duration);
 			
 			mDbHelper.updateDistanceRan();
 			mDbHelper.updateRunningTime();
 		}
-		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID);
+		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, 0);
 		mDbHelper.updateNumRuns();
 		mDbHelper.updateAvgSpeed();
 		mDbHelper.updateMedDuration();

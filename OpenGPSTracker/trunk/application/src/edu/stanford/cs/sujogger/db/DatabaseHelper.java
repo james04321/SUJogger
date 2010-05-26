@@ -172,14 +172,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, cursor.getDouble(0));
+			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, cursor.getDouble(0));
+			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		/*
 	
@@ -419,14 +419,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * Statistics Methods
 	 */
 	
-	public long getStatisticLong(long statisticId) {
-		return (long) getStatisticReal(statisticId);
+	public long getStatisticLong(long statisticId, long groupId) {
+		return (long) getStatisticReal(statisticId, groupId);
 	}
 	
-	public double getStatisticReal(long statisticId) {
+	public double getStatisticReal(long statisticId, long groupId) {
 		double statVal = 0;
 		Cursor cursor = mDb.query(true, Stats.TABLE, new String[] {Stats.VALUE}, 
-				Stats._ID + "=" + statisticId, null, null, null, null, null);
+				Stats.STATISTIC_ID + "=" + statisticId + " AND " + 
+				Stats.GROUP_ID + "=" + groupId, null, null, null, null, null);
 		if (cursor != null && cursor.getCount() > 0 && cursor.moveToFirst())
 			statVal = cursor.getDouble(0);
 		
@@ -434,24 +435,26 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return statVal;
 	}
 	
-	public boolean setStatistic(long statisticId, double val) {		
+	public boolean setStatistic(long statisticId, long groupId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
 		
-		return mDb.update(Stats.TABLE, args, Stats._ID + "=" + statisticId, null) > 0;
+		return mDb.update(Stats.TABLE, args, 
+				Stats.STATISTIC_ID + "=" + statisticId + " AND " + 
+				Stats.GROUP_ID + "=" + groupId, null) > 0;
 	}
 	
-	public void increaseStatistic(long statisticId, double val) {		
+	public void increaseStatistic(long statisticId, long groupId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
 
 		mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
-				" + ? WHERE " + Stats._ID + " = ?", 
-				new Object[] {new Double(val), new Long(statisticId)});
+				" + ? WHERE " + Stats.STATISTIC_ID + " = ? AND " + Stats.GROUP_ID + " = ?", 
+				new Object[] {new Double(val), new Long(statisticId), new Long(groupId)});
 	}
 	
-	public void increaseStatisticByOne(long statisticId) {
-		increaseStatistic(statisticId, 1);
+	public void increaseStatisticByOne(long statisticId, long groupId) {
+		increaseStatistic(statisticId, groupId, 1);
 	}
 	
 	// Updates distances run in the past week / month
@@ -460,14 +463,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, cursor.getDouble(0));
+			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, cursor.getDouble(0));
+			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 	}
 	
@@ -477,14 +480,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.RUNNING_TIME_WEEK_ID, cursor.getDouble(0));
+			setStatistic(Stats.RUNNING_TIME_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.RUNNING_TIME_MONTH_ID, cursor.getDouble(0));
+			setStatistic(Stats.RUNNING_TIME_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 	}
 	
@@ -494,36 +497,36 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.NUM_RUNS_WEEK_ID, cursor.getDouble(0));
+			setStatistic(Stats.NUM_RUNS_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
-			setStatistic(Stats.NUM_RUNS_MONTH_ID, cursor.getDouble(0));
+			setStatistic(Stats.NUM_RUNS_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 	}
 	
 	public void updateAvgSpeed() {
-		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID);
-		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID);
+		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID, 0);
+		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_ID, totalDist / totalTime);
+			setStatistic(Stats.AVG_SPEED_ID, 0, totalDist / totalTime);
 		
-		double totalDistWeek = getStatisticReal(Stats.DISTANCE_RAN_WEEK_ID);
-		double totalTimeWeek = getStatisticReal(Stats.RUNNING_TIME_WEEK_ID);
+		double totalDistWeek = getStatisticReal(Stats.DISTANCE_RAN_WEEK_ID, 0);
+		double totalTimeWeek = getStatisticReal(Stats.RUNNING_TIME_WEEK_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_WEEK_ID, totalDistWeek / totalTimeWeek);
+			setStatistic(Stats.AVG_SPEED_WEEK_ID, 0, totalDistWeek / totalTimeWeek);
 		
-		double totalDistMonth = getStatisticReal(Stats.DISTANCE_RAN_MONTH_ID);
-		double totalTimeMonth = getStatisticReal(Stats.RUNNING_TIME_MONTH_ID);
+		double totalDistMonth = getStatisticReal(Stats.DISTANCE_RAN_MONTH_ID, 0);
+		double totalTimeMonth = getStatisticReal(Stats.RUNNING_TIME_MONTH_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_MONTH_ID, totalDistMonth / totalTimeMonth);
+			setStatistic(Stats.AVG_SPEED_MONTH_ID, 0, totalDistMonth / totalTimeMonth);
 	}
 	
 	public void updateMedDuration() {
-		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
+		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID, 0);
 		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {Tracks.DURATION}, 
 				null, null, null, null, Tracks.DURATION, String.valueOf(queryLimit));
@@ -531,14 +534,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		int queryCount = cursor.getCount();
 		if (queryCount > 0) {
 			cursor.moveToPosition(queryCount / 2);
-			setStatistic(Stats.MED_DURATION_ID, cursor.getLong(0));
+			setStatistic(Stats.MED_DURATION_ID, 0, cursor.getLong(0));
 		}
 		
 		cursor.close();
 	}
 	
 	public void updateMedDistance() {
-		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID);
+		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID, 0);
 		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {Tracks.DISTANCE}, 
 				null, null, null, null, Tracks.DISTANCE, String.valueOf(queryLimit));
@@ -546,7 +549,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		int queryCount = cursor.getCount();
 		if (queryCount > 0) {
 			cursor.moveToPosition(queryCount / 2);
-			setStatistic(Stats.MED_DURATION_ID, cursor.getDouble(0));
+			setStatistic(Stats.MED_DURATION_ID, 0, cursor.getDouble(0));
 		}
 		
 		cursor.close();
@@ -561,15 +564,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		
 		/**
 		 * SELECT achievements._id, achievements.completed FROM achievements, statistics 
-		 * WHERE achievements.statistic_id=statistics._id
+		 * WHERE achievements.statistic_id=statistics.statistic_id
+		 * AND statistics.group_id=0
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
 		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
 		 */
 		
 		String selectClause = Achievements.TABLE + "." + Achievements._ID;
 		String tables = Achievements.TABLE + ", " + Stats.TABLE;
-		String whereClause = Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
-			Stats.TABLE + "." + Stats._ID + " AND " + 
+		String whereClause = 
+			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
+			Stats.TABLE + "." + Stats.STATISTIC_ID + " AND " +
+			Stats.TABLE + "." + Stats.GROUP_ID + "=0 AND " +
 			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
