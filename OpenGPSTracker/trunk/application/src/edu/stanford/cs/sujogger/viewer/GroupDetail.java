@@ -160,6 +160,10 @@ public class GroupDetail extends ListActivity {
 		//Users section
 		int userId = (Integer)mGroupedAdapter.getItem(position);
 		Log.d(TAG, "userID = " + userId);
+		Intent i = new Intent(this, PeopleTrackList.class);
+		i.putExtra("userId",userId);
+		startActivity(i);
+		return;
 	}
 	
 	private void fillData() {

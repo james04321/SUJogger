@@ -15,6 +15,11 @@
 			android:textAppearance="?android:attr/textAppearanceLarge"
 			android:paddingBottom="3dip"
 			/>
+		<ImageView android:id="@+id/listitem_icon"
+			android:width="20dip"
+			android:height="20dip"
+			android:src="@drawable/upload_32"
+			/>
 		<edu.stanford.cs.sujogger.util.DurationView
 			android:id="@+id/listitem_duration"
 			android:gravity="right"

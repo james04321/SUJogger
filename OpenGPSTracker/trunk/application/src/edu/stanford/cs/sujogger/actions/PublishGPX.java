@@ -29,18 +29,6 @@
 package edu.stanford.cs.sujogger.actions;
 
 
-import edu.stanford.cs.gaming.sdk.model.AppResponse;
-import edu.stanford.cs.gaming.sdk.model.Obj;
-import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
-import edu.stanford.cs.sujogger.R;
-import edu.stanford.cs.sujogger.actions.utils.GpxCreator;
-import edu.stanford.cs.sujogger.actions.utils.XmlCreationProgressListener;
-import edu.stanford.cs.sujogger.db.DatabaseHelper;
-import edu.stanford.cs.sujogger.util.Common;
-import edu.stanford.cs.sujogger.util.Constants;
-import edu.stanford.cs.sujogger.viewer.GroupList;
-import edu.stanford.cs.sujogger.viewer.LoggerMap;
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -49,24 +37,39 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
+import android.content.ContentResolver;
+import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RemoteViews;
-
+import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.Obj;
+import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
+import edu.stanford.cs.sujogger.R;
+import edu.stanford.cs.sujogger.actions.utils.GpxCreator;
+import edu.stanford.cs.sujogger.actions.utils.TrackCreator;
+import edu.stanford.cs.sujogger.actions.utils.XmlCreationProgressListener;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.viewer.LoggerMap;
+ 
 /**
  * Store a GPX file to SDCard
  * 
  * @version $Id: PublishGPX.java 472 2010-04-08 09:50:01Z rcgroot $
  * @author rene (c) Mar 22, 2009, Sogeti B.V.
  */
-public class PublishGPX extends Activity
+public class PublishGPX extends Activity 
 {
    public static final String TAG = "OGT.PublishGPX";
    
@@ -93,8 +96,20 @@ public class PublishGPX extends Activity
 					
 					switch(appResponse.request_id) {
 					case 100:
-						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
+						int trackId = ((Obj) appResponse.object).id;
+						Log.d(TAG, "APPRESPONSE OBJECT IS: " + appResponse.object.getClass().getName());
+	//					int trackId = (Integer) appResponse.object;
+						Obj obj = (Obj) appResponse.appRequest.object;
+						int _id = obj.object_properties[0].int_val;
+					//	Uri uri = new Uri(obj.object_properties[3].string_val);
+						ContentResolver resolver = context.getContentResolver();
+						ContentValues values = new ContentValues();
+						values.put(Tracks.TRACK_ID, trackId);
+						resolver.update(PublishGPX.this.getIntent().getData() , values, Tracks._ID + "=" + _id, null);
 						
+						//						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
+						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
+						trackCreator.downloadTrack(21);
 						/*
 						GroupList.this.toggleNewGroupItemState();
 						Integer groupId = (Integer)(appResponse.object);
@@ -122,7 +137,7 @@ public class PublishGPX extends Activity
 			catch (Exception e) {
 				e.printStackTrace();
 			}
-		}
+		} 
 	}
    
    private OnClickListener mOnClickListener = new OnClickListener()
@@ -154,7 +169,7 @@ public class PublishGPX extends Activity
 				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
 	  mGamingServiceConn.bind();
 	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
-	  
+	     
    }
 
    /*
@@ -184,7 +199,7 @@ public class PublishGPX extends Activity
          default:
             return super.onCreateDialog( id );
       }
-   }
+   } 
 
    protected void exportGPX( String chosenBaseFileName )
    {

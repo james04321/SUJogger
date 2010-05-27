@@ -65,6 +65,7 @@ import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
+import edu.stanford.cs.sujogger.util.TrackListAdapter;
 
 /**
  * Show a list view of all tracks, also doubles for showing search results
@@ -97,7 +98,7 @@ public class TrackList extends ListActivity
    private String mDialogCurrentName = "";
    
    private List<Map<String,?>> actions;
-   private SimpleCursorAdapter trackAdapter;
+   private TrackListAdapter trackAdapter;
 
    private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
       {
@@ -447,8 +448,12 @@ public class TrackList extends ListActivity
       String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
       int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from, R.id.listitem_duration, R.id.listitem_distance };
       // Now create a simple cursor adapter and set it to display
-      trackAdapter = new SimpleCursorAdapter( this, 
-    		  R.layout.trackitem, tracksCursor, fromColumns, toItems );
+      //trackAdapter = new SimpleCursorAdapter( this, 
+    	//	  R.layout.trackitem, tracksCursor, fromColumns, toItems );
+      
+      trackAdapter = new TrackListAdapter(this, tracksCursor);
+       
+      
       //showGlobal = false;
       if (!showGlobal) {
     	  setListAdapter( trackAdapter );

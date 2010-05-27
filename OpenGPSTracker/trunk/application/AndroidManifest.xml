@@ -197,6 +197,15 @@
              </intent-filter>
          </activity>
 
+         <activity
+             android:name=".viewer.PeopleTrackList"
+             android:label="@string/track_list"
+             android:icon="@drawable/icon" >
+             <intent-filter>
+                 <category android:name="android.intent.category.DEFAULT" />
+             </intent-filter>
+         </activity>
+
 		<service android:enabled="true" android:name=".logger.GPSLoggerService">
 			<intent-filter android:label="GPS logger">
 				<action android:name="edu.stanford.cs.sujogger.intent.action.GPSLoggerService"></action>

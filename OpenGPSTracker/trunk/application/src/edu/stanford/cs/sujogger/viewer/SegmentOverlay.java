@@ -303,6 +303,7 @@ public class SegmentOverlay extends Overlay
 
    private synchronized void calculatePath()
    {
+	   Log.d(TAG, "CALCULATING PATH");
       mDotPath = null;
       if( this.mPath == null )
       {
@@ -386,6 +387,8 @@ public class SegmentOverlay extends Overlay
          }
       }
       //      Log.d( TAG, "transformSegmentToPath stop: points "+mCalculatedPoints+" from "+moves+" moves" );
+	   Log.d(TAG, "CALCULATING PATH DONE");
+ 
    }
 
    /**

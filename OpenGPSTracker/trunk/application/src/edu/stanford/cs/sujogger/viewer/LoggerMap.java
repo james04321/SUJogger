@@ -1163,6 +1163,7 @@ public class LoggerMap extends MapActivity {
 	private void createDataOverlays() {
 		mLastSegmentOverlay = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
+		//ASLAI HERE
 		overlays.clear();
 		overlays.add(mMylocation);
 
@@ -1315,6 +1316,7 @@ public class LoggerMap extends MapActivity {
 				resolver.registerContentObserver(tracksegmentsUri, false,
 						this.mTrackSegmentsObserver);
 				resolver.registerContentObserver(mediaUri, false, this.mTrackMediasObserver);
+//ASLAI CHANGED
 				this.mMapView.getOverlays().clear();
 
 				updateTitleBar();

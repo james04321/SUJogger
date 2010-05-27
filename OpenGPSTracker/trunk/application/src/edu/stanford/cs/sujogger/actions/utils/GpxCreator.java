@@ -90,6 +90,9 @@ public class GpxCreator extends XmlCreator
    {
       Looper.prepare();
       Uri trackUri = mIntent.getData();
+      int _id = 0;
+      int duration = 0;
+      double distance = 0;
       String fileName = "UntitledTrack";
       if( mChosenBaseFileName != null && !mChosenBaseFileName.equals( "" ) )
       {
@@ -101,10 +104,13 @@ public class GpxCreator extends XmlCreator
          ContentResolver resolver = mContext.getContentResolver();
          try
          {
-            trackCursor = resolver.query( trackUri, new String[] { Tracks.NAME }, null, null, null );
+            trackCursor = resolver.query( trackUri, new String[] { Tracks.NAME, Tracks._ID, Tracks.DISTANCE, Tracks.DURATION }, null, null, null );
             if( trackCursor.moveToLast() )
             {
                fileName = trackCursor.getString( 0 );
+               _id = trackCursor.getInt(1);
+               distance = trackCursor.getDouble(2);
+               duration = trackCursor.getInt(3);
             }
          }
          finally
@@ -132,24 +138,44 @@ public class GpxCreator extends XmlCreator
 	         serializeTrack( trackUri, serializer );
 	         Obj obj = new Obj();
 	         obj.obj_type = "track";
-	         obj.object_properties = new ObjProperty[3];
+	         obj.object_properties = new ObjProperty[6];
+	         
+	         ObjProperty idProp = new ObjProperty();
+	         idProp.name = "_id";
+	         idProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_INT;
+	         idProp.int_val = _id;
+	         obj.object_properties[0] = idProp;
+	         
 	         ObjProperty nameProp = new ObjProperty();
 	         nameProp.name = "name";
 	         nameProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
 	         nameProp.string_val = fileName;
-	         obj.object_properties[0] = nameProp;
+	         obj.object_properties[1] = nameProp;
 	         
 	         ObjProperty trackProp = new ObjProperty();
 	         trackProp.name = "gpx";
 	         trackProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
 	         trackProp.string_val = baos.toString();
-	         obj.object_properties[1] = trackProp;
+	         obj.object_properties[2] = trackProp;
 	         
-	         ObjProperty idProp = new ObjProperty();
-	         idProp.name = "trackUri";
-	         idProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
-	         idProp.string_val = trackUri.toString();
-	         obj.object_properties[2] = idProp;
+	         ObjProperty trackUriProp = new ObjProperty();
+	         trackUriProp.name = "trackUri";
+	         trackUriProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         trackUriProp.string_val = trackUri.toString();
+	         obj.object_properties[3] = trackUriProp;
+
+	         ObjProperty distanceProp = new ObjProperty();
+	         distanceProp.name = "distance";
+	         distanceProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         distanceProp.float_val = (float) distance;
+	         obj.object_properties[4] = distanceProp;
+
+	         ObjProperty durationProp = new ObjProperty();
+	         durationProp.name = "duration";
+	         durationProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_INT;
+	         durationProp.int_val = duration;
+	         obj.object_properties[5] = durationProp;
+	         
 	         
 	         mGamingServiceConn.createObj(TrackList.PUBLISH_TRACK, obj);
 	         Log.d(TAG, "Object published to server");
