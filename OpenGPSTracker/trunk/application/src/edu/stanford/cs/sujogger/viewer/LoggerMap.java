@@ -36,8 +36,10 @@ import java.util.List;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
 import android.content.ActivityNotFoundException;
+import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -60,6 +62,7 @@ import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.PowerManager;
+import android.os.RemoteException;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -87,6 +90,9 @@ import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
 
+import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
@@ -98,6 +104,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
 import edu.stanford.cs.sujogger.logger.SettingsDialog;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.UnitsI18n;
 
@@ -155,6 +162,12 @@ public class LoggerMap extends MapActivity {
 	private SharedPreferences mSharedPreferences;
 	private GPSLoggerServiceManager mLoggerServiceManager;
 	private DatabaseHelper mDbHelper;
+	
+	public static final int UPDATE_SBS_RID = 1;
+	public static final int GET_SBS_RID = 2;
+	private GamingServiceConnection mGameCon;
+	private ScoreboardUpdateReceiver mReceiver;
+	private ProgressDialog mDialogUpdate;
 
 	private final ContentObserver mTrackSegmentsObserver = new ContentObserver(new Handler()) {
 		@Override
@@ -398,6 +411,12 @@ public class LoggerMap extends MapActivity {
 		
 		mDbHelper = new DatabaseHelper(this);
 		
+		mReceiver = new ScoreboardUpdateReceiver(); 
+		mGameCon = new GamingServiceConnection(this, mReceiver, 
+				Constants.APP_ID, Constants.APP_API_KEY, LoggerMap.class.toString());
+		mGameCon.bind();
+		mGameCon.setUserId(Common.getRegisteredUser().id);
+		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);
 
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -493,7 +512,8 @@ public class LoggerMap extends MapActivity {
 		if (mLoggerServiceManager.getLoggingState() == Constants.STOPPED) {
 			stopService(new Intent(Constants.SERVICENAME));
 		}
-
+		
+		mGameCon.unbind();
 		super.onDestroy();
 	}
 
@@ -1500,40 +1520,44 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		
 		if (dist > 0 && duration > 0) {
-			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, dist);
-			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, (double) duration);
+			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, 0, dist);
+			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, 0, (double) duration);
 			
 			mDbHelper.updateDistanceRan();
 			mDbHelper.updateRunningTime();
 		}
-		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID);
+		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, 0);
 		mDbHelper.updateNumRuns();
 		mDbHelper.updateAvgSpeed();
 		mDbHelper.updateMedDuration();
 		mDbHelper.updateMedDistance();
 		
+		ScoreBoard[] scores = mDbHelper.getSoloStatistics();
+		mDialogUpdate = ProgressDialog.show(this, "", "Updating statistics...", true);
+		
+		try {
+			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
+		} catch (RemoteException e) {}
+	}
+	
+	private void updateAchievements() {
 		Cursor newAchCursor = mDbHelper.updateAchievements();
-		if (newAchCursor.getCount() > 0) {
-			int i = 0;
+		if (newAchCursor.getCount() > 0) {			
+			// Display a toast notification of the first achievement
+			newAchCursor.moveToNext();
+			View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
+					(ViewGroup) findViewById(R.id.toast_layout_root));
 			
-			// Display up to two achievements in the toast notification
-			while(newAchCursor.moveToNext() && i < 1) {
-				View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
-						(ViewGroup) findViewById(R.id.toast_layout_root));
-				
-				ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
-				image.setImageResource(R.drawable.androidmarker);
-				TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
-				text.setText(Achievements.getTitleForId(newAchCursor.getInt(0)) + " achievement earned!");
-				
-				Toast achToast = new Toast(getApplicationContext());
-				achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-				achToast.setDuration(Toast.LENGTH_LONG);
-				achToast.setView(toastLayout);
-				achToast.show();
-				
-				i++;
-			}
+			ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
+			image.setImageResource(R.drawable.androidmarker);
+			TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
+			text.setText(Achievements.getTitleForId(newAchCursor.getInt(0)) + " achievement earned!");
+			
+			Toast achToast = new Toast(getApplicationContext());
+			achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+			achToast.setDuration(Toast.LENGTH_LONG);
+			achToast.setView(toastLayout);
+			achToast.show();
 		}
 	}
 
@@ -1566,5 +1590,28 @@ public class LoggerMap extends MapActivity {
 	private void addVoice() {
 		Intent intent = new Intent(android.provider.MediaStore.Audio.Media.RECORD_SOUND_ACTION);
 		startActivityForResult(intent, MENU_VOICE);
+	}
+	
+	private class ScoreboardUpdateReceiver extends BroadcastReceiver {
+		public void onReceive(Context context, Intent intent) {
+			Log.d(TAG, "onReceive()");
+			try {
+				AppResponse appResponse = null;
+				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
+					Log.d(TAG, appResponse.toString());
+					
+					switch(appResponse.request_id) {
+					case UPDATE_SBS_RID: 
+						mDialogUpdate.dismiss();
+						updateAchievements();
+						break;
+					default: break;
+					}
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

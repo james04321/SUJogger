@@ -40,10 +40,12 @@ public class MessageSender extends Activity {
 	private static final String TAG = "OGT.MessageSender";
 	public static final int MSG_SEND_RID = 1;
 	
+	
 	private long mGroupId;
 	private long[] mUserIds;
 	private User[] mUsers;
 	private int mMessageType;
+	private String mSubjectString;
 	private DatabaseHelper mDbHelper;
 	
 	private GamingServiceConnection mGameCon;
@@ -76,7 +78,7 @@ public class MessageSender extends Activity {
 			mYear = year;
 			mMonth = monthOfYear;
 			mDay = dayOfMonth;
-			updateDateTimeSubject();
+			updateDateTimeSubject(true);
 		}
 	};
 
@@ -85,7 +87,7 @@ public class MessageSender extends Activity {
 		public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
 			mHour = hourOfDay;
 			mMinute = minute;
-			updateDateTimeSubject();
+			updateDateTimeSubject(true);
 		}
 	};
 
@@ -103,10 +105,16 @@ public class MessageSender extends Activity {
 			mGroupId = extras != null ? extras.getLong(Groups.TABLE) : 0;
 		}
 		
-		long userId = savedInstanceState != null ? savedInstanceState.getLong(Users.TABLE) : 0;
-		if (userId == 0) {
+		mUserIds = savedInstanceState != null ? savedInstanceState.getLongArray(Users.TABLE) : null;
+		if (mUserIds == null) {
 			Bundle extras = getIntent().getExtras();
-			userId = extras != null ? extras.getLong(Users.TABLE) : 0;
+			mUserIds = extras != null ? extras.getLongArray(Users.TABLE) : null;
+		}
+		
+		mSubjectString = savedInstanceState != null ? savedInstanceState.getString(GameMessages.SUBJECT) : null;
+		if (mSubjectString == null) {
+			Bundle extras = getIntent().getExtras();
+			mSubjectString = extras != null ? extras.getString(GameMessages.SUBJECT) : null;
 		}
 
 		Log.d(TAG, "onCreate(): groupId = " + mGroupId);
@@ -118,16 +126,14 @@ public class MessageSender extends Activity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, MessageSender.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(6);
+		mGameCon.setUserId(3);
 
 		setTitle("New Message");
 		
-		if (userId == 0) {
-			mUserIds = null;
+		if (mUserIds == null) {
 			mUsers = null;
 		}
 		else {
-			mUserIds = new long[] {userId};
 			mUsers = mDbHelper.getUserArrayForUserIds(mUserIds);
 		}
 
@@ -143,6 +149,7 @@ public class MessageSender extends Activity {
 				case GameMessages.TYPE_GENERIC: 
 					mMessageType = GameMessages.TYPE_GENERIC;
 					datetimeLayout.setVisibility(View.GONE);
+					allButton.setVisibility(View.VISIBLE);
 					subjectText.setEnabled(true);
 					subjectText.setHint("Subject");
 					subjectText.requestFocus();
@@ -150,25 +157,35 @@ public class MessageSender extends Activity {
 				case GameMessages.TYPE_INVITE:
 					mMessageType = GameMessages.TYPE_INVITE;
 					datetimeLayout.setVisibility(View.VISIBLE);
+					allButton.setVisibility(View.GONE);
 					subjectText.setEnabled(false);
 					bodyText.requestFocus();
 					break;
 				case GameMessages.TYPE_CHALLENGE: 
 					mMessageType = GameMessages.TYPE_CHALLENGE;
 					datetimeLayout.setVisibility(View.VISIBLE);
+					allButton.setVisibility(View.GONE);
 					subjectText.setEnabled(false);
 					bodyText.requestFocus();
 					break;
 				default: break;
 				}
 				
-				updateDateTimeSubject();
+				updateDateTimeSubject(true);
+				updateRecipients();
 			}
 			
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
 
 		subjectText = (EditText) findViewById(R.id.msg_subject);
+		if (mSubjectString != null) {
+			Log.d(TAG, "subjectString = " + mSubjectString);
+			subjectText.setText(mSubjectString);
+			msgSpinner.setSelection(GameMessages.TYPE_GENERIC);
+			mMessageType = GameMessages.TYPE_GENERIC;
+		}
+		
 		bodyText = (EditText) findViewById(R.id.msg_body);
 		
 		final Calendar c = Calendar.getInstance();
@@ -231,14 +248,25 @@ public class MessageSender extends Activity {
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			
 			public void onClick(View v) {
-				sendMessage();
+				if (mMessageType != GameMessages.TYPE_GENERIC && mGroupId == 0 && mUsers == null) {
+					Toast toast = Toast.makeText(MessageSender.this, 
+							"Select a group or some friends to send to", Toast.LENGTH_SHORT);
+					toast.show();
+				}
+				else if (subjectText.getText().toString().equals("")) {
+					Toast toast = Toast.makeText(MessageSender.this, 
+							"Cannot send without a subject", Toast.LENGTH_SHORT);
+					toast.show();
+				}
+				else
+					sendMessage();
 			}
 		});
 		
 		msgRecipientText = (TextView)findViewById(R.id.msg_to);
 		updateRecipients();
 		
-		updateDateTimeSubject();
+		updateDateTimeSubject(false);
 	}
 
 	@Override
@@ -265,6 +293,8 @@ public class MessageSender extends Activity {
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
 		outState.putLong(Groups.TABLE, mGroupId);
+		outState.putLongArray(Users.TABLE, mUserIds);
+		outState.putString(GameMessages.SUBJECT, mSubjectString);
 	}
 
 	@Override
@@ -291,8 +321,12 @@ public class MessageSender extends Activity {
 	}
 	
 	private void updateRecipients() {
-		if (mGroupId == 0 && mUsers == null)
-			msgRecipientText.setText("To: All");
+		if (mGroupId == 0 && mUsers == null) {
+			if (mMessageType == GameMessages.TYPE_GENERIC)
+				msgRecipientText.setText("To: All");
+			else
+				msgRecipientText.setText("To: ");
+		}
 		else if (mGroupId > 0) {
 			Cursor groupInfo = mDbHelper.getGroupWithId(mGroupId);
 			String groupName = null;
@@ -307,7 +341,7 @@ public class MessageSender extends Activity {
 		}
 	}
 
-	private void updateDateTimeSubject() {
+	private void updateDateTimeSubject(boolean updateSubject) {
 		dateButton.setText(new StringBuilder()
 			.append(mMonth+1).append("/")
 			.append(mDay).append("/")
@@ -328,7 +362,10 @@ public class MessageSender extends Activity {
 			.append(mDay).toString() + " at " + timeString);
 			break;
 		case GameMessages.TYPE_GENERIC:
-			subjectText.setText("");
+			if (mSubjectString != null)
+				subjectText.setText(mSubjectString);
+			else
+				subjectText.setText("");
 		default: break;
 		}
 	}
@@ -352,14 +389,14 @@ public class MessageSender extends Activity {
 				subjectText.getText().toString(), bodyText.getText().toString());
 		User[] recipients = getArrayOfRecipients();
 		
-		//mDbHelper.insertGameMessage(Common.getRegisteredUser(), recipients, now, msgObject);
+		mDbHelper.insertGameMessage(Common.getRegisteredUser(), recipients, now, msgObject);
 		
-		
+		/*
 		try {
 			mGameCon.sendMessage(MSG_SEND_RID, msgObject, Messages.TYPE_GM, 
 					Common.getRegisteredUser(), null, recipients, now, Feed.class.toString());	
 		} catch (RemoteException e) {}
-		
+		*/
 		
 		Toast toast = Toast.makeText(MessageSender.this, 
 				"Message sent", Toast.LENGTH_SHORT);

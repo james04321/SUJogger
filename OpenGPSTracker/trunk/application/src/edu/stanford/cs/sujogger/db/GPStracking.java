@@ -69,12 +69,24 @@ public final class GPStracking
 		public static final int NUM_PARTNER_RUNS_MONTH_ID = 24;
 		public static final int AVG_SPEED_MONTH_ID = 25;
 		
+		public static final int[] ALL_STAT_IDS = new int[] {
+			DISTANCE_RAN_ID, RUNNING_TIME_ID, NUM_RUNS_ID, NUM_PARTNER_RUNS_ID, AVG_SPEED_ID,
+			MED_DURATION_ID, MED_DISTANCE_ID, DISTANCE_RAN_WEEK_ID, RUNNING_TIME_WEEK_ID,
+			NUM_RUNS_WEEK_ID, NUM_PARTNER_RUNS_WEEK_ID, AVG_SPEED_WEEK_ID, DISTANCE_RAN_MONTH_ID,
+			RUNNING_TIME_MONTH_ID, NUM_RUNS_MONTH_ID, NUM_PARTNER_RUNS_MONTH_ID, AVG_SPEED_MONTH_ID};
+		
 		public static final long WEEK_INTERVAL = 604800000; // milliseconds in a week
 		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month
 		
 		// Table attributes
+		public static final String STATISTIC_ID = "statistic_id";
+		public static final String SCOREBOARD_ID = "scoreboard_id";
+		public static final String GROUP_ID = "group_id"; //group_id_server; 0 if self
 		public static final String VALUE = "value";
 		
+		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
+		static final String SCOREBOARD_ID_TYPE = "INTEGER NOT NULL";
+		static final String GROUP_ID_TYPE = "INTEGER NOT NULL DEFAULT 0";
 		static final String VALUE_TYPE = "REAL NOT NULL";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
@@ -266,7 +278,7 @@ public final class GPStracking
 		public static final int TYPE_CHALLENGE = 1;
 		public static final int TYPE_GENERIC = 2;
 		
-		public static String[] types = {"Invite", "Challenge", "Generic message"};
+		public static String[] types = {"Invite", "Challenge", "Message"};
 	}
 	
 	public static final class GMRecipients implements android.provider.BaseColumns {

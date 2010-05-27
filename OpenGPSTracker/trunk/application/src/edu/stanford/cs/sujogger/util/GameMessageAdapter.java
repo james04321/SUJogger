@@ -18,15 +18,32 @@ public class GameMessageAdapter extends CursorAdapter {
 	private static final String TAG = "OGT.GameMessageAdapter";
 	private Cursor mCursor;
 	private boolean mFlinging = false;
+	private boolean mFull;
 
-	public GameMessageAdapter(Context context, Cursor c) {
-		super(context, c);
-		mCursor = c;
+	public GameMessageAdapter(Context context, Cursor c, boolean full) {
+		this(context, c, true, full);
 	}
 
-	public GameMessageAdapter(Context context, Cursor c, boolean autoRequery) {
+	public GameMessageAdapter(Context context, Cursor c, boolean autoRequery, boolean full) {
 		super(context, c, autoRequery);
 		mCursor = c;
+		mFull = full;
+	}
+	
+	@Override
+	public void changeCursor(Cursor cursor) {
+		mCursor = cursor;
+		super.changeCursor(cursor);
+	}
+	
+	@Override
+	public Object getItem(int position) {
+		if (position >= 0 && position < mCursor.getCount()) {
+			mCursor.moveToPosition(position);
+			Log.d(TAG, "getItem(): id = " + mCursor.getLong(0));
+			return mCursor.getLong(0);
+		}
+		else return 0;
 	}
 	
 	@Override
@@ -88,13 +105,32 @@ public class GameMessageAdapter extends CursorAdapter {
 			timeText.setText(month + "/" + day + "/" + year);
 		}
 		
+		if (mFull) {
+			String body = cursor.getString(7);
+			TextView bodyText = (TextView)view.findViewById(R.id.msg_item_body);
+			if (body == null) {
+				bodyText.setVisibility(View.GONE);
+				bodyText.setText("");
+			}
+			else {
+				bodyText.setVisibility(View.VISIBLE);
+				bodyText.setText(body);
+			}
+		}
 	}
 
 	@Override
 	public View newView(Context context, Cursor cursor, ViewGroup parent) {
-		final View v = LayoutInflater.from(context).inflate(R.layout.message_item, parent, false);
-		bindView(v, context, cursor);
-		return v;
+		if (mFull) {
+			final View v = LayoutInflater.from(context).inflate(R.layout.message_item_full, parent, false);
+			bindView(v, context, cursor);
+			return v;
+		}
+		else {
+			final View v = LayoutInflater.from(context).inflate(R.layout.message_item, parent, false);
+			bindView(v, context, cursor);
+			return v;
+		}
 	}
 
 }

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="wrap_content"
+	>
+	<RelativeLayout 
+	    android:layout_width="fill_parent"
+	    android:layout_height="50dip"
+	    android:paddingTop="6dip"
+	    android:paddingLeft="6dip"
+	    android:paddingRight="6dip">
+	              
+	    <edu.stanford.cs.sujogger.util.RemoteImageView 
+	    	android:id="@+id/msg_item_image"
+	    	android:layout_width="36dip"
+	    	android:layout_height="36dip"
+	    	android:layout_alignParentTop="true"
+	        android:layout_marginRight="10dip"
+	    />
+	    
+	    <TextView 
+	    	android:id="@+id/msg_item_subject"
+	    	android:layout_width="wrap_content"
+	    	android:layout_height="20dip"
+	    	android:textAppearance="?android:attr/textAppearanceSmall"
+	    	android:layout_toRightOf="@id/msg_item_image"
+	        android:layout_alignParentBottom="true"
+	        android:layout_alignParentRight="true"
+	    />
+	    
+	    <TextView 
+	    	android:id="@+id/msg_item_name"
+	    	android:layout_width="fill_parent"
+	    	android:layout_height="wrap_content"
+	    	
+	    	android:textStyle="bold"
+	    	android:textSize="16sp"
+	    	android:layout_toRightOf="@id/msg_item_image"
+	        android:layout_alignParentTop="true"
+	        android:layout_above="@id/msg_item_subject"
+	    />
+	    
+	    <TextView 
+	    	android:id="@+id/msg_item_time"
+	    	android:layout_width="wrap_content"
+	    	android:layout_height="wrap_content"
+	    	android:textSize="12sp"
+	        android:layout_alignParentTop="true"
+	        android:layout_alignParentRight="true"
+	        android:layout_marginTop="2dp"
+	    />
+	</RelativeLayout>
+	
+	<TextView 
+	    	android:id="@+id/msg_item_body"
+	    	android:layout_width="fill_parent"
+	    	android:layout_height="wrap_content"
+	    	android:textAppearance="?android:attr/textAppearanceSmall"
+	        android:paddingLeft="6dip"
+	        android:paddingRight="6dip"
+	        android:paddingBottom="6dip"
+	    />
+</LinearLayout>
