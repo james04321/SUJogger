@@ -56,6 +56,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.MediaColumns;
+import edu.stanford.cs.sujogger.db.GPStracking.ScoreboardTemp;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
@@ -1014,5 +1015,34 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		mDb.insert(Users.TABLE, null, values);
 	}
 	
+	/**
+	 * ScoreBoard Methods
+	 */
 	
+	public void fillScoreBoard(ScoreBoard[] scores) {
+		mDb.delete(ScoreboardTemp.TABLE, null, null);
+		
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < scores.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(ScoreboardTemp.USER_ID, scores[i].user_id);
+				values.put(ScoreboardTemp.GROUP_ID, scores[i].group_id);
+				values.put(ScoreboardTemp.VALUE, scores[i].value);
+				values.put(ScoreboardTemp.TYPE, scores[i].sb_type);
+				mDb.insert(ScoreboardTemp.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+	}
+	
+	public Cursor getScoresWithUsers() {
+		String tables = ScoreboardTemp.TABLE + "," + Users.TABLE;
+		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.USER_ID + "=" +
+			Users.TABLE + "." + Users.USER_ID;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause, null);
+		return cursor;
+	}
 }

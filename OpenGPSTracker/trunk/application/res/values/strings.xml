@@ -131,6 +131,8 @@
     <string name="fp_clearbutton">Clear</string>
     <string name="fp_addbutton">Add</string>
     
+    <string name="lb_option">Leaderboards</string>
+    
     <!-- Feed Tab -->
     <string name="feed_filter_all">All</string>
     <string name="feed_filter_msg">Messages</string>

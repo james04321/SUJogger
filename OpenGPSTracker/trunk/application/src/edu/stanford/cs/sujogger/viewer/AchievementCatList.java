@@ -6,6 +6,9 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
 import edu.stanford.cs.sujogger.R;
@@ -17,7 +20,8 @@ import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
-
+	private static final int MENU_LEADERBOARD = 0;
+	
 	private DatabaseHelper mDbHelper;
 	private Cursor mRecAchEarned;
 	private Cursor mRecAchLost;
@@ -84,6 +88,32 @@ public class AchievementCatList extends ListActivity {
 	        i.putExtra(Categories.TABLE, (Integer)item);
 	        startActivity(i);
 		}
+	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		boolean result = super.onCreateOptionsMenu(menu);
+		Log.d(TAG, "onCreateOptionsMenu()");
+		
+		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option);
+		return result;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		boolean handled = false;
+		
+		switch (item.getItemId()) {
+		case MENU_LEADERBOARD:
+			
+			handled = true;
+			break;
+		default:
+			handled = super.onOptionsItemSelected(item);
+			break;
+		}
+		
+		return handled;
 	}
 
 	private void fillData() {

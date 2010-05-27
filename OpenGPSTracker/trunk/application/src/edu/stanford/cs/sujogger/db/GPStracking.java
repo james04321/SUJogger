@@ -217,12 +217,14 @@ public final class GPStracking
 		public static final String FIRST_NAME = "first_name";
 		public static final String LAST_NAME = "last_name";
 		public static final String IMG_URL = "img_url";
+		public static final String IS_FRIEND = "is_friend";
 		
 		static final String USER_ID_TYPE = "INTEGER NOT NULL";
 		static final String FB_ID_TYPE = "INTEGER NOT NULL";
 		static final String FIRST_NAME_TYPE = "TEXT";
 		static final String LAST_NAME_TYPE = "TEXT";
 		static final String IMG_URL_TYPE = "TEXT";
+		static final String IS_FRIEND_TYPE = "INTEGER NOT NULL DEFAULT 0";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		public static final String TABLE = "users";
@@ -297,6 +299,21 @@ public final class GPStracking
 		//Types
 		public static final int TYPE_GM = 0;
 		public static final int TYPE_NOTIFICATION = 1;
+	}
+	
+	public static final class ScoreboardTemp implements android.provider.BaseColumns {
+		public static final String USER_ID = "user_id";
+		public static final String GROUP_ID = "group_id";
+		public static final String VALUE = "value";
+		public static final String TYPE = "type";
+		
+		static final String USER_ID_TYPE = "INTEGER";
+		static final String GROUP_ID_TYPE = "INTEGER";
+		static final String VALUE_TYPE = "INTEGER NOT NULL";
+		static final String TYPE_TYPE = "INTEGER NOT NULL";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "scoreboard";
 	}
    
    /**
