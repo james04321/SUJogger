@@ -36,6 +36,9 @@ public class Constants
    public static final String TMPICTUREFILE_PATH = EXTERNAL_DIR+"media_tmp";
    public static final Uri NAME_URI = Uri.parse( "content://" + GPStracking.AUTHORITY+".string" );
    
+   public static final String STATS_INITIALIZED = "stats_initialized";
+   
+   //Gaming@Stanford stuff
    public static final int APP_ID = 1;
    public static final String APP_API_KEY = "";
 }

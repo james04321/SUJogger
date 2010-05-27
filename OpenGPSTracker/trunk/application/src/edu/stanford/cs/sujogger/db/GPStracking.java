@@ -69,6 +69,12 @@ public final class GPStracking
 		public static final int NUM_PARTNER_RUNS_MONTH_ID = 24;
 		public static final int AVG_SPEED_MONTH_ID = 25;
 		
+		public static final int[] ALL_STAT_IDS = new int[] {
+			DISTANCE_RAN_ID, RUNNING_TIME_ID, NUM_RUNS_ID, NUM_PARTNER_RUNS_ID, AVG_SPEED_ID,
+			MED_DURATION_ID, MED_DISTANCE_ID, DISTANCE_RAN_WEEK_ID, RUNNING_TIME_WEEK_ID,
+			NUM_RUNS_WEEK_ID, NUM_PARTNER_RUNS_WEEK_ID, AVG_SPEED_WEEK_ID, DISTANCE_RAN_MONTH_ID,
+			RUNNING_TIME_MONTH_ID, NUM_RUNS_MONTH_ID, NUM_PARTNER_RUNS_MONTH_ID, AVG_SPEED_MONTH_ID};
+		
 		public static final long WEEK_INTERVAL = 604800000; // milliseconds in a week
 		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month
 		

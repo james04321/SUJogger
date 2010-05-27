@@ -35,19 +35,27 @@ import java.util.Map;
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.AlertDialog.Builder;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -60,10 +68,16 @@ import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 /**
@@ -90,7 +104,16 @@ public class TrackList extends ListActivity
    public static final int PUBLISH_TRACK=100;
    public static final int DOWNLOAD_TRACK=101;
    
+   public static final int CREATE_SB_RID = 1;
+   public static final int GET_SBS_RID = 2;
    
+   private SharedPreferences mSharedPreferences;
+   private ProgressDialog mDialogInit;
+   
+   private DatabaseHelper mDbHelper;
+   private GamingServiceConnection mGameCon;
+   private ScoreboardReceiver mReceiver;
+   private Handler mWaitHandler;
    
    private EditText mTrackNameView;
    private Uri mDialogUri;
@@ -119,6 +142,20 @@ public class TrackList extends ListActivity
             TrackList.this.getContentResolver().update( mDialogUri, values, null, null );
          }
       };
+   
+   private Runnable mWaitServiceStartTask = new Runnable() {
+	   public void run() {
+		   if (mGameCon.grs != null) {
+			   try {
+				   mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
+			   } catch (RemoteException e) {}
+			   mWaitHandler.removeCallbacks(mWaitServiceStartTask);
+		   }
+		   else {
+			   mWaitHandler.postDelayed(mWaitServiceStartTask, 100);
+		   }
+	   }
+   };
 
    @Override
    protected void onCreate( Bundle savedInstanceState )
@@ -126,6 +163,17 @@ public class TrackList extends ListActivity
       super.onCreate( savedInstanceState );
       Log.d(TAG, "onCreate()");
       this.setContentView( R.layout.tracklist );
+      
+      mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+      
+      mDbHelper = new DatabaseHelper(this);
+      mDbHelper.openAndGetDb();
+      
+      mReceiver = new ScoreboardReceiver(); 
+      mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
+    		  Constants.APP_ID, Constants.APP_API_KEY, TrackList.class.toString());
+      mGameCon.bind();
+      mGameCon.setUserId(Common.getRegisteredUser().id);
       
       actions = new LinkedList<Map<String,?>>();
 	  actions.add(Common.createItem("New Track"));
@@ -135,6 +183,31 @@ public class TrackList extends ListActivity
 
       // Add the context menu (the long press thing)
       registerForContextMenu( getListView() );
+      
+      if (!mSharedPreferences.getBoolean(Constants.STATS_INITIALIZED, false)) {
+    	  mDialogInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
+    	  mWaitHandler = new Handler();
+    	  //Poll the GamingServiceConnection every 100ms until the service starts
+    	  mWaitHandler.postDelayed(mWaitServiceStartTask, 100);
+      }
+   }
+   
+   private void initializeSelfStatistics() {
+	   //try {
+		   ScoreBoard score;
+		   int[] allStats = Stats.ALL_STAT_IDS;
+		   ScoreBoard[] scores = new ScoreBoard[allStats.length];
+		   for (int i = 0; i < allStats.length; i++) {
+			   score = new ScoreBoard();
+			   score.app_id = Constants.APP_ID;
+			   score.user_id = Common.getRegisteredUser().id;
+			   score.group_id = -1;
+			   score.value = 0;
+			   score.sb_type = String.valueOf(allStats[i]);
+			   scores[i] = score;
+		   }
+		   //mGameCon.createScoreBoards(CREATE_SB_RID, scores);
+	   //} catch (RemoteException e) {}
    }
 
    @Override
@@ -149,10 +222,8 @@ public class TrackList extends ListActivity
 	   Log.d(TAG, "onRestart()");
 	   
 	   trackAdapter.notifyDataSetChanged();
-	   //trackAdapter.notifyDataSetInvalidated();
 	   getListView().invalidate();
 	   getListView().invalidateViews();
-	   //displayIntent( getIntent() );
 	   super.onRestart();
    }
    
@@ -186,6 +257,13 @@ public class TrackList extends ListActivity
       outState.putParcelable( "URI", mDialogUri );
       outState.putString( "NAME", mDialogCurrentName );
       super.onSaveInstanceState( outState );
+   }
+   
+   @Override
+   protected void onDestroy() {
+	   mDbHelper.close();
+	   mGameCon.unbind();
+	   super.onDestroy();
    }
 
    @Override
@@ -478,4 +556,52 @@ public class TrackList extends ListActivity
       Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
       return cursor;
    }
+   
+   private class ScoreboardReceiver extends BroadcastReceiver {
+		public void onReceive(Context context, Intent intent) {
+			Log.d(TAG, "onReceive()");
+			try {
+				AppResponse appResponse = null;
+				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
+					Log.d(TAG, appResponse.toString());
+					
+					switch(appResponse.request_id) {
+					case GET_SBS_RID:
+						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						if (scores == null) {
+							Log.d(TAG, "onReceive(): no scores available");
+							initializeSelfStatistics();
+						}
+						else {
+							Log.d(TAG, "onReceive(): scores found");
+							Integer[] scoreIds = new Integer[scores.length];
+							for (int i = 0; i < scoreIds.length; i++)
+								scoreIds[i] = scores[i].id;
+							mDbHelper.updateScoreboardIds(scoreIds);
+							
+							Editor editor = mSharedPreferences.edit();
+							editor.putBoolean(Constants.STATS_INITIALIZED, true);
+							editor.commit();
+							mDialogInit.dismiss();
+						}
+						break;
+					case CREATE_SB_RID:
+						Integer[] scoreIds = (Integer[])appResponse.object;
+						if (scoreIds != null)
+							mDbHelper.updateScoreboardIds(scoreIds);
+						
+						Editor editor = mSharedPreferences.edit();
+						editor.putBoolean(Constants.STATS_INITIALIZED, true);
+						editor.commit();
+						mDialogInit.dismiss();
+						break;
+					default: break;
+					}
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
 }

@@ -20,6 +20,7 @@ public class JoggerApp extends TabActivity {
 		} catch (IOException e) {
 			throw new Error("Unable to create database");
 		}
+		dbHelper.close();
 		
 		TabHost host = getTabHost();
 		host.addTab(host.newTabSpec("tracks").setIndicator("Tracks").

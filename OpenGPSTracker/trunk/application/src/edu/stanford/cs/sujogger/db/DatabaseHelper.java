@@ -47,6 +47,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
+import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
@@ -63,6 +64,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
 import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.MessageObject;
 
 /**
@@ -435,6 +437,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return statVal;
 	}
 	
+	public ScoreBoard[] getSoloStatistics() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
+				Stats.GROUP_ID + "=" + 0, null);
+		ScoreBoard score;
+		ScoreBoard[] scores = new ScoreBoard[cursor.getCount()];
+		int[] allStats = Stats.ALL_STAT_IDS;
+		int i = 0;
+		while (cursor.moveToNext()) {
+			score = new ScoreBoard();
+			score.id = cursor.getInt(2);
+			score.app_id = Constants.APP_ID;
+			score.user_id = Common.getRegisteredUser().id;
+			score.group_id = 0;
+			score.value = (int)cursor.getDouble(4);
+			score.sb_type = String.valueOf(allStats[i]);
+			scores[i] = score;
+			Log.d(TAG, "sb_type = " + score.sb_type + "; value = " + score.value);
+			i++;
+		}
+		cursor.close();
+		return scores;
+	}
+	
 	public boolean setStatistic(long statisticId, long groupId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
@@ -552,6 +577,23 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			setStatistic(Stats.MED_DURATION_ID, 0, cursor.getDouble(0));
 		}
 		
+		cursor.close();
+	}
+	
+	// Updates solo statistics with scoreboard IDs from the server
+	public void updateScoreboardIds(Integer[] scoreIds) {
+		ContentValues values = new ContentValues();
+		int[] allStats = Stats.ALL_STAT_IDS;
+		for (int i = 0; i < scoreIds.length; i++) {
+			values.clear();
+			values.put(Stats.SCOREBOARD_ID, scoreIds[i]);
+			mDb.update(Stats.TABLE, values, 
+					Stats.GROUP_ID + "=" + 0 + " AND " +
+					Stats.STATISTIC_ID + "=" + allStats[i], null);
+		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		DatabaseUtils.dumpCursor(cursor);
 		cursor.close();
 	}
 	

@@ -138,7 +138,7 @@ public class Feed extends ListActivity {
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		Log.d(TAG, "onSaveInstnaceState()");
+		Log.d(TAG, "onSaveInstanceState()");
 		super.onSaveInstanceState(outState);
 		outState.putInt(FILTER_MODE_KEY, mFilterMode);
 	}
