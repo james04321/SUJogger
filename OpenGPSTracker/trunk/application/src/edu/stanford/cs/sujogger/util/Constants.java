@@ -36,7 +36,15 @@ public class Constants
    public static final String TMPICTUREFILE_PATH = EXTERNAL_DIR+"media_tmp";
    public static final Uri NAME_URI = Uri.parse( "content://" + GPStracking.AUTHORITY+".string" );
    
+   //Facebook integration
+   public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
+   public static final String FB_APP_ID = "127241693959042";
+   public static final String[] FB_PERMISSIONS =
+       new String[] {"read_friendlists", "offline_access"};
+   
+   //First launch flags
    public static final String STATS_INITIALIZED = "stats_initialized";
+   public static final String USER_REGISTERED = "user_registered";
    
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;

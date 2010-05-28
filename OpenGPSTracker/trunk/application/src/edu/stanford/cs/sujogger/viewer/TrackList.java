@@ -32,6 +32,10 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -66,16 +70,25 @@ import android.widget.AdapterView;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
-import android.widget.SimpleCursorAdapter;
 import android.widget.TextView;
+
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.DialogError;
+import com.facebook.android.Facebook;
+import com.facebook.android.FacebookError;
+import com.facebook.android.Util;
+import com.facebook.android.Facebook.DialogListener;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.util.BaseRequestListener;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
@@ -109,12 +122,16 @@ public class TrackList extends ListActivity
    public static final int GET_SBS_RID = 2;
    
    private SharedPreferences mSharedPreferences;
-   private ProgressDialog mDialogInit;
+   private ProgressDialog mDialogUserInit;
+   private ProgressDialog mDialogStatisticInit;
    
    private DatabaseHelper mDbHelper;
    private GamingServiceConnection mGameCon;
    private ScoreboardReceiver mReceiver;
    private Handler mWaitHandler;
+   
+   private Facebook mFacebook;
+   private AsyncFacebookRunner mAsyncRunner;
    
    private EditText mTrackNameView;
    private Uri mDialogUri;
@@ -185,8 +202,18 @@ public class TrackList extends ListActivity
       // Add the context menu (the long press thing)
       registerForContextMenu( getListView() );
       
-      if (!mSharedPreferences.getBoolean(Constants.STATS_INITIALIZED, false)) {
-    	  mDialogInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
+      if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+    	  mFacebook = new Facebook();
+    	  mAsyncRunner = new AsyncFacebookRunner(mFacebook);
+    	  
+    	  mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+                  new LoginDialogListener());
+      }
+   }
+   
+   private void getStatisticsFromServer() {
+	   if (!mSharedPreferences.getBoolean(Constants.STATS_INITIALIZED, false)) {
+		  mDialogStatisticInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
     	  mWaitHandler = new Handler();
     	  //Poll the GamingServiceConnection every 100ms until the service starts
     	  mWaitHandler.postDelayed(mWaitServiceStartTask, 100);
@@ -587,7 +614,7 @@ public class TrackList extends ListActivity
 							Editor editor = mSharedPreferences.edit();
 							editor.putBoolean(Constants.STATS_INITIALIZED, true);
 							editor.commit();
-							mDialogInit.dismiss();
+							mDialogStatisticInit.dismiss();
 						}
 						break;
 					case CREATE_SB_RID:
@@ -598,7 +625,7 @@ public class TrackList extends ListActivity
 						Editor editor = mSharedPreferences.edit();
 						editor.putBoolean(Constants.STATS_INITIALIZED, true);
 						editor.commit();
-						mDialogInit.dismiss();
+						mDialogStatisticInit.dismiss();
 						break;
 					default: break;
 					}
@@ -609,4 +636,71 @@ public class TrackList extends ListActivity
 			}
 		}
 	}
+   
+   private final class LoginDialogListener implements DialogListener {
+       public void onComplete(Bundle values) {
+           //SessionEvents.onLoginSuccess();
+           Log.d(TAG, "Facebook login successfull!!!");
+           mDialogUserInit = ProgressDialog.show(TrackList.this, "", "Retrieving your friends...", true);
+           mAsyncRunner.request("me/friends", new FriendsRequestListener());
+       }
+
+       public void onFacebookError(FacebookError error) {
+           //SessionEvents.onLoginError(error.getMessage());
+       }
+       
+       public void onError(DialogError error) {
+           //SessionEvents.onLoginError(error.getMessage());
+       }
+
+       public void onCancel() {
+           //SessionEvents.onLoginError("Action Canceled");
+       }
+   }
+   
+   public class FriendsRequestListener extends BaseRequestListener {
+
+       public void onComplete(final String response) {
+           try {
+               // process the response here: executed in background thread
+               Log.d(TAG, "Response: " + response.toString());
+               JSONObject json = Util.parseJson(response);
+               
+               JSONArray friends = json.getJSONArray("data");
+               if (friends == null) return;
+               
+               User[] users = new User[friends.length()];
+               JSONObject friend;
+               User user;
+               String[] names;
+               for (int i = 0; i < friends.length(); i++) {
+            	   friend = friends.getJSONObject(i);
+            	   user = new User();
+            	   user.fb_id = friend.getInt("id");
+            	   names = friend.getString("name").split(" ", 2);
+            	   if (names.length > 0)
+            		   user.first_name = names[0];
+            	   if (names.length > 1)
+            		   user.last_name = names[1];
+            	   user.fb_photo = Constants.GRAPH_BASE_URL + user.fb_id + "/picture";
+            	   users[i] = user;
+            	   Log.d(TAG, "firstName = " + user.first_name + "; lastName = " + user.last_name + "; fb_id = " + user.fb_id + "; fb_photo = " + user.fb_photo);
+               }
+               
+               TrackList.this.runOnUiThread(new Runnable() {
+                   public void run() {
+                       mDialogUserInit.dismiss();
+                       Editor editor = mSharedPreferences.edit();
+                       editor.putBoolean(Constants.USER_REGISTERED, true);
+                       editor.commit();
+                       getStatisticsFromServer();
+                   }
+               });
+           } catch (JSONException e) {
+               Log.w("Facebook-Example", "JSON Error in response");
+           } catch (FacebookError e) {
+               Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+           }
+       }
+   }
 }
