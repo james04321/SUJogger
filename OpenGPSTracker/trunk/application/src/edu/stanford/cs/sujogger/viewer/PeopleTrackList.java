@@ -21,31 +21,52 @@ import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 
+import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.PublishGPX;
+import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.actions.utils.TrackCreator;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
+import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
+import android.view.ContextMenu;
+import android.view.MenuItem;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.ListView;
+import android.widget.TextView;
  
 public class PeopleTrackList extends ListActivity {
+	class Track {
+		public int id;
+		public String name;
+		public int duration;
+		public double distance;
+		
+	}
+	   private static final int MENU_DOWNLOAD_TRACK = 0;
+	
 	public static final String TAG = "PeopleTrackList";
 	   private PeopleTrackListReceiver mReceiver;
 	   private GamingServiceConnection mGamingServiceConn;
-	   private int[] ids;
+	   private Track[] tracks;
+
+	private ProgressDialog mProgressDialog;
 	class PeopleTrackListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			try {
@@ -58,6 +79,8 @@ public class PeopleTrackList extends ListActivity {
 					case 120:
 				        ListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
 				        setListAdapter(adapter);
+				        Log.d(TAG, "HERE 3");
+				        mProgressDialog.cancel();
 				        /*
 						int trackId = ((Obj) appResponse.object).id;
 						Log.d(TAG, "APPRESPONSE OBJECT IS: " + appResponse.object.getClass().getName());
@@ -108,12 +131,17 @@ public class PeopleTrackList extends ListActivity {
 	/** Called when the activity is first created. */
     @Override
     public void onCreate(Bundle savedInstanceState) {
+    	Log.d(TAG, "HERE1");
         super.onCreate(savedInstanceState);
     	  mReceiver = new PeopleTrackListReceiver(); 
     	  mGamingServiceConn = new GamingServiceConnection(this, mReceiver, 
     				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
     	  mGamingServiceConn.bind();
     	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
+          registerForContextMenu( getListView() );
+    	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.dialog_download_track_list), true);
+      	Log.d(TAG, "HERE2");
+
     	  try {
 			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser().id, -1, "track", "name");
 		} catch (RemoteException e) {
@@ -124,22 +152,35 @@ public class PeopleTrackList extends ListActivity {
 
 
     }
- 
+    
+    public void finalize() {
+ 	   onDestroy();
+    }
+    
+    public void onDestroy() {
+ 	   mGamingServiceConn.unbind();
+ 	   super.onDestroy();
+    }
+    
     /**
      * Creates and returns a list adapter for the current list activity
      * @return
      */
     protected ListAdapter createAdapter(ObjProperty[] objProp)
     { 
+    	Log.d("TAG", "HERE5");
     	String[] testValues = new String[0];
     	if (objProp != null && objProp.length > 0) {
     	 testValues = new String[objProp.length];
-    	 ids = new int[objProp.length];
+    	 tracks = new Track[objProp.length];
     	for (int i=0; i< objProp.length; i++) {
+    		tracks[i] = new Track();
+    		tracks[i].id = objProp[i].obj_id;
+    		tracks[i].name = objProp[i].string_val;
     		testValues[i] = objProp[i].string_val;
-    		ids[i] = objProp[i].obj_id;
     	}
     	}
+    	Log.d("TAG", "HERE6");
     		
     	/*
     	// Create some mock data
@@ -162,10 +203,11 @@ public class PeopleTrackList extends ListActivity {
 		Log.v(TAG, "position = " + position + "; id = " + id);
 		
 
-		int objId = ids[position];
+		int objId = tracks[position].id;
+		String name = tracks[position].name;
 		Log.d(TAG, "objId = " + objId);
 		TrackCreator trackCreator = new TrackCreator(this);
-		trackCreator.downloadTrack(objId);
+		trackCreator.downloadTrack(objId, name);
 		/*
 		Intent i = new Intent(this, PeopleTrackList.class);
 		i.putExtra("userId",userId);
@@ -173,5 +215,50 @@ public class PeopleTrackList extends ListActivity {
 		*/
 		return;
 	}
-	    
+
+	   public void onCreateContextMenu( ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo )
+	   {
+		   /*
+	      if( menuInfo instanceof AdapterView.AdapterContextMenuInfo )
+	      {
+	         AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
+	         if (itemInfo.position < actions.size() + 1) return;
+	         TextView textView = (TextView) itemInfo.targetView.findViewById( android.R.id.text1 );
+	         if( textView != null )
+	         {
+	            menu.setHeaderTitle( textView.getText() );
+	         }
+	      }
+	      */
+	      menu.add( 0, MENU_DOWNLOAD_TRACK, 0, R.string.menu_downloadTrack );
+
+	   }
+	   public boolean onContextItemSelected( MenuItem item )
+	   {
+	      boolean handled = false;
+	      AdapterView.AdapterContextMenuInfo info;
+	      try
+	      {
+	         info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+	      }
+	      catch( ClassCastException e )
+	      {
+	         Log.e( TAG, "Bad menuInfo", e );
+	         return handled;
+	      }
+	      
+
+	      
+			Log.v(TAG, "ASLAI HERE: position = " + info.position + "; id = " + tracks[info.position].id);
+			
+
+			int objId = tracks[info.position].id;
+			String name = tracks[info.position].name;
+			Log.d(TAG, "objId = " + objId);
+			TrackCreator trackCreator = new TrackCreator(this);
+			trackCreator.downloadTrack(objId, name);	      
+			handled = true;
+	      return handled;
+	   }
+	
 }
