@@ -165,6 +165,7 @@ public class LoggerMap extends MapActivity {
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
+	public static final int GET_GRP_SBS_RID = 3;
 	private GamingServiceConnection mGameCon;
 	private ScoreboardUpdateReceiver mReceiver;
 	private ProgressDialog mDialogUpdate;
@@ -1537,6 +1538,7 @@ public class LoggerMap extends MapActivity {
 		
 		try {
 			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
+			
 		} catch (RemoteException e) {}
 	}
 	

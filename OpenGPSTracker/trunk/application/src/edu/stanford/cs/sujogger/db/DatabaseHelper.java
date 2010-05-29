@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.ArrayList;
 import java.util.Date;
 
 import android.content.ContentResolver;
@@ -913,14 +914,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	//Insert all groups and group_users and let the DB constraints
 	// filter out duplicates
-	public void updateGroups(Group[] groups) {
-		if (groups == null || groups.length == 0) return;
+	public ArrayList<Group> updateGroups(Group[] groups) {
+		if (groups == null || groups.length == 0) return null;
 		
+		ArrayList<Group> newGroups = new ArrayList<Group>();
 		User[] users;
 		mDb.beginTransaction();
 		try {
 			for (int i = 0; i < groups.length; i++) {
-				addGroup(groups[i].id, groups[i].name, 0);
+				if (addGroup(groups[i].id, groups[i].name, 0))
+					newGroups.add(groups[i]);
 				
 				users = groups[i].users;
 				long[] userIds = new long[users.length];
@@ -936,6 +939,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM groups_users", null);
 		DatabaseUtils.dumpCursor(cursor);
 		cursor.close();
+		
+		return newGroups;
 	}
 	
 	/**
