@@ -27,7 +27,7 @@ public class GroupListAdapter extends CursorAdapter {
 	
 	public Object getItem(int position) {
 		mCursor.moveToPosition(position);
-		return mCursor.getInt(0);
+		return mCursor.getInt(1);
 	}
 
 	@Override

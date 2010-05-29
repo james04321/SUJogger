@@ -63,7 +63,7 @@ public final class R {
         public static final int ach_list_item_title=0x7f090002;
         public static final int achievementcat_fraction=0x7f090007;
         public static final int achievementcat_name=0x7f090006;
-        public static final int currentSpeed=0x7f090029;
+        public static final int currentSpeed=0x7f09002a;
         public static final int fileNameField=0x7f09000d;
         public static final int filter_menu=0x7f090008;
         public static final int filter_menu_all=0x7f090009;
@@ -91,49 +91,48 @@ public final class R {
         public static final int layer_satellite=0x7f090019;
         public static final int layer_speed=0x7f09001b;
         public static final int layer_traffic=0x7f09001a;
-        public static final int lb_spinner=0x7f09001f;
+        public static final int lb_spinner_time=0x7f090020;
+        public static final int lb_spinner_type=0x7f09001f;
         public static final int lb_top_control_bar=0x7f09001e;
-        public static final int list_complex_caption=0x7f090021;
-        public static final int list_complex_title=0x7f090020;
-        public static final int list_header_title=0x7f090022;
-        public static final int list_simple_title=0x7f090023;
+        public static final int list_complex_caption=0x7f090022;
+        public static final int list_complex_title=0x7f090021;
+        public static final int list_header_title=0x7f090023;
+        public static final int list_simple_title=0x7f090024;
         public static final int listitem_distance=0x7f090058;
         public static final int listitem_duration=0x7f090055;
         public static final int listitem_from=0x7f090057;
         public static final int listitem_icon=0x7f090054;
         public static final int listitem_name=0x7f090053;
-        public static final int logcontrol_pause=0x7f090025;
-        public static final int logcontrol_resume=0x7f090026;
-        public static final int logcontrol_start=0x7f090024;
-        public static final int logcontrol_stop=0x7f090027;
-        public static final int msg_body=0x7f09003c;
-        public static final int msg_date=0x7f090039;
-        public static final int msg_datetime_layout=0x7f090038;
-        public static final int msg_item_body=0x7f090032;
-        public static final int msg_item_image=0x7f09002e;
-        public static final int msg_item_name=0x7f090030;
-        public static final int msg_item_subject=0x7f09002f;
-        public static final int msg_item_time=0x7f090031;
-        public static final int msg_send=0x7f09003d;
-        public static final int msg_subject=0x7f09003b;
-        public static final int msg_time=0x7f09003a;
-        public static final int msg_to=0x7f090033;
-        public static final int msg_to_all=0x7f090035;
-        public static final int msg_to_friends=0x7f090037;
-        public static final int msg_to_group=0x7f090036;
-        public static final int msg_type_spinner=0x7f090034;
-        public static final int myMapView=0x7f090028;
-        public static final int nameField=0x7f09003e;
-        public static final int newtrack_progress=0x01010000;
-        public static final int newtrack_title=0x7f09003f;
+        public static final int logcontrol_pause=0x7f090026;
+        public static final int logcontrol_resume=0x7f090027;
+        public static final int logcontrol_start=0x7f090025;
+        public static final int logcontrol_stop=0x7f090028;
+        public static final int msg_body=0x7f09003d;
+        public static final int msg_date=0x7f09003a;
+        public static final int msg_datetime_layout=0x7f090039;
+        public static final int msg_item_body=0x7f090033;
+        public static final int msg_item_image=0x7f09002f;
+        public static final int msg_item_name=0x7f090031;
+        public static final int msg_item_subject=0x7f090030;
+        public static final int msg_item_time=0x7f090032;
+        public static final int msg_send=0x7f09003e;
+        public static final int msg_subject=0x7f09003c;
+        public static final int msg_time=0x7f09003b;
+        public static final int msg_to=0x7f090034;
+        public static final int msg_to_all=0x7f090036;
+        public static final int msg_to_friends=0x7f090038;
+        public static final int msg_to_group=0x7f090037;
+        public static final int msg_type_spinner=0x7f090035;
+        public static final int myMapView=0x7f090029;
+        public static final int nameField=0x7f09003f;
         public static final int notename=0x7f090040;
         public static final int notetext=0x7f090041;
         public static final int progress=0x7f090043;
         public static final int progresstext=0x7f090044;
-        public static final int speedbar=0x7f09002d;
-        public static final int speedview00=0x7f09002a;
-        public static final int speedview01=0x7f09002b;
-        public static final int speedview02=0x7f09002c;
+        public static final int speedbar=0x7f09002e;
+        public static final int speedview00=0x7f09002b;
+        public static final int speedview01=0x7f09002c;
+        public static final int speedview02=0x7f09002d;
         public static final int stat_averagespeed=0x7f090047;
         public static final int stat_distance=0x7f090045;
         public static final int stat_endtime=0x7f09004b;
@@ -172,16 +171,15 @@ public final class R {
         public static final int message_item_full=0x7f030012;
         public static final int messagesender=0x7f030013;
         public static final int namedialog=0x7f030014;
-        public static final int new_track_item=0x7f030015;
-        public static final int notenamedialog=0x7f030016;
-        public static final int notetextdialog=0x7f030017;
-        public static final int savenotificationprogress=0x7f030018;
-        public static final int settings=0x7f030019;
-        public static final int statistics=0x7f03001a;
-        public static final int toast_ach_background=0x7f03001b;
-        public static final int trackitem=0x7f03001c;
-        public static final int tracklist=0x7f03001d;
-        public static final int user_list_item=0x7f03001e;
+        public static final int notenamedialog=0x7f030015;
+        public static final int notetextdialog=0x7f030016;
+        public static final int savenotificationprogress=0x7f030017;
+        public static final int settings=0x7f030018;
+        public static final int statistics=0x7f030019;
+        public static final int toast_ach_background=0x7f03001a;
+        public static final int trackitem=0x7f03001b;
+        public static final int tracklist=0x7f03001c;
+        public static final int user_list_item=0x7f03001d;
     }
     public static final class raw {
         public static final int conversion_from_meter=0x7f060002;
@@ -190,7 +188,7 @@ public final class R {
         public static final int licence_short=0x7f060000;
     }
     public static final class string {
-        public static final int about_activity_name_extended=0x7f080081;
+        public static final int about_activity_name_extended=0x7f080082;
         /**  ***************************
    About information
    ***************************
@@ -204,13 +202,13 @@ public final class R {
    About information
    ***************************
          */
-        public static final int about_comments=0x7f080080;
-        public static final int about_copyright=0x7f080085;
-        public static final int about_email=0x7f080087;
-        public static final int about_website_label=0x7f080088;
-        public static final int about_website_url=0x7f080086;
+        public static final int about_comments=0x7f080081;
+        public static final int about_copyright=0x7f080086;
+        public static final int about_email=0x7f080088;
+        public static final int about_website_label=0x7f080089;
+        public static final int about_website_url=0x7f080087;
         public static final int app_name=0x7f080000;
-        public static final int app_search=0x7f080084;
+        public static final int app_search=0x7f080085;
         public static final int btn_cancel=0x7f080028;
         public static final int btn_install=0x7f08002b;
         public static final int btn_okay=0x7f080027;
@@ -239,8 +237,8 @@ public final class R {
         public static final int dialog_tracking_title=0x7f080006;
         public static final int disableblanking_summary=0x7f080053;
         public static final int disableblanking_title=0x7f080052;
-        public static final int distance_smallunitname=0x7f08008b;
-        public static final int distance_unitname=0x7f08008a;
+        public static final int distance_smallunitname=0x7f08008c;
+        public static final int distance_unitname=0x7f08008b;
         public static final int email_body=0x7f08004b;
         public static final int email_chooser=0x7f080049;
         public static final int email_subject=0x7f08004a;
@@ -250,14 +248,16 @@ public final class R {
         public static final int error_writesdcard=0x7f080026;
         /**  Feed Tab 
          */
-        public static final int feed_filter_all=0x7f080079;
-        public static final int feed_filter_bcast=0x7f08007b;
-        public static final int feed_filter_msg=0x7f08007a;
-        public static final int feed_menu_compose=0x7f08007d;
-        public static final int feed_menu_filter=0x7f08007c;
-        public static final int feed_menu_refresh=0x7f08007e;
+        public static final int feed_filter_all=0x7f08007a;
+        public static final int feed_filter_bcast=0x7f08007c;
+        public static final int feed_filter_msg=0x7f08007b;
+        public static final int feed_menu_compose=0x7f08007e;
+        public static final int feed_menu_filter=0x7f08007d;
+        public static final int feed_menu_refresh=0x7f08007f;
         public static final int fp_addbutton=0x7f080077;
         public static final int fp_clearbutton=0x7f080076;
+        /**  FriendPicker  
+         */
         public static final int fp_search_hint=0x7f080075;
         public static final int from=0x7f08001e;
         public static final int graphtype_distancealtitude=0x7f080044;
@@ -292,8 +292,8 @@ public final class R {
         public static final int menu_statistics=0x7f080037;
         public static final int menu_tracking=0x7f08002e;
         public static final int menu_tracklist=0x7f080033;
-        public static final int my_achievements=0x7f08007f;
-        public static final int no_information_available=0x7f080082;
+        public static final int my_achievements=0x7f080080;
+        public static final int no_information_available=0x7f080083;
         public static final int no_tracks=0x7f08001f;
         public static final int opengpstracker_settings=0x7f08004d;
         public static final int opengpstracker_title=0x7f08004c;
@@ -302,9 +302,10 @@ public final class R {
         public static final int preference_behavior=0x7f08004f;
         public static final int preference_display=0x7f08004e;
         public static final int receive_filewriter=0x7f080046;
-        public static final int receive_gpxpublish=0x7f080083;
+        public static final int receive_gpxpublish=0x7f080084;
         public static final int receive_gpxsender=0x7f080048;
         public static final int receive_kmzfilewriter=0x7f080047;
+        public static final int refresh=0x7f080079;
         public static final int search_description=0x7f080073;
         public static final int search_hint=0x7f080074;
         public static final int search_label=0x7f080072;
@@ -323,7 +324,7 @@ public final class R {
         public static final int showspeed_title=0x7f08005c;
         public static final int showtraffic_summary=0x7f08005b;
         public static final int showtraffic_title=0x7f08005a;
-        public static final int speed_unitname=0x7f080089;
+        public static final int speed_unitname=0x7f08008a;
         public static final int speedsanitycheck_summary=0x7f080061;
         public static final int speedsanitycheck_title=0x7f080060;
         public static final int stat_averagespeed=0x7f08006b;

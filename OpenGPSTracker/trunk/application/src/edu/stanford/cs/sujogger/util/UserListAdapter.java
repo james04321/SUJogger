@@ -34,7 +34,7 @@ public class UserListAdapter extends CursorAdapter {
 				int initPos = 0, cursorPos = 0;
 				mCursor.moveToPosition(-1);
 				while(mCursor.moveToNext() && initPos < initialUserIds.length) {
-					if (mCursor.getLong(0) != initialUserIds[initPos])
+					if (mCursor.getLong(1) != initialUserIds[initPos])
 						checkmarks[cursorPos] = false;
 					else {
 						checkmarks[cursorPos] = true;
@@ -52,7 +52,7 @@ public class UserListAdapter extends CursorAdapter {
 	public Object getItem(int position) {
 		if (position >= 0 && position < mCursor.getCount()) {
 			mCursor.moveToPosition(position);
-			return mCursor.getInt(0);
+			return mCursor.getInt(1);
 		}
 		else return null;
 	}
@@ -91,7 +91,7 @@ public class UserListAdapter extends CursorAdapter {
 		for (int i = 0; i < checkmarks.length; i++) {
 			if (checkmarks[i]) {
 				mCursor.moveToPosition(i);
-				checkedUsers[pos] = mCursor.getLong(0);
+				checkedUsers[pos] = mCursor.getLong(1);
 				pos++;
 			}
 		}

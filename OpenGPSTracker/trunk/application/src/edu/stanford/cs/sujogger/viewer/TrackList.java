@@ -139,7 +139,7 @@ public class TrackList extends ListActivity
    
    private List<Map<String,?>> actions;
    private TrackListAdapter trackAdapter;
-
+   
    private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
       {
          public void onClick( DialogInterface dialog, int which )
@@ -221,6 +221,7 @@ public class TrackList extends ListActivity
    }
    
    private void initializeSelfStatistics() {
+	   //TODO: uncomment this
 	   //try {
 		   ScoreBoard score;
 		   int[] allStats = Stats.ALL_STAT_IDS;
@@ -464,11 +465,12 @@ public class TrackList extends ListActivity
    {
       Dialog dialog = null;
       Builder builder = null;
+      View view;
       switch( id )
       {
-         case DIALOG_RENAME:
+      	case DIALOG_RENAME:
             LayoutInflater factory = LayoutInflater.from( this );
-            View view = factory.inflate( R.layout.namedialog, null );
+            view = factory.inflate( R.layout.namedialog, null );
             mTrackNameView = (EditText) view.findViewById( R.id.nameField );
 
             builder = new AlertDialog.Builder( this ).setTitle( R.string.dialog_routename_title ).setMessage( R.string.dialog_routename_message ).setIcon( android.R.drawable.ic_dialog_alert )
@@ -609,7 +611,7 @@ public class TrackList extends ListActivity
 							Integer[] scoreIds = new Integer[scores.length];
 							for (int i = 0; i < scoreIds.length; i++)
 								scoreIds[i] = scores[i].id;
-							mDbHelper.updateScoreboardIds(scoreIds);
+							mDbHelper.updateSoloScoreboardIds(scoreIds);
 							
 							Editor editor = mSharedPreferences.edit();
 							editor.putBoolean(Constants.STATS_INITIALIZED, true);
@@ -620,7 +622,7 @@ public class TrackList extends ListActivity
 					case CREATE_SB_RID:
 						Integer[] scoreIds = (Integer[])appResponse.object;
 						if (scoreIds != null)
-							mDbHelper.updateScoreboardIds(scoreIds);
+							mDbHelper.updateSoloScoreboardIds(scoreIds);
 						
 						Editor editor = mSharedPreferences.edit();
 						editor.putBoolean(Constants.STATS_INITIALIZED, true);
@@ -655,6 +657,7 @@ public class TrackList extends ListActivity
 
        public void onCancel() {
            //SessionEvents.onLoginError("Action Canceled");
+    	   
        }
    }
    

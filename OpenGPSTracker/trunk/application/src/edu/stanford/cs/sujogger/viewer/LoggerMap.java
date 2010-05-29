@@ -1529,8 +1529,8 @@ public class LoggerMap extends MapActivity {
 		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, 0);
 		mDbHelper.updateNumRuns();
 		mDbHelper.updateAvgSpeed();
-		mDbHelper.updateMedDuration();
-		mDbHelper.updateMedDistance();
+		//mDbHelper.updateMedDuration();
+		//mDbHelper.updateMedDistance();
 		
 		ScoreBoard[] scores = mDbHelper.getSoloStatistics();
 		mDialogUpdate = ProgressDialog.show(this, "", "Updating statistics...", true);

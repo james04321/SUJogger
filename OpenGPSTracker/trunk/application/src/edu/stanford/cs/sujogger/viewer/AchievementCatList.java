@@ -105,7 +105,8 @@ public class AchievementCatList extends ListActivity {
 		
 		switch (item.getItemId()) {
 		case MENU_LEADERBOARD:
-			
+			Intent i = new Intent(this, LeaderBoard.class);
+			startActivity(i);
 			handled = true;
 			break;
 		default:

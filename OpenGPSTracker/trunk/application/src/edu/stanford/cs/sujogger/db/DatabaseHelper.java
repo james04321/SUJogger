@@ -47,6 +47,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.net.Uri;
 import android.util.Log;
+import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
@@ -582,7 +583,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	// Updates solo statistics with scoreboard IDs from the server
-	public void updateScoreboardIds(Integer[] scoreIds) {
+	public void updateSoloScoreboardIds(Integer[] scoreIds) {
 		ContentValues values = new ContentValues();
 		int[] allStats = Stats.ALL_STAT_IDS;
 		for (int i = 0; i < scoreIds.length; i++) {
@@ -591,6 +592,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.update(Stats.TABLE, values, 
 					Stats.GROUP_ID + "=" + 0 + " AND " +
 					Stats.STATISTIC_ID + "=" + allStats[i], null);
+		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
+	}
+	
+	public void insertScoreboards(ScoreBoard[] scores) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < scores.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(Stats.STATISTIC_ID, Integer.parseInt(scores[i].sb_type));
+				values.put(Stats.SCOREBOARD_ID, scores[i].id);
+				values.put(Stats.GROUP_ID, scores[i].group_id);
+				values.put(Stats.VALUE, scores[i].value);
+				mDb.insert(Stats.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
 		}
 		
 		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
@@ -735,6 +757,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * Groups Methods
 	 */
 	
+	//Get all groups along with the # of members
 	public Cursor getGroups() {
 		/**
 		 * SELECT groups._id, groups.group_id, groups.name, ifnull(subtotal.count,0) 
@@ -753,7 +776,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String innerSelectClause = Groups.TABLE + 
 			".*, count(" + GroupsUsers.TABLE + "." + GroupsUsers._ID + ") AS count";
 		String innerTables = Groups.TABLE + ", " + GroupsUsers.TABLE;
-		String innerWhereClause = Groups.TABLE + "." + Groups._ID + "=" + 
+		String innerWhereClause = Groups.TABLE + "." + Groups.GROUP_ID + "=" + 
 			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID;
 		String innerQuery = "SELECT " + innerSelectClause + " FROM " + innerTables + 
 			" WHERE " + innerWhereClause;
@@ -768,13 +791,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		values.put(Groups.GROUP_ID, groupIdServer);
 		values.put(Groups.NAME, groupName);
 		values.put(Groups.IS_OWNER, isOwner);
-		return mDb.insert(Groups.TABLE, null, values) >= 0;
+		return mDb.insert(Groups.TABLE, null, values) > 0;
 	}
 	
 	public Cursor getGroupWithId(long groupId) {
 		Cursor cursor = mDb.query(Groups.TABLE, 
 				new String[] {Groups._ID, Groups.GROUP_ID, Groups.NAME, Groups.IS_OWNER}, 
-				Groups._ID + "=" + groupId, null, null, null, null);
+				Groups.GROUP_ID + "=" + groupId, null, null, null, null);
 		return cursor;
 	}
 	
@@ -784,7 +807,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * AND groups_users.group_id=groupId
 		 */
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
-		String whereClause = Users.TABLE + "." + Users._ID + "=" +
+		String whereClause = Users.TABLE + "." + Users.USER_ID + "=" +
 			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
 			" AND " + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId;
 		Cursor cursor = mDb.rawQuery("SELECT " + Users.TABLE + ".* FROM " + tables + 
@@ -804,7 +827,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			else 
 				idString += "," + userIds[i];
 		}
-		String whereClause = Users.TABLE + "." + Users._ID + 
+		String whereClause = Users.TABLE + "." + Users.USER_ID + 
 			" IN (" + idString + ")";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + 
 				" WHERE " + whereClause, null);
@@ -845,13 +868,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getAllUsersExcludingGroup(long groupId) {
-		//TODO: also exclude self from results
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
 		 * AND users._id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users WHERE groups_users.group_id=groupId)
 		 * UNION
-		 * SELECT users.* FROM users WHERE users._id NOT IN 
+		 * SELECT users.* FROM users WHERE users.user_id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users)
 		 * ORDER BY users.last_name, users.first_name
 		 */
@@ -860,7 +882,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId + ")";
 		
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
-		String whereClause = Users.TABLE + "." + Users._ID + "=" +
+		String whereClause = Users.TABLE + "." + Users.USER_ID + "=" +
 			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
 			" AND " + Users.TABLE + "." + Users._ID + " NOT IN " + subQuery;
 		String subQuery2 = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
@@ -873,7 +895,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
-	
 	
 	public void addUsersToGroup(long groupId, long[] users) {
 		mDb.beginTransaction();
@@ -888,6 +909,33 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		} finally {
 			mDb.endTransaction();
 		}
+	}
+	
+	//Insert all groups and group_users and let the DB constraints
+	// filter out duplicates
+	public void updateGroups(Group[] groups) {
+		if (groups == null || groups.length == 0) return;
+		
+		User[] users;
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < groups.length; i++) {
+				addGroup(groups[i].id, groups[i].name, 0);
+				
+				users = groups[i].users;
+				long[] userIds = new long[users.length];
+				for (int j = 0; j < users.length; j++)
+					userIds[j] = users[j].id;
+				addUsersToGroup(groups[i].id, userIds);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM groups_users", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
 	}
 	
 	/**
@@ -1019,7 +1067,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * ScoreBoard Methods
 	 */
 	
-	public void fillScoreBoard(ScoreBoard[] scores) {
+	public void fillScoreBoardTemp(ScoreBoard[] scores) {
 		mDb.delete(ScoreboardTemp.TABLE, null, null);
 		
 		mDb.beginTransaction();

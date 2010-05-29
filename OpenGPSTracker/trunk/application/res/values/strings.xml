@@ -127,11 +127,13 @@
     <string name="search_description">SUJogger track names</string>
     <string name="search_hint">Search tracks</string>
     
+    <!-- FriendPicker  -->
     <string name="fp_search_hint">Search for a friend</string>
     <string name="fp_clearbutton">Clear</string>
     <string name="fp_addbutton">Add</string>
     
     <string name="lb_option">Leaderboards</string>
+    <string name="refresh">Refresh</string>
     
     <!-- Feed Tab -->
     <string name="feed_filter_all">All</string>

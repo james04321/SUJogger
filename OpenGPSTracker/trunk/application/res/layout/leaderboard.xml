@@ -10,15 +10,23 @@
 		android:layout_height="wrap_content" 
 		android:id="@+id/lb_top_control_bar">
 		
-		<Spinner android:id="@+id/lb_spinner"
-			android:layout_width="fill_parent"
+		<Spinner android:id="@+id/lb_spinner_type"
+			android:layout_width="wrap_content"
 			android:layout_height="wrap_content"
 			android:drawSelectorOnTop="true"
+			android:layout_weight="1"
+		/>
+		<Spinner android:id="@+id/lb_spinner_time"
+			android:layout_width="wrap_content"
+			android:layout_height="wrap_content"
+			android:drawSelectorOnTop="true"
+			android:layout_toRightOf="@id/lb_spinner_type"
 			android:layout_weight="1"
 		/>
 	</RelativeLayout>
 	
 	<ListView 
+		android:id="@+id/android:list"
 		android:layout_width="fill_parent"
 		android:layout_height="0dip" 
 		android:layout_below="@id/lb_top_control_bar" 
