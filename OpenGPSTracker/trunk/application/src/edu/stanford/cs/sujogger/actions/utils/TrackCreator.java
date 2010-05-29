@@ -1,6 +1,5 @@
 package edu.stanford.cs.sujogger.actions.utils;
 
-import java.io.StringBufferInputStream;
 import java.io.StringReader;
 
 import javax.xml.parsers.SAXParser;
@@ -12,6 +11,7 @@ import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
 import android.app.Activity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.ContentValues;
 import android.content.Context;
@@ -21,6 +21,7 @@ import android.net.Uri;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
@@ -30,6 +31,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.viewer.MessageSender;
 
 public class TrackCreator {
 	   private GamingServiceConnection mGamingServiceConn;
@@ -43,6 +45,7 @@ public class TrackCreator {
 	   private long mWaypointId = -1;
 
 	   private Location mPreviousLocation;
+	private ProgressDialog mProgressDialog;
 	   
 	   public TrackCreator(Activity activity) {
 		   this.activity = activity;
@@ -54,9 +57,11 @@ public class TrackCreator {
 			  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
 			     		   
 	   }
-	public void downloadTrack(int trackId) {
+	public void downloadTrack(int trackId, String name) {
 		try {
 	//		trackId = 21; //ASLAI: HERE
+	    	  mProgressDialog = ProgressDialog.show(activity, "", activity.getString( R.string.dialog_download_track), true);
+			
 			mGamingServiceConn.getObj(110, trackId);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
@@ -100,7 +105,11 @@ public class TrackCreator {
 						startNewSegment();
 						//						saxParser.parse(new StringBufferInputStream(trackGPX), new LocationHandler(this));
 						saxParser.parse(new InputSource(new StringReader(trackGPX)), new LocationHandler(this));
-
+						TrackCreator.this.mGamingServiceConn.unbind();
+						mProgressDialog.cancel();
+						Toast toast = Toast.makeText(activity, 
+								"Track " + name + " is downloaded successfully", Toast.LENGTH_SHORT);
+						toast.show();
 						break;
 						
 

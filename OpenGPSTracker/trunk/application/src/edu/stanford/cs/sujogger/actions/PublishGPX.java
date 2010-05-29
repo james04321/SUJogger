@@ -35,6 +35,7 @@ import android.app.Dialog;
 import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
@@ -108,8 +109,10 @@ public class PublishGPX extends Activity
 						resolver.update(PublishGPX.this.getIntent().getData() , values, Tracks._ID + "=" + _id, null);
 						
 						//						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
-						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
-						trackCreator.downloadTrack(21);
+//						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
+//						trackCreator.downloadTrack(21);
+						mProgressDialog.cancel();
+						PublishGPX.this.finalize();
 						/*
 						GroupList.this.toggleNewGroupItemState();
 						Integer groupId = (Integer)(appResponse.object);
@@ -121,6 +124,7 @@ public class PublishGPX extends Activity
 						GroupList.this.getListView().invalidateViews();
 						*/
 						break;
+						/*
 					case 101:
 						Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id: " + appResponse.request_id);
 						Log.d(TAG, "Response is: " + appResponse);
@@ -130,6 +134,7 @@ public class PublishGPX extends Activity
 							Log.d(TAG, "STRING_VAL IS: " + objArray[i].object_properties[j].string_val);
 							}
 						}
+						*/
 					default: break;
 					}
 				}
@@ -155,6 +160,8 @@ public class PublishGPX extends Activity
             }
          }
       };
+
+private ProgressDialog mProgressDialog;
 
    @Override
    public void onCreate( Bundle savedInstanceState )
@@ -203,12 +210,22 @@ public class PublishGPX extends Activity
 
    protected void exportGPX( String chosenBaseFileName )
    {
-      GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, new ProgressListener(), mGamingServiceConn, true );
+      GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, null, mGamingServiceConn, true );
       mGpxCreator.start();
+	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.ticker_publishing )+ " " + chosenBaseFileName + " to server", true);
+
       
 //      this.finish();
    }
    
+   public void finalize() {
+	   onDestroy();
+   }
+   
+   public void onDestroy() {
+	   mGamingServiceConn.unbind();
+	   super.onDestroy();
+   }
    class ProgressListener implements XmlCreationProgressListener
    {
       public void startNotification( String fileName )
@@ -216,7 +233,7 @@ public class PublishGPX extends Activity
          String ns = Context.NOTIFICATION_SERVICE;
          mNotificationManager = (NotificationManager) PublishGPX.this.getSystemService( ns );
          int icon = android.R.drawable.ic_menu_save;
-         CharSequence tickerText = getString( R.string.ticker_saving )+ "\"" + fileName + "\"";
+         CharSequence tickerText = getString( R.string.ticker_publishing )+ " " + fileName + " to server";
        
          mNotification = new Notification();
          PendingIntent contentIntent = PendingIntent.getActivity( PublishGPX.this, 0, new Intent( PublishGPX.this, LoggerMap.class ).setFlags( Intent.FLAG_ACTIVITY_NEW_TASK ),

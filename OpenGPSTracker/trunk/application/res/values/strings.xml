@@ -154,4 +154,8 @@
    <string name="no_information_available">No information available.</string>
    
 <string name="receive_gpxpublish">Publish and share with others</string>
+<string name="ticker_publishing">Publishing track</string>
+<string name="menu_downloadTrack">Download Track</string>
+<string name="dialog_download_track_list">Retrieving track list</string>
+<string name="dialog_download_track">Downloading track</string>
 </resources>
