@@ -55,6 +55,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.GroupsTemp;
 import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.MediaColumns;
@@ -1012,12 +1013,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void insertGameMessage(User fromUser, User[] recipients,	
 			long sendTime, MessageObject msgObject) {
 		//Insert unseen users
-		insertUser(fromUser);
+		addUser(fromUser);
 		if (recipients != null) {
 			mDb.beginTransaction();
 			try {
 				for (int i = 0; i < recipients.length; i++) {
-					insertUser(recipients[i]);
+					addUser(recipients[i]);
 				}
 				mDb.setTransactionSuccessful();
 			} finally {
@@ -1058,14 +1059,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void insertUser(User user) {
+	public boolean addUser(User user) {
 		ContentValues values = new ContentValues();
 		values.put(Users.USER_ID, user.id);
 		values.put(Users.FB_ID, user.fb_id);
 		values.put(Users.FIRST_NAME, user.first_name);
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
-		mDb.insert(Users.TABLE, null, values);
+		return mDb.insert(Users.TABLE, null, values) > 0;
+	}
+	
+	//Add all users to user table and let table constraints handle duplicates
+	public void addUsers(User[] users) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < users.length; i++)
+				addUser(users[i]);
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+	}
+	
+	public void addGroupsTemp(Group[] groups) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < groups.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(GroupsTemp.GROUP_ID, groups[i].id);
+				values.put(GroupsTemp.NAME, groups[i].name);
+				mDb.insert(GroupsTemp.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 	}
 	
 	/**

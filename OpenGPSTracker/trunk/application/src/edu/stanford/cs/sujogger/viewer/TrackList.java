@@ -128,7 +128,6 @@ public class TrackList extends ListActivity
    private DatabaseHelper mDbHelper;
    private GamingServiceConnection mGameCon;
    private ScoreboardReceiver mReceiver;
-   private Handler mWaitHandler;
    
    private Facebook mFacebook;
    private AsyncFacebookRunner mAsyncRunner;
@@ -160,20 +159,6 @@ public class TrackList extends ListActivity
             TrackList.this.getContentResolver().update( mDialogUri, values, null, null );
          }
       };
-   
-   private Runnable mWaitServiceStartTask = new Runnable() {
-	   public void run() {
-		   if (mGameCon.grs != null) {
-			   try {
-				   mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
-			   } catch (RemoteException e) {}
-			   mWaitHandler.removeCallbacks(mWaitServiceStartTask);
-		   }
-		   else {
-			   mWaitHandler.postDelayed(mWaitServiceStartTask, 100);
-		   }
-	   }
-   };
 
    @Override
    protected void onCreate( Bundle savedInstanceState )
@@ -214,9 +199,9 @@ public class TrackList extends ListActivity
    private void getStatisticsFromServer() {
 	   if (!mSharedPreferences.getBoolean(Constants.STATS_INITIALIZED, false)) {
 		  mDialogStatisticInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
-    	  mWaitHandler = new Handler();
-    	  //Poll the GamingServiceConnection every 100ms until the service starts
-    	  mWaitHandler.postDelayed(mWaitServiceStartTask, 100);
+    	  try {
+    		  mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
+    	  } catch (RemoteException e) {}
       }
    }
    
