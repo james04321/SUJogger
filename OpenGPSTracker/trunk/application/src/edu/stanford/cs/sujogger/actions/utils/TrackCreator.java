@@ -27,6 +27,7 @@ import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.util.Common;
@@ -45,6 +46,8 @@ public class TrackCreator {
 	   private long mWaypointId = -1;
 
 	   private Location mPreviousLocation;
+	   private DatabaseHelper mDbHelper;
+	   
 	private ProgressDialog mProgressDialog;
 	   
 	   public TrackCreator(Activity activity) {
@@ -76,6 +79,8 @@ public class TrackCreator {
 			int duration = 0;
 			double distance = 0;
 			String trackGPX = "";
+			int userId = 0;
+			long creationTime = 0;
 			
 			try {
 				AppResponse appResponse = null;
@@ -93,15 +98,19 @@ public class TrackCreator {
 								trackGPX = objProp[i].string_val;
 						Log.d(TAG, "TrackGPX is: " + trackGPX);
 							} else if ("duration".equals(objProp[i].name)) {
-								duration = new Integer(objProp[i].int_val);
+								duration = objProp[i].int_val;
 							} else if ("distance".equals(objProp[i].name)) {
-								distance = new Double(new Float(objProp[i].float_val));
+								distance = objProp[i].float_val;
 							} else if ("name".equals(objProp[i].name)) {
 								name = objProp[i].string_val;
-							}			
+							} else if ("creation_time".equals(objProp[i].name)) {
+								creationTime = (long) objProp[i].float_val;
+							} else if ("user_id".equals(objProp[i].name)) {
+								userId = objProp[i].int_val;
+							}
 							
 						}
-						startNewTrack(obj.id, name, duration, distance);
+						startNewTrack(obj.id, name, duration, distance, userId, creationTime);
 						startNewSegment();
 						//						saxParser.parse(new StringBufferInputStream(trackGPX), new LocationHandler(this));
 						saxParser.parse(new InputSource(new StringReader(trackGPX)), new LocationHandler(this));
@@ -121,17 +130,25 @@ public class TrackCreator {
 				e.printStackTrace();
 			}
 		}
-		private void startNewTrack(int trackId, String name, int duration, double distance)
+		private void startNewTrack(int trackId, String name, int duration, double distance, int userId, long creationTime)
 		{
 			ContentValues values = new ContentValues();
+			Log.d(TAG, "STARTNEWTRACK DURATION IS " + duration);
+			Log.d(TAG, "STARTNEWTRACK DISTANCE IS " + distance);
 			values.put(Tracks.DURATION, duration);
 			values.put(Tracks.DISTANCE, distance);
 			values.put(Tracks.NAME, name);
 			values.put(Tracks.TRACK_ID, trackId);
+			values.put(Tracks.USER_ID, userId);
+			values.put(Tracks.CREATION_TIME, creationTime);
+			mDbHelper = new DatabaseHelper(activity);
+			mDbHelper.openAndGetDb();	
+			mTrackId = mDbHelper.createTrack(values);
+			mDbHelper.close();
 			
 			
-			Uri newTrack = mContext.getContentResolver().insert( Tracks.CONTENT_URI, values);
-			mTrackId = new Long( newTrack.getLastPathSegment() ).longValue();
+//			Uri newTrack = mContext.getContentResolver().insert( Tracks.CONTENT_URI, values);
+//			mTrackId = new Long( newTrack.getLastPathSegment() ).longValue();
 		}
 		   public void stopLogging()
 		   {

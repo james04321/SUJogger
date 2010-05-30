@@ -107,15 +107,15 @@ public class PublishGPX extends Activity
 						ContentValues values = new ContentValues();
 						values.put(Tracks.TRACK_ID, trackId);
 						resolver.update(PublishGPX.this.getIntent().getData() , values, Tracks._ID + "=" + _id, null);
-						
+						 
 						//						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
 //						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
 //						trackCreator.downloadTrack(21);
 						mProgressDialog.cancel();
-						PublishGPX.this.finalize();
+						PublishGPX.this.finalize(); 
 						/*
 						GroupList.this.toggleNewGroupItemState();
-						Integer groupId = (Integer)(appResponse.object);
+						Integer groupId = (Integer)(appResponse.object); 
 						Group newGroup = (Group)(appResponse.appRequest.object);
 						Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = " + newGroup.name);
 						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
@@ -133,7 +133,7 @@ public class PublishGPX extends Activity
 							for (int j=0; j < objArray[i].object_properties.length; j++) {
 							Log.d(TAG, "STRING_VAL IS: " + objArray[i].object_properties[j].string_val);
 							}
-						}
+						} 
 						*/
 					default: break;
 					}
@@ -219,12 +219,14 @@ private ProgressDialog mProgressDialog;
    }
    
    public void finalize() {
+	   finish();
 	   onDestroy();
    }
    
    public void onDestroy() {
-	   mGamingServiceConn.unbind();
 	   super.onDestroy();
+	   mGamingServiceConn.unbind();
+	   
    }
    class ProgressListener implements XmlCreationProgressListener
    {

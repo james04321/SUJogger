@@ -268,6 +268,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 
 		return mediaId;
 	}
+	
+	public long createTrack(ContentValues contentValues) {
+//		contentValues.put(Tracks.CREATION_TIME, new Date().getTime());
+		long id = mDb.insert(Tracks.TABLE, null, contentValues);
+		return id;
+	}
 
 	/**
 	 * Deletes a single track and all underlying segments and waypoints

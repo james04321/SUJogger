@@ -31,6 +31,7 @@ package edu.stanford.cs.sujogger.viewer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
@@ -152,6 +153,8 @@ public class LoggerMap extends MapActivity {
 	private EditText mNoteTextView;
 
 	private double mAverageSpeed = 4.4704;
+	//ASLAI
+	private ArrayList<Long> mTrackIdList;
 	private long mTrackId = -1;
 	private boolean statisticsPresent = false;
 	private long mLastSegment = -1;
@@ -397,6 +400,7 @@ public class LoggerMap extends MapActivity {
 	protected void onCreate(Bundle load) {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(load);
+		mTrackIdList = new ArrayList<Long>();
 		this.startService(new Intent(Constants.SERVICENAME));
 
 		Object previousInstanceData = getLastNonConfigurationInstance();
@@ -1185,7 +1189,7 @@ public class LoggerMap extends MapActivity {
 		mLastSegmentOverlay = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		//ASLAI HERE
-		overlays.clear();
+		overlays.clear(); 
 		overlays.add(mMylocation);
 
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1307,6 +1311,10 @@ public class LoggerMap extends MapActivity {
 		}*/
 	}
 
+// ASLAI
+	private void clearOverlays() {		
+		mMapView.getOverlays().clear();
+	}
 	/**
 	 * Alter this to set a new track as current.
 	 * 

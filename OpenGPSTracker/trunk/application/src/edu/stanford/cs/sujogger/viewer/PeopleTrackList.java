@@ -16,6 +16,10 @@
 
 package edu.stanford.cs.sujogger.viewer;
 
+import java.util.ArrayList;
+import java.util.Hashtable;
+import java.util.List;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
@@ -29,6 +33,9 @@ import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.util.DateView;
+import edu.stanford.cs.sujogger.util.DistanceView;
+import edu.stanford.cs.sujogger.util.DurationView;
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -43,10 +50,13 @@ import android.os.Bundle;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.ImageView;
 import android.widget.ListAdapter;
 import android.widget.ListView;
 import android.widget.TextView;
@@ -64,7 +74,8 @@ public class PeopleTrackList extends ListActivity {
 	public static final String TAG = "PeopleTrackList";
 	   private PeopleTrackListReceiver mReceiver;
 	   private GamingServiceConnection mGamingServiceConn;
-	   private Track[] tracks;
+	   private ArrayList<Track> trackList;
+	   private Hashtable<Integer, Track> trackHash;
 
 	private ProgressDialog mProgressDialog;
 	class PeopleTrackListReceiver extends BroadcastReceiver {
@@ -77,7 +88,8 @@ public class PeopleTrackList extends ListActivity {
 					
 					switch(appResponse.request_id) {
 					case 120:
-				        ListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
+//				        ListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
+						PeopleTrackListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
 				        setListAdapter(adapter);
 				        Log.d(TAG, "HERE 3");
 				        mProgressDialog.cancel();
@@ -140,10 +152,16 @@ public class PeopleTrackList extends ListActivity {
     	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
           registerForContextMenu( getListView() );
     	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.dialog_download_track_list), true);
-      	Log.d(TAG, "HERE2");
+    	  trackList = new ArrayList<Track>();
+    	  trackHash = new Hashtable<Integer, Track>();
+    	  Log.d(TAG, "HERE2");
 
     	  try {
-			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser().id, -1, "track", "name");
+    		  String[] names = new String[3];
+    		  names[0] = "name";
+    		  names[1] = "duration";
+    		  names[2] = "distance";
+			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser().id, -1, "track", names);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -161,27 +179,34 @@ public class PeopleTrackList extends ListActivity {
  	   mGamingServiceConn.unbind();
  	   super.onDestroy();
     }
-    
-    /**
-     * Creates and returns a list adapter for the current list activity
-     * @return
-     */
-    protected ListAdapter createAdapter(ObjProperty[] objProp)
+
+    protected PeopleTrackListAdapter createAdapter(ObjProperty[] objProp)
     { 
     	Log.d("TAG", "HERE5");
-    	String[] testValues = new String[0];
+//    	String[] testValues = new String[0];
     	if (objProp != null && objProp.length > 0) {
-    	 testValues = new String[objProp.length];
-    	 tracks = new Track[objProp.length];
+//    	 testValues = new String[objProp.length];
     	for (int i=0; i< objProp.length; i++) {
-    		tracks[i] = new Track();
-    		tracks[i].id = objProp[i].obj_id;
-    		tracks[i].name = objProp[i].string_val;
-    		testValues[i] = objProp[i].string_val;
+    		if (trackHash.get(objProp[i].obj_id) == null) {
+    			Track track = new Track();
+    			track.id = objProp[i].obj_id;
+    			trackHash.put(track.id, track);
+    		}
+    		Track track = trackHash.get(objProp[i].obj_id);
+    		Log.d(TAG, "ASLAI OBJPROP[i].NAME is " + objProp[i].name);
+    		if ("name".equals(objProp[i].name)) {
+    			trackList.add(track);
+    			track.name = objProp[i].string_val;
+//        		testValues[i] = objProp[i].string_val;
+    		} else if ("duration".equals(objProp[i].name)) {
+    			track.duration = objProp[i].int_val;
+    		} else if ("distance".equals(objProp[i].name)) {
+    			track.distance = objProp[i].float_val;
+    		}
     	}
     	}
     	Log.d("TAG", "HERE6");
-    		
+
     	/*
     	// Create some mock data
     	String[] testValues = new String[] {
@@ -192,12 +217,59 @@ public class PeopleTrackList extends ListActivity {
     	*/
  
     	// Create a simple array adapter (of type string) with the test values
+    	PeopleTrackListAdapter adapter = new PeopleTrackListAdapter(PeopleTrackList.this, R.layout.trackitem, trackList);
+ 
+    	return adapter;
+    }
+ 
+    
+    /**
+     * Creates and returns a list adapter for the current list activity
+     * @return
+     */
+    /*
+    protected ListAdapter createAdapter(ObjProperty[] objProp)
+    { 
+    	Log.d("TAG", "HERE5");
+    	String[] testValues = new String[0];
+    	if (objProp != null && objProp.length > 0) {
+    	 testValues = new String[objProp.length];
+    	for (int i=0; i< objProp.length; i++) {
+    		if (trackHash.get(objProp[i].obj_id) == null) {
+    			Track track = new Track();
+    			track.id = objProp[i].obj_id;
+    			trackHash.put(track.id, track);
+    		}
+    		Track track = trackHash.get(objProp[i].obj_id);
+    		if ("name".equals(objProp[i].name)) {
+    			trackList.add(track.id);
+    			track.name = objProp[i].string_val;
+        		testValues[i] = objProp[i].string_val;
+    		} else if ("duration".equals(objProp[i].name)) {
+    			track.duration = objProp[i].int_val;
+    		} else if ("distance".equals(objProp[i].name)) {
+    			track.distance = objProp[i].float_val;
+    		}
+    	}
+    	}
+    	Log.d("TAG", "HERE6");
+    		*/
+    	/*
+    	// Create some mock data
+    	String[] testValues = new String[] {
+    			"Test1",
+    			"Test2",
+    			"Test3"
+    	};
+    	*/
+ /*
+    	// Create a simple array adapter (of type string) with the test values
     	ListAdapter adapter = new ArrayAdapter<String>(this, android.R.layout.simple_list_item_1, testValues);
  
     	return adapter;
     }
-
-    
+*/
+    /*
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
@@ -208,14 +280,10 @@ public class PeopleTrackList extends ListActivity {
 		Log.d(TAG, "objId = " + objId);
 		TrackCreator trackCreator = new TrackCreator(this);
 		trackCreator.downloadTrack(objId, name);
-		/*
-		Intent i = new Intent(this, PeopleTrackList.class);
-		i.putExtra("userId",userId);
-		startActivity(i);
-		*/
+
 		return;
 	}
-
+*/
 	   public void onCreateContextMenu( ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo )
 	   {
 		   /*
@@ -249,16 +317,62 @@ public class PeopleTrackList extends ListActivity {
 	      
 
 	      
-			Log.v(TAG, "ASLAI HERE: position = " + info.position + "; id = " + tracks[info.position].id);
+			Log.v(TAG, "ASLAI HERE: position = " + info.position + "; id = " + trackList.get(info.position));
 			
 
-			int objId = tracks[info.position].id;
-			String name = tracks[info.position].name;
+			int objId = trackList.get(info.position).id;
+			String name = trackHash.get(objId).name;
 			Log.d(TAG, "objId = " + objId);
 			TrackCreator trackCreator = new TrackCreator(this);
 			trackCreator.downloadTrack(objId, name);	      
 			handled = true;
 	      return handled;
 	   }
-	
+
+	   
+	   
+	   class PeopleTrackListAdapter extends ArrayAdapter<Track> {
+		   private ArrayList<Track> items;
+	        public PeopleTrackListAdapter(Context context, int textViewResourceId, ArrayList<PeopleTrackList.Track> items) {
+                super(context, textViewResourceId, items);
+                this.items = items;
+        }
+
+	        public View getView(int position, View convertView, ViewGroup parent) {
+	                View v = convertView;
+	                if (v == null) {
+	                    LayoutInflater vi = (LayoutInflater)getSystemService(Context.LAYOUT_INFLATER_SERVICE);
+	                    v = vi.inflate(R.layout.trackitem, null);
+	                }
+	                Track o = items.get(position);
+	                if (o != null) {
+	            		TextView titleView = (TextView) v.findViewById(R.id.listitem_name);
+	            		titleView.setText(o.name);
+	            		
+	            		DateView creationTimeView = (DateView)v.findViewById(R.id.listitem_from);
+//	            		creationTimeView.setText(creationTime);
+	            		creationTimeView.setVisibility(View.INVISIBLE);
+	            		DistanceView distanceView = (DistanceView)v.findViewById(R.id.listitem_distance);
+	            		distanceView.setText("" + o.distance);
+	            		
+	            		DurationView durationView = (DurationView)v.findViewById(R.id.listitem_duration);
+	            		durationView.setText("" + o.duration);
+	            			            		ImageView iconView = (ImageView)v.findViewById(R.id.listitem_icon);
+	            		//if (trackId != null)
+	            			iconView.setVisibility(View.GONE);
+	                	/*
+	                        TextView tt = (TextView) v.findViewById(R.id.toptext);
+	                        TextView bt = (TextView) v.findViewById(R.id.bottomtext);
+	                        if (tt != null) {
+	                              tt.setText("Name: "+o.getOrderName());                            }
+	                        if(bt != null){
+	                              bt.setText("Status: "+ o.getOrderStatus());
+	                        }
+	                        */
+	                }
+	                return v;
+	        }
+	   
+	   }
+	   
 }

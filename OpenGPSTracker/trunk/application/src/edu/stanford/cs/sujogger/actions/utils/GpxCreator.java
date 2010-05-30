@@ -94,6 +94,8 @@ public class GpxCreator extends XmlCreator
       int duration = 0;
       double distance = 0;
       String fileName = "UntitledTrack";
+      long creationTime = 0;
+      int userId = 0;
       if( mChosenBaseFileName != null && !mChosenBaseFileName.equals( "" ) )
       {
          fileName = mChosenBaseFileName;
@@ -108,20 +110,60 @@ public class GpxCreator extends XmlCreator
             if( trackCursor.moveToLast() )
             {
                fileName = trackCursor.getString( 0 );
+               Log.d(TAG, "Name is: " + fileName);
+
                _id = trackCursor.getInt(1);
+               Log.d(TAG, "ID is: " + _id);
                distance = trackCursor.getDouble(2);
+               Log.d(TAG, "Distance is: " + distance);
                duration = trackCursor.getInt(3);
+               Log.d(TAG, "Duration is: " + duration);
+
             }
+         } catch (Exception e) {
+        	 e.printStackTrace();
          }
          finally
          {
             if( trackCursor != null )
             {
+            	
                trackCursor.close();
             }
          }
       }
       if (mPublish) {
+          Cursor trackCursor = null;
+          ContentResolver resolver = mContext.getContentResolver();
+          try
+          {
+             trackCursor = resolver.query( trackUri, new String[] { Tracks.NAME, Tracks._ID, Tracks.DISTANCE, Tracks.DURATION, Tracks.USER_ID, Tracks.CREATION_TIME }, null, null, null );
+             if( trackCursor.moveToLast() )
+             {
+
+                _id = trackCursor.getInt(1);
+                Log.d(TAG, "ID is: " + _id);
+                distance = trackCursor.getDouble(2);
+                Log.d(TAG, "Distance is: " + distance);
+                duration = trackCursor.getInt(3);
+                Log.d(TAG, "Duration is: " + duration);
+                userId = trackCursor.getInt(4);
+                creationTime = trackCursor.getLong(5);
+
+             }
+          } catch (Exception e) {
+         	 e.printStackTrace();
+          }
+          finally
+          {
+             if( trackCursor != null )
+             {
+             	
+                trackCursor.close();
+             }
+          }
+       
+
     	  try {
  	         Log.d(TAG, "Object publishing to server");
     		  
@@ -138,43 +180,61 @@ public class GpxCreator extends XmlCreator
 	         serializeTrack( trackUri, serializer );
 	         Obj obj = new Obj();
 	         obj.obj_type = "track";
-	         obj.object_properties = new ObjProperty[6];
+	         obj.object_properties = new ObjProperty[8];
 	         
 	         ObjProperty idProp = new ObjProperty();
 	         idProp.name = "_id";
 	         idProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_INT;
 	         idProp.int_val = _id;
 	         obj.object_properties[0] = idProp;
+
+	         ObjProperty userProp = new ObjProperty();
+	         userProp.name = "user_id";
+	         userProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_INT;
+	         userProp.int_val = userId;
+	         obj.object_properties[1] = userProp;
+	         
+	         ObjProperty timeProp = new ObjProperty();
+	         timeProp.name = "creation_time";
+	         timeProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_FLOAT;
+	         timeProp.float_val = creationTime;
+	         obj.object_properties[2] = timeProp;
 	         
 	         ObjProperty nameProp = new ObjProperty();
 	         nameProp.name = "name";
 	         nameProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
 	         nameProp.string_val = fileName;
-	         obj.object_properties[1] = nameProp;
-	         
-	         ObjProperty trackProp = new ObjProperty();
-	         trackProp.name = "gpx";
-	         trackProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
-	         trackProp.string_val = baos.toString();
-	         obj.object_properties[2] = trackProp;
-	         
+	         obj.object_properties[3] = nameProp;
+
 	         ObjProperty trackUriProp = new ObjProperty();
 	         trackUriProp.name = "trackUri";
 	         trackUriProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
 	         trackUriProp.string_val = trackUri.toString();
-	         obj.object_properties[3] = trackUriProp;
-
+	         obj.object_properties[4] = trackUriProp;
+ 
 	         ObjProperty distanceProp = new ObjProperty();
 	         distanceProp.name = "distance";
-	         distanceProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
-	         distanceProp.float_val = (float) distance;
-	         obj.object_properties[4] = distanceProp;
+	         distanceProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_FLOAT;
+//	         distanceProp.float_val = (float) distance;
+//	         distanceProp.float_val =  3.0;
+	         distanceProp.float_val = distance;	     
+	         Log.d(TAG, "ASLAI DISTANCE IS: " + distanceProp.float_val);
+	         obj.object_properties[5] = distanceProp;
 
 	         ObjProperty durationProp = new ObjProperty();
 	         durationProp.name = "duration";
 	         durationProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_INT;
 	         durationProp.int_val = duration;
-	         obj.object_properties[5] = durationProp;
+	         Log.d(TAG, "ASLAI DURATION IS: " + durationProp.int_val);
+	         obj.object_properties[6] = durationProp;
+       
+	         ObjProperty trackProp = new ObjProperty();
+	         trackProp.name = "gpx";
+	         trackProp.prop_type = GamingServiceConnection.OBJ_PROPERTIES_STRING;
+	         trackProp.string_val = baos.toString();
+	         obj.object_properties[7] = trackProp;
+	         
+
 	         
 	         
 	         mGamingServiceConn.createObj(TrackList.PUBLISH_TRACK, obj);
