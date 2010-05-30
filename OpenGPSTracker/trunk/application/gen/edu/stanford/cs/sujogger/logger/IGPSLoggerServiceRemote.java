@@ -109,6 +109,14 @@ reply.writeNoException();
 reply.writeInt(((_result)?(1):(0)));
 return true;
 }
+case TRANSACTION_isLogging:
+{
+data.enforceInterface(DESCRIPTOR);
+long _result = this.isLogging();
+reply.writeNoException();
+reply.writeLong(_result);
+return true;
+}
 }
 return super.onTransact(code, data, reply, flags);
 }
@@ -252,6 +260,23 @@ _data.recycle();
 }
 return _result;
 }
+public long isLogging() throws android.os.RemoteException
+{
+android.os.Parcel _data = android.os.Parcel.obtain();
+android.os.Parcel _reply = android.os.Parcel.obtain();
+long _result;
+try {
+_data.writeInterfaceToken(DESCRIPTOR);
+mRemote.transact(Stub.TRANSACTION_isLogging, _data, _reply, 0);
+_reply.readException();
+_result = _reply.readLong();
+}
+finally {
+_reply.recycle();
+_data.recycle();
+}
+return _result;
+}
 }
 static final int TRANSACTION_loggingState = (android.os.IBinder.FIRST_CALL_TRANSACTION + 0);
 static final int TRANSACTION_startLogging = (android.os.IBinder.FIRST_CALL_TRANSACTION + 1);
@@ -260,6 +285,7 @@ static final int TRANSACTION_resumeLogging = (android.os.IBinder.FIRST_CALL_TRAN
 static final int TRANSACTION_stopLogging = (android.os.IBinder.FIRST_CALL_TRANSACTION + 4);
 static final int TRANSACTION_storeMediaUri = (android.os.IBinder.FIRST_CALL_TRANSACTION + 5);
 static final int TRANSACTION_isMediaPrepared = (android.os.IBinder.FIRST_CALL_TRANSACTION + 6);
+static final int TRANSACTION_isLogging = (android.os.IBinder.FIRST_CALL_TRANSACTION + 7);
 }
 public int loggingState() throws android.os.RemoteException;
 public long startLogging() throws android.os.RemoteException;
@@ -268,4 +294,5 @@ public long resumeLogging() throws android.os.RemoteException;
 public void stopLogging() throws android.os.RemoteException;
 public android.net.Uri storeMediaUri(android.net.Uri mediaUri) throws android.os.RemoteException;
 public boolean isMediaPrepared() throws android.os.RemoteException;
+public long isLogging() throws android.os.RemoteException;
 }

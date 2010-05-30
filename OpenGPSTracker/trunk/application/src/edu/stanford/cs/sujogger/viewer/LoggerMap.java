@@ -35,6 +35,8 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -124,6 +126,7 @@ public class LoggerMap extends MapActivity {
 	private static final int MENU_STATS = 4;
 	private static final int MENU_ABOUT = 5;
 	private static final int MENU_LAYERS = 6;
+	private static final int MENU_CLEARTRACK = 7;
 	//private static final int MENU_NOTE = 7;
 	private static final int MENU_NAME = 8;
 	private static final int MENU_PICTURE = 9;
@@ -154,8 +157,8 @@ public class LoggerMap extends MapActivity {
 
 	private double mAverageSpeed = 4.4704;
 	//ASLAI
-	private ArrayList<Long> mTrackIdList;
-	private long mTrackId = -1;
+	private ArrayList<Long> mTrackIds = new ArrayList<Long>();
+//	private long mTrackId = -1;
 	private boolean statisticsPresent = false;
 	private long mLastSegment = -1;
 	private long mLastWaypoint = -1;
@@ -163,7 +166,7 @@ public class LoggerMap extends MapActivity {
 	private WakeLock mWakeLock = null;
 	private MapController mMapController = null;
 	private SharedPreferences mSharedPreferences;
-	private GPSLoggerServiceManager mLoggerServiceManager;
+//	private GPSLoggerServiceManager GPSLoggerServiceManager;
 	private DatabaseHelper mDbHelper;
 	
 	public static final int UPDATE_SBS_RID = 1;
@@ -173,11 +176,102 @@ public class LoggerMap extends MapActivity {
 	private ScoreboardUpdateReceiver mReceiver;
 	private ProgressDialog mDialogUpdate;
 
+	private ArrayList<Long> toTrackIdsLongArray(long[] longArray) {
+		if (longArray == null || longArray.length <=0) {
+			return new ArrayList<Long>();
+		}
+		ArrayList<Long> arrayList = new ArrayList<Long>();
+		for (int i=0; i < longArray.length; i++) {
+			arrayList.add(longArray[i]);
+		}
+		return arrayList;
+	}
+	private long[] getTrackIdsLongArray() {
+		int arraySize = mTrackIds.size();
+		if (arraySize <= 0) {
+			return new long[0];
+		}
+		long[] longArray = new long[arraySize];
+		for (int i = 0; i < arraySize; i++) {
+			longArray[i] = mTrackIds.get(i);
+		}
+		return longArray;
+	}
+	private void addTrackIds(long val, boolean startLogging) {
+
+		
+		int size = mTrackIds.size();
+		for (int i=0; i < size; i++) {
+			if (mTrackIds.get(i) == val) {
+				return;
+			}
+		}
+		int state = GPSLoggerServiceManager.getLoggingState();
+		Log.d(TAG, "ADDTRACKIDS STATE IS " + state);
+
+        if ((state == Constants.LOGGING || state == Constants.PAUSED) && !startLogging
+        		&& mTrackIds.size() > 0) {        	
+            mTrackIds.add(mTrackIds.size()-1, val);
+        } else {
+
+		  mTrackIds.add(val);
+		  
+         }
+	}
+	private String getTrackIdsString() {
+		String str = "Track ids are: ";
+
+		for (Long trackId : mTrackIds) {
+			str += "" + trackId + ", ";
+		}
+		return str;
+	}
+	private long getLastTrackId() {
+		long trackId = -1;
+		if ((trackId = GPSLoggerServiceManager.isLogging()) != -1) {
+			Log.d(TAG, "LastTrackId: " + trackId);
+			return trackId;
+		}
+		if (mTrackIds.size() == 0) {
+			return trackId;
+		}
+		trackId = mTrackIds.get(mTrackIds.size()-1);
+		Log.d(TAG, "LastTrackId: " + trackId);
+			
+		return trackId;
+	}
+	private String trackIdsToPreference() {
+		
+		if (mTrackIds == null || mTrackIds.size() == 0)
+			return "";
+		int size = mTrackIds.size();
+		String str = "" + mTrackIds.get(0);
+		for (int i = 1; i < size; i++) {
+			str += ","+ mTrackIds.get(i);
+		}
+		return str;
+	}
+	
+	private ArrayList<Long> preferenceToTrackIds(SharedPreferences sharedPreferences) {
+//		return new ArrayList<Long>();
+		
+		String value = sharedPreferences.getString("mTrackIds", "");
+		if ("".equals(value)) {
+			return new ArrayList<Long>();
+		}
+		ArrayList<Long> arrList = new ArrayList<Long>();
+		String[] strArray = value.split(",");
+		for (int i=0; i < strArray.length; i++) {
+			arrList.add(new Long(strArray[i]));
+		}
+		return arrList;
+		
+	}
 	private final ContentObserver mTrackSegmentsObserver = new ContentObserver(new Handler()) {
 		@Override
 		public void onChange(boolean selfUpdate) {
 			if (!selfUpdate) {
-				Log.d(TAG, "mTrackSegmentsObserver " + mTrackId);
+				Log.d(TAG, "mTrackSegmentsObserver " + getTrackIdsString());
 				LoggerMap.this.updateDataOverlays();
 			}
 			else {
@@ -206,7 +300,7 @@ public class LoggerMap extends MapActivity {
 		@Override
 		public void onChange(boolean selfUpdate) {
 			if (!selfUpdate) {
-				Log.d(TAG, "mTrackMediasObserver " + mTrackId);
+				Log.d(TAG, "mTrackMediasObserver " + getTrackIdsString());
 				if (mLastSegmentOverlay != null) {
 					mLastSegmentOverlay.calculateMedia();
 					mMapView.postInvalidate();
@@ -221,7 +315,7 @@ public class LoggerMap extends MapActivity {
 		public void onClick(DialogInterface dialog, int which) {
 			Log.d(TAG, "mNoTrackDialogListener" + which);
 			Intent tracklistIntent = new Intent(LoggerMap.this, TrackList.class);
-			tracklistIntent.putExtra(Tracks._ID, LoggerMap.this.mTrackId);
+			tracklistIntent.putExtra(Tracks._ID, LoggerMap.this.getLastTrackId());
 			startActivityForResult(tracklistIntent, MENU_TRACKLIST);
 		}
 	};
@@ -231,7 +325,7 @@ public class LoggerMap extends MapActivity {
 			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
-			Uri uri = ContentUris.withAppendedId(Tracks.CONTENT_URI, LoggerMap.this.mTrackId);
+			Uri uri = ContentUris.withAppendedId(Tracks.CONTENT_URI, LoggerMap.this.getLastTrackId());
 			getContentResolver().update(uri, values, null, null);
 			getContentResolver().notifyChange(uri, null);
 			updateTitleBar();
@@ -258,18 +352,18 @@ public class LoggerMap extends MapActivity {
 			switch (id) {
 			case R.id.logcontrol_start:
 				Log.d(TAG, "mLoggingControlListener: start GPS logging...");
-				long loggerTrackId = mLoggerServiceManager.startGPSLogging(null);
-				moveToTrack(loggerTrackId, true);
+				long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
+				moveToTrack(loggerTrackId, true, true);
 				showDialog(DIALOG_TRACKNAME);
 				break;
 			case R.id.logcontrol_pause:
-				mLoggerServiceManager.pauseGPSLogging();
+				GPSLoggerServiceManager.pauseGPSLogging();
 				break;
 			case R.id.logcontrol_resume:
-				mLoggerServiceManager.resumeGPSLogging();
+				GPSLoggerServiceManager.resumeGPSLogging();
 				break;
 			case R.id.logcontrol_stop:
-				mLoggerServiceManager.stopGPSLogging();
+				GPSLoggerServiceManager.stopGPSLogging();
 				Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
 				calculateTrackStatistics();
 				break;
@@ -378,7 +472,7 @@ public class LoggerMap extends MapActivity {
 				}
 			}
 
-			LoggerMap.this.mLoggerServiceManager.storeMediaUri(Uri.fromFile(file));
+			GPSLoggerServiceManager.storeMediaUri(Uri.fromFile(file));
 		}
 
 	};
@@ -387,7 +481,7 @@ public class LoggerMap extends MapActivity {
 		public void onClick(DialogInterface dialog, int which) {
 			String name = mNoteNameView.getText().toString();
 			Uri media = Uri.withAppendedPath(Constants.NAME_URI, Uri.encode(name));
-			LoggerMap.this.mLoggerServiceManager.storeMediaUri(media);
+			GPSLoggerServiceManager.storeMediaUri(media);
 		}
 
 	};
@@ -400,19 +494,33 @@ public class LoggerMap extends MapActivity {
 	protected void onCreate(Bundle load) {
 		Log.d(TAG, "onCreate()");
 		super.onCreate(load);
-		mTrackIdList = new ArrayList<Long>();
 		this.startService(new Intent(Constants.SERVICENAME));
-
+		/*
+		if (load != null) {
+			Log.d(TAG, "BUNDLE IS NOT NULL");
+          mTrackIds = toTrackIdsLongArray(load.getLongArray("trackIds"));
+		} else {
+			Log.d(TAG, "BUNDLE IS NULL");
+		  mTrackIds = new ArrayList<Long>();
+		}
+		*/
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		
+		mTrackIds = preferenceToTrackIds(mSharedPreferences);
+		Log.d(TAG, getTrackIdsString());
+		/*
 		Object previousInstanceData = getLastNonConfigurationInstance();
 		if (previousInstanceData != null && previousInstanceData instanceof GPSLoggerServiceManager) {
-			mLoggerServiceManager = (GPSLoggerServiceManager) previousInstanceData;
+			GPSLoggerServiceManager = (GPSLoggerServiceManager) previousInstanceData;
 			Log.d(TAG, "getting previous GPSLoggerServiceManager");
 		}
 		else {
-			mLoggerServiceManager = new GPSLoggerServiceManager((Context) this);
+			GPSLoggerServiceManager = new GPSLoggerServiceManager((Context) this);
 			Log.d(TAG, "creating new GPSLoggerServiceManager");
 		}
-		mLoggerServiceManager.startup();
+		*/
+		GPSLoggerServiceManager.setContext(this);
+		GPSLoggerServiceManager.startup();
 		
 		mDbHelper = new DatabaseHelper(this);
 		
@@ -458,7 +566,7 @@ public class LoggerMap extends MapActivity {
 			this.mWakeLock.release();
 			Log.w(TAG, "onPause(): Released lock to keep screen on!");
 		}
-		if (mTrackId > 0) {
+		if (mTrackIds.size() > 0) {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
 			resolver.unregisterContentObserver(this.mTrackSegmentsObserver);
 			resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
@@ -482,12 +590,12 @@ public class LoggerMap extends MapActivity {
 		// updateCompassDisplayVisibility();
 		// updateLocationDisplayVisibility();
 
-		if (mTrackId >= 0) {
+		if (mTrackIds.size() >= 0) {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
-			Uri trackUri = Uri.withAppendedPath(Tracks.CONTENT_URI, mTrackId + "/segments");
-			Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, mTrackId + "/segments/"
+			Uri trackUri = Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId() + "/segments");
+			Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId() + "/segments/"
 					+ mLastSegment + "/waypoints");
-			Uri mediaUri = ContentUris.withAppendedId(Media.CONTENT_URI, mTrackId);
+			Uri mediaUri = ContentUris.withAppendedId(Media.CONTENT_URI, getLastTrackId());
 
 			resolver.unregisterContentObserver(this.mTrackSegmentsObserver);
 			resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
@@ -495,6 +603,7 @@ public class LoggerMap extends MapActivity {
 			resolver.registerContentObserver(trackUri, false, this.mTrackSegmentsObserver);
 			resolver.registerContentObserver(lastSegmentUri, true, this.mSegmentWaypointsObserver);
 			resolver.registerContentObserver(mediaUri, true, this.mTrackMediasObserver);
+
 		}
 		updateDataOverlays();
 	}
@@ -507,14 +616,17 @@ public class LoggerMap extends MapActivity {
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
-		this.mLoggerServiceManager.shutdown();
+		Editor editor = mSharedPreferences.edit();
+		editor.putString("mTrackIds", trackIdsToPreference());
+		editor.commit();		
+		GPSLoggerServiceManager.shutdown();
 		if (mWakeLock != null && mWakeLock.isHeld()) {
 			mWakeLock.release();
 			Log.w(TAG, "onDestroy(): Released lock to keep screen on!");
 		}
 		mSharedPreferences
 				.unregisterOnSharedPreferenceChangeListener(this.mSharedPreferenceChangeListener);
-		if (mLoggerServiceManager.getLoggingState() == Constants.STOPPED) {
+		if (GPSLoggerServiceManager.getLoggingState() == Constants.STOPPED) {
 			stopService(new Intent(Constants.SERVICENAME));
 		}
 		
@@ -532,7 +644,7 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "onNewIntent");
 		Uri data = newIntent.getData();
 		if (data != null) {
-			moveToTrack(Long.parseLong(data.getLastPathSegment()), true);
+			moveToTrack(Long.parseLong(data.getLastPathSegment()), true, false);
 		}
 	}
 
@@ -542,7 +654,7 @@ public class LoggerMap extends MapActivity {
 			Log.d(TAG, "Restoring the previous map ");
 			super.onRestoreInstanceState(load);
 		}
-
+//ASLAI TODO
 		Uri data = this.getIntent().getData();
 		if (load != null && load.containsKey("track")) // 1st track from a
 														// previous instance of
@@ -550,13 +662,13 @@ public class LoggerMap extends MapActivity {
 		{
 			long loadTrackId = load.getLong("track");
 			Log.d(TAG, "Moving to restored track " + loadTrackId);
-			moveToTrack(loadTrackId, false);
+			moveToTrack(loadTrackId, false, false);
 		}
 		else if (data != null) // 2nd track ordered to make
 		{
 			long loadTrackId = Long.parseLong(data.getLastPathSegment());
 			Log.d(TAG, "Moving to intented track " + loadTrackId);
-			moveToTrack(loadTrackId, true);
+			moveToTrack(loadTrackId, true, false);
 		}
 		else {
 			Log.d(TAG, "Moving to last track ");
@@ -578,12 +690,15 @@ public class LoggerMap extends MapActivity {
 			GeoPoint lastPoint = getLastTrackPoint();
 			this.mMapView.getController().animateTo(lastPoint);
 		}
+		redrawOverlays();		
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle save) {
 		super.onSaveInstanceState(save);
-		save.putLong("track", this.mTrackId);
+		Log.d(TAG, "ONSAVEINSTANCESTATE: " + getTrackIdsString());
+		save.putLongArray("trackIds", this.getTrackIdsLongArray());
+//		save.putLong("track", this.mTrackId);
 		save.putInt("zoom", this.mMapView.getZoomLevel());
 		GeoPoint point = this.mMapView.getMapCenter();
 		save.putInt("e6lat", point.getLatitudeE6());
@@ -595,12 +710,13 @@ public class LoggerMap extends MapActivity {
 	 * 
 	 * @see android.app.Activity#onRetainNonConfigurationInstance()
 	 */
+	/*
 	@Override
 	public Object onRetainNonConfigurationInstance() {
-		Object nonConfigurationInstance = this.mLoggerServiceManager;
+		Object nonConfigurationInstance = GPSLoggerServiceManager;
 		return nonConfigurationInstance;
 	}
-
+*/
 	@Override
 	public boolean onKeyDown(int keyCode, KeyEvent event) {
 		boolean propagate = true;
@@ -619,6 +735,7 @@ public class LoggerMap extends MapActivity {
 			setTrafficOverlay(!this.mMapView.isTraffic());
 			propagate = false;
 			break;
+			/*
 		case KeyEvent.KEYCODE_F:
 			moveToTrack(this.mTrackId - 1, true);
 			propagate = false;
@@ -627,6 +744,7 @@ public class LoggerMap extends MapActivity {
 			moveToTrack(this.mTrackId + 1, true);
 			propagate = false;
 			break;
+			*/
 		default:
 			propagate = super.onKeyDown(keyCode, event);
 			break;
@@ -637,7 +755,7 @@ public class LoggerMap extends MapActivity {
 	@Override
 	public void finish() {
 		Log.d(TAG, "finish()");
-		if (mLoggerServiceManager.getLoggingState() == Constants.LOGGING)
+		if (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING)
 			setResult(TrackList.TRACKSTATUS_TRACKING);
 		else
 			setResult(TrackList.TRACKSTATUS_IDLE);
@@ -647,7 +765,7 @@ public class LoggerMap extends MapActivity {
 
 	/*
 	 * @Override public void onBackPressed() { Log.d(TAG, "onBackPressed"); //if
-	 * (mLoggerServiceManager.getLoggingState() == Constants.LOGGING) //
+	 * (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING) //
 	 * setResult(TrackList.TRACKSTATUS_TRACKING); //else //
 	 * setResult(TrackList.TRACKSTATUS_IDLE); finish(); return; }
 	 */
@@ -693,7 +811,8 @@ public class LoggerMap extends MapActivity {
 		// SubMenu notemenu = menu.addSubMenu( ContextMenu.NONE, MENU_NOTE,
 		// ContextMenu.NONE, R.string.menu_insertnote ).setIcon(
 		// R.drawable.ic_menu_myplaces );
-
+		menu.add(ContextMenu.NONE, MENU_CLEARTRACK, ContextMenu.NONE, R.string.menu_clear_track)
+		.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('C');
 		menu.add(ContextMenu.NONE, MENU_STATS, ContextMenu.NONE, R.string.menu_statistics).setIcon(
 				R.drawable.ic_menu_picture).setAlphabeticShortcut('S');
 		menu.add(ContextMenu.NONE, MENU_SHARE, ContextMenu.NONE, R.string.menu_shareTrack).setIcon(
@@ -730,9 +849,9 @@ public class LoggerMap extends MapActivity {
 	@Override
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// MenuItem notemenu = menu.findItem( MENU_NOTE );
-		// notemenu.setEnabled( mLoggerServiceManager.isMediaPrepared() );
+		// notemenu.setEnabled( GPSLoggerServiceManager.isMediaPrepared() );
 		MenuItem sharemenu = menu.findItem(MENU_SHARE);
-		sharemenu.setEnabled(mTrackId >= 0);
+		sharemenu.setEnabled(mTrackIds.size() > 0);
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -759,15 +878,19 @@ public class LoggerMap extends MapActivity {
 			startActivity(i);
 			handled = true;
 			break;
+		case MENU_CLEARTRACK:
+			clearOverlays();
+			handled = true;
+			break;			
 		case MENU_TRACKLIST:
 			Intent tracklistIntent = new Intent(this, TrackList.class);
-			tracklistIntent.putExtra(Tracks._ID, this.mTrackId);
+			tracklistIntent.putExtra(Tracks._ID, this.getLastTrackId());
 			startActivityForResult(tracklistIntent, MENU_TRACKLIST);
 			break;
 		case MENU_STATS:
-			if (this.mTrackId >= 0) {
+			if (this.mTrackIds.size() > 0) {
 				Intent actionIntent = new Intent(this, Statistics.class);
-				trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, mTrackId);
+				trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
 				actionIntent.setData(trackUri);
 				startActivity(actionIntent);
 				handled = true;
@@ -788,7 +911,7 @@ public class LoggerMap extends MapActivity {
 			break;
 		case MENU_SHARE:
 			Intent actionIntent = new Intent(Intent.ACTION_RUN);
-			trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, mTrackId);
+			trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
 			actionIntent.setDataAndType(trackUri, Tracks.CONTENT_ITEM_TYPE);
 			actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
@@ -923,7 +1046,7 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
-		int state = mLoggerServiceManager.getLoggingState();
+		int state = GPSLoggerServiceManager.getLoggingState();
 		switch (id) {
 		case DIALOG_LOGCONTROL:
 			Button start = (Button) dialog.findViewById(R.id.logcontrol_start);
@@ -1000,7 +1123,7 @@ public class LoggerMap extends MapActivity {
 			case MENU_TRACKLIST:
 				Uri trackUri = intent.getData();
 				long trackId = Long.parseLong(trackUri.getLastPathSegment());
-				moveToTrack(trackId, true);
+				moveToTrack(trackId, true, false);
 				break;
 			case MENU_ABOUT:
 				break;
@@ -1021,7 +1144,7 @@ public class LoggerMap extends MapActivity {
 				fileUri = builder.scheme("file").appendEncodedPath("/").appendEncodedPath(
 						newFile.getAbsolutePath()).appendQueryParameter("width", width)
 						.appendQueryParameter("height", height).build();
-				this.mLoggerServiceManager.storeMediaUri(fileUri);
+				GPSLoggerServiceManager.storeMediaUri(fileUri);
 				mLastSegmentOverlay.calculateMedia();
 				mMapView.postInvalidate();
 				break;
@@ -1034,13 +1157,13 @@ public class LoggerMap extends MapActivity {
 				file.renameTo(newFile);
 				builder = new Uri.Builder();
 				fileUri = builder.scheme("file").appendPath(newFile.getAbsolutePath()).build();
-				this.mLoggerServiceManager.storeMediaUri(fileUri);
+				GPSLoggerServiceManager.storeMediaUri(fileUri);
 				mLastSegmentOverlay.calculateMedia();
 				mMapView.postInvalidate();
 				break;
 			case MENU_VOICE:
 				uri = Uri.parse(intent.getDataString());
-				this.mLoggerServiceManager.storeMediaUri(uri);
+				GPSLoggerServiceManager.storeMediaUri(uri);
 				mLastSegmentOverlay.calculateMedia();
 				mMapView.postInvalidate();
 				break;
@@ -1066,7 +1189,7 @@ public class LoggerMap extends MapActivity {
 		Cursor trackCursor = null;
 		try {
 			trackCursor = resolver.query(ContentUris.withAppendedId(Tracks.CONTENT_URI,
-					this.mTrackId), new String[] { Tracks.NAME }, null, null, null);
+					this.getLastTrackId()), new String[] { Tracks.NAME }, null, null, null);
 			if (trackCursor != null && trackCursor.moveToLast()) {
 				String trackName = trackCursor.getString(0);
 				this.setTitle(trackName);
@@ -1088,7 +1211,7 @@ public class LoggerMap extends MapActivity {
 				PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
 				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, TAG);
 			}
-			if (mLoggerServiceManager.getLoggingState() == Constants.LOGGING && !mWakeLock.isHeld()) {
+			if (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING && !mWakeLock.isHeld()) {
 				mWakeLock.acquire();
 				Log.w(TAG, "Acquired lock to keep screen on!");
 			}
@@ -1160,7 +1283,7 @@ public class LoggerMap extends MapActivity {
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor waypointsCursor = null;
 		try {
-			Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, this.mTrackId
+			Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, this.getTaskId()
 					+ "/segments/" + mLastSegment + "/waypoints");
 			waypointsCursor = resolver.query(lastSegmentUri, new String[] { Waypoints.SPEED },
 					null, null, null);
@@ -1186,9 +1309,12 @@ public class LoggerMap extends MapActivity {
 	 * @see SegmentOverlay
 	 */
 	private void createDataOverlays() {
+		Log.d(TAG, "CREATEDATAOVERLAYS");
 		mLastSegmentOverlay = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		//ASLAI HERE
+		Long lastTrackId = getLastTrackId();
+		
 		overlays.clear(); 
 		overlays.add(mMylocation);
 
@@ -1199,9 +1325,11 @@ public class LoggerMap extends MapActivity {
 																// Constants.TRACKCOLORING,
 																// "2" )
 																// ).intValue();
-
+		for (long trackId: mTrackIds) {
+			Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 		try {
-			Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, this.mTrackId + "/segments");
+
+			Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
 			segments = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null, null);
 			if (segments != null && segments.moveToFirst()) {
 				do {
@@ -1218,9 +1346,11 @@ public class LoggerMap extends MapActivity {
 						segmentOverlay.addPlacement(SegmentOverlay.LAST_SEGMENT);
 						getLastTrackPoint();
 					}
-					mLastSegment = segmentsId;
+					if (trackId == lastTrackId) 
+					    mLastSegment = segmentsId;
 				} while (segments.moveToNext());
 			}
+			
 		}
 		finally {
 			if (segments != null) {
@@ -1230,15 +1360,23 @@ public class LoggerMap extends MapActivity {
 
 		moveActiveViewWindow();
 
-		Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, mTrackId + "/segments/"
+		}
+
+		Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, lastTrackId + "/segments/"
 				+ mLastSegment + "/waypoints");
 		resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
 		resolver.registerContentObserver(lastSegmentUri, false, this.mSegmentWaypointsObserver);
+		Log.d(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
+
 	}
 
 	private void updateDataOverlays() {
+	
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
-		Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, this.mTrackId + "/segments");
+		for (long trackId: mTrackIds) {
+			Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+ 
+		Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
 		Cursor segmentsCursor = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		int segmentOverlaysCount = 0;
@@ -1252,9 +1390,11 @@ public class LoggerMap extends MapActivity {
 			segmentsCursor = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null,
 					null);
 			if (segmentsCursor != null && segmentsCursor.getCount() == segmentOverlaysCount) {
+				Log.d(TAG, "UPDATEDATAOVERLAYS SAME SEGMENT COUNT");
 				// Log.d( TAG, "Alignment of segments" );
 			}
 			else {
+				Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
 				createDataOverlays();
 			}
 		}
@@ -1264,11 +1404,12 @@ public class LoggerMap extends MapActivity {
 			}
 		}
 		moveActiveViewWindow();
+		}
 	}
 
 	private void moveActiveViewWindow() {
 		GeoPoint lastPoint = getLastTrackPoint();
-		if (lastPoint != null && mLoggerServiceManager.getLoggingState() == Constants.LOGGING) {
+		if (lastPoint != null && GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING) {
 			Point out = new Point();
 			this.mMapView.getProjection().toPixels(lastPoint, out);
 			int height = this.mMapView.getHeight();
@@ -1310,10 +1451,32 @@ public class LoggerMap extends MapActivity {
 			mSpeedtexts[i].setText(speedText);
 		}*/
 	}
-
-// ASLAI
-	private void clearOverlays() {		
+    private void redrawOverlays() {
 		mMapView.getOverlays().clear();
+		GeoPoint lastPoint = getLastTrackPoint();
+	    mMapView.getController().animateTo(lastPoint);
+		
+		if (mTrackIds.size() > 0) {
+            moveToTrack(getLastTrackId(), true, true);
+
+		}    	
+    }
+// ASLAI
+	private void clearOverlays() {	
+		int state = GPSLoggerServiceManager.getLoggingState();
+		Log.d("TAG", "ASLAI STATE IS: " + state);
+		ArrayList<Long> tmpTrackIds = new ArrayList<Long>();
+        if (state == Constants.LOGGING || state == Constants.PAUSED) {        	
+            tmpTrackIds.add(getLastTrackId());
+        }
+        mTrackIds = tmpTrackIds;    
+        redrawOverlays();
+//		createDataOverlays();
+//		updateDataOverlays();
+//		moveActiveViewWindow();
+		Editor editor = mSharedPreferences.edit();
+		editor.putString("mTrackIds", trackIdsToPreference());
+		editor.commit();
 	}
 	/**
 	 * Alter this to set a new track as current.
@@ -1322,7 +1485,56 @@ public class LoggerMap extends MapActivity {
 	 * @param center
 	 *            center on the end of the track
 	 */
-	private void moveToTrack(long trackId, boolean center) {
+	private void moveToTrack(long trackId, boolean center, boolean startLogging) {
+		Cursor track = null;
+		try {
+			ContentResolver resolver = this.getApplicationContext().getContentResolver();
+			Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
+			Uri mediaUri = ContentUris.withAppendedId(Media.CONTENT_URI, this.getLastTrackId());
+			track = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.DURATION,
+					Tracks.DISTANCE }, null, null, null);
+			addTrackIds(trackId, startLogging);
+			if (track != null && track.moveToFirst()) {
+//				this.mTrackId = trackId;
+				mLastSegment = -1;
+				mLastWaypoint = -1;
+				// ASLAI PROBLEM HERE
+				if (trackId == this.getLastTrackId() && track.getInt(1) != 0 && track.getDouble(2) != 0)
+					statisticsPresent = true;
+				else
+					statisticsPresent = false;
+				resolver.unregisterContentObserver(this.mTrackSegmentsObserver);
+				resolver.unregisterContentObserver(this.mTrackMediasObserver);
+				Uri tracksegmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId()
+						+ "/segments");
+				resolver.registerContentObserver(tracksegmentsUri, false,
+						this.mTrackSegmentsObserver);
+				resolver.registerContentObserver(mediaUri, false, this.mTrackMediasObserver);
+//ASLAI CHANGED
+				this.mMapView.getOverlays().clear();
+
+
+
+
+			}
+
+		}
+		finally {
+			if (track != null) {
+				track.close();
+			}
+		}
+		if (center) {
+			GeoPoint lastPoint = getLastTrackPoint();
+			this.mMapView.getController().animateTo(lastPoint);
+		}	
+		updateTitleBar();
+		updateDataOverlays();
+		updateSpeedbarVisibility();					
+	}
+	/*
+	//ASLAI
+	private void moveToLoggingTrack(long trackId) {
 		Cursor track = null;
 		try {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1331,7 +1543,8 @@ public class LoggerMap extends MapActivity {
 			track = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.DURATION,
 					Tracks.DISTANCE }, null, null, null);
 			if (track != null && track.moveToFirst()) {
-				this.mTrackId = trackId;
+				addTrackIds(trackId, true);
+//				this.mTrackId = trackId;
 				mLastSegment = -1;
 				mLastWaypoint = -1;
 				if (track.getInt(1) != 0 && track.getDouble(2) != 0)
@@ -1346,13 +1559,13 @@ public class LoggerMap extends MapActivity {
 						this.mTrackSegmentsObserver);
 				resolver.registerContentObserver(mediaUri, false, this.mTrackMediasObserver);
 //ASLAI CHANGED
-				this.mMapView.getOverlays().clear();
+//				this.mMapView.getOverlays().clear();
 
 				updateTitleBar();
 				updateDataOverlays();
 				updateSpeedbarVisibility();
 
-				if (center) {
+				if (true) {
 					GeoPoint lastPoint = getLastTrackPoint();
 					this.mMapView.getController().animateTo(lastPoint);
 				}
@@ -1365,6 +1578,7 @@ public class LoggerMap extends MapActivity {
 		}
 	}
 
+*/
 	/**
 	 * Get the last know position from the GPS provider and return that
 	 * information wrapped in a GeoPoint to which the Map can navigate.
@@ -1409,7 +1623,7 @@ public class LoggerMap extends MapActivity {
 		GeoPoint lastPoint = null;
 		try {
 			ContentResolver resolver = this.getContentResolver();
-			waypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, mTrackId
+			waypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId()
 					+ "/waypoints"), new String[] { Waypoints.LATITUDE, Waypoints.LONGITUDE,
 					"max(" + Waypoints.TABLE + "." + Waypoints._ID + ")" }, null, null, null);
 			if (waypoint != null && waypoint.moveToLast()) {
@@ -1442,7 +1656,7 @@ public class LoggerMap extends MapActivity {
 					Tracks.NAME, }, null, null, null);
 			if (track != null && track.moveToLast()) {
 				trackId = track.getInt(0);
-				moveToTrack(trackId, true);
+				moveToTrack(trackId, true, false);
 			}
 		}
 		finally {
@@ -1463,7 +1677,7 @@ public class LoggerMap extends MapActivity {
 		double distanceTraveled = 0f;
 		long duration = 0;
 
-		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.mTrackId);
+		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 
 		Cursor segments = null;

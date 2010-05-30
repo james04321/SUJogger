@@ -172,6 +172,8 @@ public class PeopleTrackList extends ListActivity {
     }
     
     public void finalize() {
+  	   mGamingServiceConn.unbind();
+       finish();    	
  	   onDestroy();
     }
     

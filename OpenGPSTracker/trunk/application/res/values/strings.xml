@@ -158,4 +158,5 @@
 <string name="menu_downloadTrack">Download Track</string>
 <string name="dialog_download_track_list">Retrieving track list</string>
 <string name="dialog_download_track">Downloading track</string>
+<string name="menu_clear_track">Clear Tracks</string>
 </resources>

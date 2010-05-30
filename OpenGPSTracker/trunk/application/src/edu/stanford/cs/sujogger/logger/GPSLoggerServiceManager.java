@@ -50,31 +50,35 @@ public class GPSLoggerServiceManager
 {
    private static final String TAG = "OGT.GPSLoggerServiceManager";
    private static final String REMOTE_EXCEPTION = "REMOTE_EXCEPTION";
-   private Context mCtx;
-   private IGPSLoggerServiceRemote mGPSLoggerRemote;
-   private final Object mStartLock = new Object();
-   private boolean mStarted = false;
+   private static Context mCtx;
+   private static IGPSLoggerServiceRemote mGPSLoggerRemote;
+   private static final Object mStartLock = new Object();
+   private static boolean mStarted = false;
 
    /**
     * Class for interacting with the main interface of the service.
     */
-   private ServiceConnection mServiceConnection = null;
-
+   private static ServiceConnection mServiceConnection = null;
+/*
    public GPSLoggerServiceManager(Context ctx)
    {
       this.mCtx = ctx;
    }
+   */
+   public static void setContext(Context ctx) {
+	   mCtx = ctx;
+   }
 
-   public int getLoggingState()
+   public static int getLoggingState()
    {
       synchronized (mStartLock)
       {
          int logging = Constants.UNKNOWN;
          try
          {
-            if( this.mGPSLoggerRemote != null )
+            if( mGPSLoggerRemote != null )
             {
-               logging = this.mGPSLoggerRemote.loggingState();
+               logging = mGPSLoggerRemote.loggingState();
                //               Log.d( TAG, "mGPSLoggerRemote tells state to be "+logging );
             }
             else
@@ -89,17 +93,41 @@ public class GPSLoggerServiceManager
          return logging;
       }
    }
+
+   public static long isLogging()
+   {
+      synchronized (mStartLock)
+      {
+         try
+         {
+            if( mGPSLoggerRemote != null )
+            {
+               return mGPSLoggerRemote.isLogging();
+               //               Log.d( TAG, "mGPSLoggerRemote tells state to be "+logging );
+            }
+            else
+            {
+               Log.w( TAG, "Remote interface to logging service not found. Started: " + mStarted );
+            }
+         }
+         catch (RemoteException e)
+         {
+            Log.e( TAG, "Could stat GPSLoggerService.", e );
+         }
+         return -1;
+      }
+   }   
    
-   public boolean isMediaPrepared()
+   public static boolean isMediaPrepared()
    {
       synchronized (mStartLock)
       {
          boolean prepared = false;
          try
          {
-            if( this.mGPSLoggerRemote != null )
+            if( mGPSLoggerRemote != null )
             {
-               prepared = this.mGPSLoggerRemote.isMediaPrepared();
+               prepared = mGPSLoggerRemote.isMediaPrepared();
             }
             else
             {
@@ -114,7 +142,7 @@ public class GPSLoggerServiceManager
       }
    }
 
-   public long startGPSLogging( String name )
+   public static long startGPSLogging( String name )
    {
       synchronized (mStartLock)
       {
@@ -122,9 +150,9 @@ public class GPSLoggerServiceManager
          {
             try
             {
-               if( this.mGPSLoggerRemote != null )
+               if( mGPSLoggerRemote != null )
                {
-                  return this.mGPSLoggerRemote.startLogging();
+                  return mGPSLoggerRemote.startLogging();
                }
             }
             catch (RemoteException e)
@@ -136,7 +164,7 @@ public class GPSLoggerServiceManager
       }
    }
 
-   public void pauseGPSLogging()
+   public static void pauseGPSLogging()
    {
       synchronized (mStartLock)
       {
@@ -144,9 +172,9 @@ public class GPSLoggerServiceManager
          {
             try
             {
-               if( this.mGPSLoggerRemote != null )
+               if( mGPSLoggerRemote != null )
                {
-                  this.mGPSLoggerRemote.pauseLogging();
+                  mGPSLoggerRemote.pauseLogging();
                }
             }
             catch (RemoteException e)
@@ -157,7 +185,7 @@ public class GPSLoggerServiceManager
       }
    }
 
-   public long resumeGPSLogging()
+   public static long resumeGPSLogging()
    {
       synchronized (mStartLock)
       {
@@ -165,9 +193,9 @@ public class GPSLoggerServiceManager
          {
             try
             {
-               if( this.mGPSLoggerRemote != null )
+               if( mGPSLoggerRemote != null )
                {
-                  return this.mGPSLoggerRemote.resumeLogging();
+                  return mGPSLoggerRemote.resumeLogging();
                }
             }
             catch (RemoteException e)
@@ -179,7 +207,7 @@ public class GPSLoggerServiceManager
       }
    }
 
-   public void stopGPSLogging()
+   public static void stopGPSLogging()
    {
       synchronized (mStartLock)
       {
@@ -187,9 +215,9 @@ public class GPSLoggerServiceManager
          {
             try
             {
-               if( this.mGPSLoggerRemote != null )
+               if( mGPSLoggerRemote != null )
                {
-                  this.mGPSLoggerRemote.stopLogging();
+                  mGPSLoggerRemote.stopLogging();
                }
             }
             catch (RemoteException e)
@@ -204,7 +232,7 @@ public class GPSLoggerServiceManager
       }
    }
 
-   public void storeMediaUri( Uri mediaUri )
+   public static void storeMediaUri( Uri mediaUri )
    {
       synchronized (mStartLock)
       {
@@ -212,9 +240,9 @@ public class GPSLoggerServiceManager
          {
             try
             {
-               if( this.mGPSLoggerRemote != null )
+               if( mGPSLoggerRemote != null )
                {
-                  this.mGPSLoggerRemote.storeMediaUri( mediaUri );
+                  mGPSLoggerRemote.storeMediaUri( mediaUri );
                }
             }
             catch (RemoteException e)
@@ -232,19 +260,19 @@ public class GPSLoggerServiceManager
    /**
     * Means by which an Activity lifecycle aware object hints about binding and unbinding
     */
-   public void startup()
+   public static void startup()
    {
-      //      Log.d( TAG, "connectToGPSLoggerService()" );
-      if( !mStarted )
+       Log.d( TAG, "connectToGPSLoggerService()" );
+      if( !mStarted)
       {
-         this.mServiceConnection = new ServiceConnection()
+         mServiceConnection = new ServiceConnection()
             {
                public void onServiceConnected( ComponentName className, IBinder service )
                {
                   synchronized (mStartLock)
                   {
-                     //                     Log.d( TAG, "onServiceConnected()" );
-                     GPSLoggerServiceManager.this.mGPSLoggerRemote = IGPSLoggerServiceRemote.Stub.asInterface( service );
+                     Log.d( TAG, "onServiceConnected()" );
+                     mGPSLoggerRemote = IGPSLoggerServiceRemote.Stub.asInterface( service );
                      mStarted = true;
                   }
                }
@@ -253,13 +281,13 @@ public class GPSLoggerServiceManager
                {
                   synchronized (mStartLock)
                   {
-                     //                     Log.d( TAG, "onServiceDisconnected()" );
-                     GPSLoggerServiceManager.this.mGPSLoggerRemote = null;
+                     Log.d( TAG, "onServiceDisconnected()" );
+                     mGPSLoggerRemote = null;
                      mStarted = false;
                   }
                }
             };
-         this.mCtx.bindService( new Intent( Constants.SERVICENAME ), this.mServiceConnection, Context.BIND_AUTO_CREATE );
+         mCtx.bindService( new Intent( Constants.SERVICENAME ), mServiceConnection, Context.BIND_AUTO_CREATE );
       }
       else
       {
@@ -270,12 +298,12 @@ public class GPSLoggerServiceManager
    /**
     * Means by which an Activity lifecycle aware object hints about binding and unbinding
     */
-   public void shutdown()
+   public static void shutdown()
    {
       //      Log.d( TAG, "disconnectFromGPSLoggerService()" );
       try
       {
-         this.mCtx.unbindService( this.mServiceConnection );
+         mCtx.unbindService( mServiceConnection );
       }
       catch (IllegalArgumentException e)
       {

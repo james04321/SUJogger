@@ -219,13 +219,15 @@ private ProgressDialog mProgressDialog;
    }
    
    public void finalize() {
+	   mGamingServiceConn.unbind();	   	   
 	   finish();
 	   onDestroy();
    }
    
    public void onDestroy() {
+	   mGamingServiceConn.unbind();	   
 	   super.onDestroy();
-	   mGamingServiceConn.unbind();
+
 	   
    }
    class ProgressListener implements XmlCreationProgressListener

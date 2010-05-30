@@ -188,6 +188,16 @@ public class GPSLoggerService extends Service
       };
    private IBinder mBinder = new IGPSLoggerServiceRemote.Stub()
       {
+	     public long isLogging() throws RemoteException
+	     {
+	         if ((GPSLoggerService.this.mLoggingState == Constants.LOGGING || 
+	             GPSLoggerService.this.mLoggingState == Constants.PAUSED) &&
+	             GPSLoggerService.this.mTrackId != -1 ) {
+	        	 return GPSLoggerService.this.mTrackId;
+	         }
+	         return -1;
+	    	 
+	     }
          public int loggingState() throws RemoteException
          {
             return mLoggingState;
