@@ -134,6 +134,8 @@
     
     <string name="lb_option">Leaderboards</string>
     <string name="refresh">Refresh</string>
+    <string name="lb_solo">Individual scores</string>
+    <string name="lb_group">Group scores</string>
     
     <!-- Feed Tab -->
     <string name="feed_filter_all">All</string>

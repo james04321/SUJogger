@@ -78,12 +78,15 @@ public final class GPStracking
 		public static final int[] GROUP_STAT_IDS = new int[] {
 			DISTANCE_RAN_ID, RUNNING_TIME_ID, NUM_RUNS_ID, NUM_PARTNER_RUNS_ID};
 		
-		public static final String[] STAT_TYPES = new String[] {
+		public static final String[] STAT_TYPES_SOLO = new String[] {
 			"Distance ran", "Running time", "Runs", "Partner runs", 
 			"Avg speed"};
 		
+		public static final String[] STAT_TYPES_GROUP = new String[] {
+			"Distance ran", "Running time", "Runs", "Partner runs"};
+		
 		public static final String[] TIME_TYPES = new String[] {
-			"All time", "The past week", "The past month"};
+			"All time", "Past week", "Past month"};
 		
 		public static final long WEEK_INTERVAL = 604800000; // milliseconds in a week
 		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month

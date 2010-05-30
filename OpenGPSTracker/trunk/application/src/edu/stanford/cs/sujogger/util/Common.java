@@ -3,6 +3,7 @@ package edu.stanford.cs.sujogger.util;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.content.Context;
 import android.os.Environment;
 import edu.stanford.cs.gaming.sdk.model.User;
 
@@ -65,5 +66,33 @@ public class Common {
 			.append(hour12).append(":")
 			.append(Common.pad(minute)).append(" ")
 			.append(ampm).toString();
+	}
+	
+	public static String distanceString(Context context, double val) {
+		UnitsI18n mUnits = new UnitsI18n(context, null);
+		double mDistance = mUnits.conversionFromMeter(val);
+		return String.format("%.2f %s", mDistance, mUnits.getDistanceUnit());
+	}
+	
+	public static String durationString(Context context, long val) {
+		long durationSec = val / 1000;
+		long hours, minutes, seconds;
+		hours = durationSec / 3600;
+		val = durationSec - (hours * 3600);
+		minutes = durationSec / 60;
+		durationSec = durationSec - (minutes * 60);
+		seconds = durationSec;
+		
+		String text = "";
+		text += String.format("%02d", hours) + ":";
+		text += String.format("%02d", minutes) + ":";
+		text += String.format("%02d", seconds);
+		return text;
+	}
+	
+	public static String speedString(Context context, double val) {
+		UnitsI18n mUnits = new UnitsI18n(context, null);
+		double speed = mUnits.conversionFromMeterAndMiliseconds(val, 1);
+		return String.format("%.2f %s", speed, mUnits.getSpeedUnit());
 	}
 }
