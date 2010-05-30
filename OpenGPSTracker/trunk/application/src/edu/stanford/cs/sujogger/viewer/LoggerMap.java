@@ -268,7 +268,7 @@ public class LoggerMap extends MapActivity {
 			case R.id.logcontrol_stop:
 				mLoggerServiceManager.stopGPSLogging();
 				Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
-				calculateTrackStatistics();
+				syncGroupStats();
 				break;
 			default:
 				break;
@@ -1443,6 +1443,19 @@ public class LoggerMap extends MapActivity {
 			}
 		}
 	}
+	
+	private void syncGroupStats() {
+		mDialogUpdate = ProgressDialog.show(this, "", "Updating statistics...", true);
+		int[] groupStatIds = mDbHelper.getGroupStatisticIds();
+		if (groupStatIds == null || groupStatIds.length == 0) {
+			calculateTrackStatistics();
+		}
+		else {
+			try {
+				mGameCon.getScoreBoards(GET_SBS_RID, mDbHelper.getGroupStatisticIds());
+			} catch (RemoteException e) {}
+		}
+	}
 
 	/**
 	 * Calculates track duration, distance, etc. right after we stop tracking
@@ -1521,24 +1534,21 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		
 		if (dist > 0 && duration > 0) {
-			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, 0, dist);
-			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, 0, (double) duration);
+			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, -1, dist);
+			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, -1, (double) duration);
 			
 			mDbHelper.updateDistanceRan();
 			mDbHelper.updateRunningTime();
 		}
-		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, 0);
+		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
 		mDbHelper.updateNumRuns();
 		mDbHelper.updateAvgSpeed();
 		//mDbHelper.updateMedDuration();
 		//mDbHelper.updateMedDistance();
 		
-		ScoreBoard[] scores = mDbHelper.getSoloStatistics();
-		mDialogUpdate = ProgressDialog.show(this, "", "Updating statistics...", true);
-		
+		ScoreBoard[] scores = mDbHelper.getAllStatistics();
 		try {
 			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
-			
 		} catch (RemoteException e) {}
 	}
 	
@@ -1606,6 +1616,13 @@ public class LoggerMap extends MapActivity {
 					case UPDATE_SBS_RID: 
 						mDialogUpdate.dismiss();
 						updateAchievements();
+						break;
+					case GET_SBS_RID:
+						ScoreBoard[] scores = (ScoreBoard[])(appResponse.object);
+						if (scores != null) {
+							mDbHelper.updateScoreboards(scores);
+						}
+						calculateTrackStatistics();
 						break;
 					default: break;
 					}
