@@ -78,12 +78,15 @@ public final class GPStracking
 		public static final int[] GROUP_STAT_IDS = new int[] {
 			DISTANCE_RAN_ID, RUNNING_TIME_ID, NUM_RUNS_ID, NUM_PARTNER_RUNS_ID};
 		
-		public static final String[] STAT_TYPES = new String[] {
+		public static final String[] STAT_TYPES_SOLO = new String[] {
 			"Distance ran", "Running time", "Runs", "Partner runs", 
 			"Avg speed"};
 		
+		public static final String[] STAT_TYPES_GROUP = new String[] {
+			"Distance ran", "Running time", "Runs", "Partner runs"};
+		
 		public static final String[] TIME_TYPES = new String[] {
-			"All time", "The past week", "The past month"};
+			"All time", "Past week", "Past month"};
 		
 		public static final long WEEK_INTERVAL = 604800000; // milliseconds in a week
 		public static final long MONTH_INTERVAL = 2629743830L; // approx. milliseconds in a month
@@ -229,7 +232,7 @@ public final class GPStracking
 		public static final String IMG_URL = "img_url";
 		public static final String IS_FRIEND = "is_friend";
 		
-		static final String USER_ID_TYPE = "INTEGER NOT NULL";
+		static final String USER_ID_TYPE = "INTEGER NOT NULL UNIQUE";
 		static final String FB_ID_TYPE = "INTEGER NOT NULL";
 		static final String FIRST_NAME_TYPE = "TEXT";
 		static final String LAST_NAME_TYPE = "TEXT";
@@ -245,12 +248,24 @@ public final class GPStracking
 		public static final String NAME = "name";
 		public static final String IS_OWNER = "is_owner";
 		
-		static final String GROUP_ID_TYPE = "INTEGER";
+		static final String GROUP_ID_TYPE = "INTEGER NOT NULL UNIQUE";
 		static final String NAME_TYPE = "TEXT NOT NULL";
 		static final String IS_OWNER_TYPE = "INTEGER NOT NULL";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		public static final String TABLE = "groups";
+	}
+	
+	//Table to store all groups for leaderboards
+	public static final class GroupsTemp implements android.provider.BaseColumns {
+		public static final String GROUP_ID = "group_id";
+		public static final String NAME = "name";
+		
+		static final String GROUP_ID_TYPE = "INTEGER NOT NULL UNIQUE";
+		static final String NAME_TYPE = "TEXT NOT NULL";
+		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
+		
+		public static final String TABLE = "groups_temp";
 	}
 	
 	public static final class GroupsUsers implements android.provider.BaseColumns {

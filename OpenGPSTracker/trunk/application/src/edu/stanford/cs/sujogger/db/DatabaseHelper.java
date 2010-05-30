@@ -55,6 +55,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.GroupsTemp;
 import edu.stanford.cs.sujogger.db.GPStracking.GroupsUsers;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.MediaColumns;
@@ -446,27 +447,58 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return statVal;
 	}
 	
-	public ScoreBoard[] getSoloStatistics() {
-		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
-				Stats.GROUP_ID + "=" + 0, null);
+	public ScoreBoard[] scoreBoardArrayFromScores(Cursor scores) {
 		ScoreBoard score;
-		ScoreBoard[] scores = new ScoreBoard[cursor.getCount()];
-		int[] allStats = Stats.ALL_STAT_IDS;
+		ScoreBoard[] scoreArray = new ScoreBoard[scores.getCount()];
 		int i = 0;
-		while (cursor.moveToNext()) {
+		while (scores.moveToNext()) {
 			score = new ScoreBoard();
-			score.id = cursor.getInt(2);
+			score.id = scores.getInt(2);
 			score.app_id = Constants.APP_ID;
-			score.user_id = Common.getRegisteredUser().id;
-			score.group_id = 0;
-			score.value = (int)cursor.getDouble(4);
-			score.sb_type = String.valueOf(allStats[i]);
-			scores[i] = score;
+			score.user_id = scores.getInt(3) > 0 ? 0 : Common.getRegisteredUser().id;
+			score.group_id = scores.getInt(3);
+			score.value = (int)scores.getDouble(4);
+			score.sb_type = scores.getString(1);
+			scoreArray[i] = score;
 			Log.d(TAG, "sb_type = " + score.sb_type + "; value = " + score.value);
 			i++;
 		}
-		cursor.close();
-		return scores;
+		scores.close();
+		return scoreArray;
+	}
+	
+	public int[] scoreBoardIdArrayFromScores(Cursor scores) {
+		int[] scoreArray = new int[scores.getCount()];
+		int i = 0;
+		while (scores.moveToNext()) {
+			scoreArray[i] = scores.getInt(2);
+			i++;
+		}
+		scores.close();
+		return scoreArray;
+	}
+	
+	public ScoreBoard[] getSoloStatistics() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
+				Stats.GROUP_ID + "=" + 0, null);
+		return scoreBoardArrayFromScores(cursor);
+	}
+	
+	public ScoreBoard[] getGroupStatistics() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
+				Stats.GROUP_ID + ">" + 0, null);
+		return scoreBoardArrayFromScores(cursor);
+	}
+	
+	public ScoreBoard[] getAllStatistics() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Stats.TABLE, null);
+		return scoreBoardArrayFromScores(cursor);
+	}
+	
+	public int[] getGroupStatisticIds() {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
+				Stats.GROUP_ID + ">" + 0, null);
+		return scoreBoardIdArrayFromScores(cursor);
 	}
 	
 	public boolean setStatistic(long statisticId, long groupId, double val) {		
@@ -478,13 +510,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				Stats.GROUP_ID + "=" + groupId, null) > 0;
 	}
 	
+	//If groupId < 0, update ALL statistics with the given statisticId
 	public void increaseStatistic(long statisticId, long groupId, double val) {		
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
-
-		mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
-				" + ? WHERE " + Stats.STATISTIC_ID + " = ? AND " + Stats.GROUP_ID + " = ?", 
-				new Object[] {new Double(val), new Long(statisticId), new Long(groupId)});
+		
+		if (groupId >= 0)
+			mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
+					" + ? WHERE " + Stats.STATISTIC_ID + " = ? AND " + Stats.GROUP_ID + " = ?", 
+					new Object[] {new Double(val), new Long(statisticId), new Long(groupId)});
+		else
+			mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
+					" + ? WHERE " + Stats.STATISTIC_ID + " = ?", 
+					new Object[] {new Double(val), new Long(statisticId)});
 	}
 	
 	public void increaseStatisticByOne(long statisticId, long groupId) {
@@ -495,14 +533,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void updateDistanceRan() {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -512,14 +552,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void updateRunningTime() {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.RUNNING_TIME_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.RUNNING_TIME_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -529,14 +571,16 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void updateNumRuns() {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeWeekThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.NUM_RUNS_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
 		
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
-				Tracks.CREATION_TIME + ">=" + timeMonthThreshold, null, null, null, null);
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
+				Tracks.USER_ID + "=" + 0, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.NUM_RUNS_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -558,7 +602,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		if (totalTime != 0)
 			setStatistic(Stats.AVG_SPEED_MONTH_ID, 0, totalDistMonth / totalTimeMonth);
 	}
-	
+	/*
 	public void updateMedDuration() {
 		long numTracks = getStatisticLong(Stats.NUM_RUNS_ID, 0);
 		long queryLimit = numTracks > 4 ? numTracks / 4 : numTracks;
@@ -588,7 +632,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		
 		cursor.close();
 	}
-	
+	*/
 	// Updates solo statistics with scoreboard IDs from the server
 	public void updateSoloScoreboardIds(Integer[] scoreIds) {
 		ContentValues values = new ContentValues();
@@ -616,6 +660,24 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				values.put(Stats.GROUP_ID, scores[i].group_id);
 				values.put(Stats.VALUE, scores[i].value);
 				mDb.insert(Stats.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
+	}
+	
+	public void updateScoreboards(ScoreBoard[] scores) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < scores.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(Stats.VALUE, scores[i].value);
+				mDb.update(Stats.TABLE, values, Stats.SCOREBOARD_ID + "=" + scores[i].id, null);
 			}
 			mDb.setTransactionSuccessful();
 		} finally {
@@ -875,6 +937,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getAllUsersExcludingGroup(long groupId) {
+		//TODO: exclude self
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
 		 * AND users._id NOT IN 
@@ -1018,12 +1081,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void insertGameMessage(User fromUser, User[] recipients,	
 			long sendTime, MessageObject msgObject) {
 		//Insert unseen users
-		insertUser(fromUser);
+		addUser(fromUser);
 		if (recipients != null) {
 			mDb.beginTransaction();
 			try {
 				for (int i = 0; i < recipients.length; i++) {
-					insertUser(recipients[i]);
+					addUser(recipients[i]);
 				}
 				mDb.setTransactionSuccessful();
 			} finally {
@@ -1064,14 +1127,41 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 	}
 	
-	public void insertUser(User user) {
+	public boolean addUser(User user) {
 		ContentValues values = new ContentValues();
 		values.put(Users.USER_ID, user.id);
 		values.put(Users.FB_ID, user.fb_id);
 		values.put(Users.FIRST_NAME, user.first_name);
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
-		mDb.insert(Users.TABLE, null, values);
+		return mDb.insert(Users.TABLE, null, values) > 0;
+	}
+	
+	//Add all users to user table and let table constraints handle duplicates
+	public void addUsers(User[] users) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < users.length; i++)
+				addUser(users[i]);
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+	}
+	
+	public void addGroupsTemp(Group[] groups) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < groups.length; i++) {
+				ContentValues values = new ContentValues();
+				values.put(GroupsTemp.GROUP_ID, groups[i].id);
+				values.put(GroupsTemp.NAME, groups[i].name);
+				mDb.insert(GroupsTemp.TABLE, null, values);
+			}
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
 	}
 	
 	/**
@@ -1095,13 +1185,29 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		} finally {
 			mDb.endTransaction();
 		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM scoreboard", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
 	}
 	
-	public Cursor getScoresWithUsers() {
+	public Cursor getScoresWithUsers(int statisticId) {
 		String tables = ScoreboardTemp.TABLE + "," + Users.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.USER_ID + "=" +
-			Users.TABLE + "." + Users.USER_ID;
-		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause, null);
+			Users.TABLE + "." + Users.USER_ID + " AND " + 
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
+				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE, null);
+		return cursor;
+	}
+	
+	public Cursor getScoresWithGroups(int statisticId) {
+		String tables = ScoreboardTemp.TABLE + "," + GroupsTemp.TABLE;
+		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.GROUP_ID + "=" +
+			GroupsTemp.TABLE + "." + GroupsTemp.GROUP_ID + " AND " + 
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
+				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE, null);
 		return cursor;
 	}
 }
