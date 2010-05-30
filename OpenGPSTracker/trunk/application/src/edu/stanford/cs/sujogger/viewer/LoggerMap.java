@@ -1370,6 +1370,68 @@ public class LoggerMap extends MapActivity {
 
 	}
 
+	private void createDataOverlays(long trackId) {
+		Log.d(TAG, "CREATEDATAOVERLAYS");
+		mLastSegmentOverlay = null;
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		//ASLAI HERE
+		Long lastTrackId = getLastTrackId();
+		
+		overlays.clear(); 
+		overlays.add(mMylocation);
+
+		ContentResolver resolver = this.getApplicationContext().getContentResolver();
+		Cursor segments = null;
+		int trackColoringMethod = SegmentOverlay.DRAW_MEASURED;// new Integer(
+																// mSharedPreferences.getString(
+																// Constants.TRACKCOLORING,
+																// "2" )
+																// ).intValue();
+			Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+		try {
+
+			Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
+			segments = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null, null);
+			if (segments != null && segments.moveToFirst()) {
+				do {
+					long segmentsId = segments.getLong(0);
+					Uri segmentUri = ContentUris.withAppendedId(segmentsUri, segmentsId);
+					SegmentOverlay segmentOverlay = new SegmentOverlay((Context) this, segmentUri,
+							trackColoringMethod, mAverageSpeed, this.mMapView);
+					overlays.add(segmentOverlay);
+					mLastSegmentOverlay = segmentOverlay;
+					if (segments.isFirst()) {
+						segmentOverlay.addPlacement(SegmentOverlay.FIRST_SEGMENT);
+					}
+					if (segments.isLast()) {
+						segmentOverlay.addPlacement(SegmentOverlay.LAST_SEGMENT);
+						getLastTrackPoint();
+					}
+					if (trackId == lastTrackId) 
+					    mLastSegment = segmentsId;
+				} while (segments.moveToNext());
+			}
+			
+		}
+		finally {
+			if (segments != null) {
+				segments.close();
+			}
+		}
+
+		moveActiveViewWindow();
+
+		
+
+		Uri lastSegmentUri = Uri.withAppendedPath(Tracks.CONTENT_URI, lastTrackId + "/segments/"
+				+ mLastSegment + "/waypoints");
+		resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
+		resolver.registerContentObserver(lastSegmentUri, false, this.mSegmentWaypointsObserver);
+		Log.d(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
+
+	}
+	
+	
 	private void updateDataOverlays() {
 	
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1395,7 +1457,7 @@ public class LoggerMap extends MapActivity {
 			}
 			else {
 				Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
-				createDataOverlays();
+				createDataOverlays(trackId);
 			}
 		}
 		finally {
