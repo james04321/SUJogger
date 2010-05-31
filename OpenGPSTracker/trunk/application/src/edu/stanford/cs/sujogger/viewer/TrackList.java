@@ -81,6 +81,7 @@ import com.facebook.android.Facebook.DialogListener;
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
@@ -573,9 +574,10 @@ public class TrackList extends ListActivity
 	   
 	   mDialogFriendInit.dismiss();
        mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
-       
+       User user = Common.getRegisteredUser();
+       user.friend_fb_ids = mFriendFbIds;
        try {
-    	   mGameCon.registerUser(USERREG_RID, Common.getRegisteredUser(), mFriendFbIds);
+    	   mGameCon.registerUser(USERREG_RID, user);
        } catch (RemoteException e) {}
    }
    
@@ -699,10 +701,10 @@ public class TrackList extends ListActivity
                JSONArray friends = json.getJSONArray("data");
                if (friends == null) return;
                
-               //long[] fbIds = new long[friends.length()];
-               long[] fbIds = new long[10];
+               long[] fbIds = new long[friends.length()];
+               //long[] fbIds = new long[10];
                JSONObject friend;
-               for (int i = 0; i < friends.length() && i < 10; i++) {
+               for (int i = 0; i < friends.length(); i++) {
             	   friend = friends.getJSONObject(i);
             	   fbIds[i] = friend.getInt("id");
             	   Log.d(TAG, "fb_id = " +fbIds[i]);
