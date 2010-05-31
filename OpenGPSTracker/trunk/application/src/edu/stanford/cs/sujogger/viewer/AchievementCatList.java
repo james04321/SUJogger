@@ -1,21 +1,29 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import android.app.ListActivity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ListView;
+import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
+import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 public class AchievementCatList extends ListActivity {
@@ -96,7 +104,7 @@ public class AchievementCatList extends ListActivity {
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
 		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option);
-		return result;
+		return result; 
 	}
 	
 	@Override
@@ -128,5 +136,25 @@ public class AchievementCatList extends ListActivity {
 
 		setListAdapter(mGroupedAdapter);
 	}
-
+	/*
+	private class AchievementCatListReceiver extends BroadcastReceiver {
+		public void onReceive(Context context, Intent intent) {
+			Log.d(TAG, "onReceive()");
+			try {
+				AppResponse appResponse = null;
+				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
+					Log.d(TAG, appResponse.toString());
+					
+					switch(appResponse.request_id) {
+					
+					default: break;
+					}
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+*/
 }
