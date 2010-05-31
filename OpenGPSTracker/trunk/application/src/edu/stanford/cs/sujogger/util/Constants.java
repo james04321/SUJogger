@@ -47,10 +47,12 @@ public class Constants
    public static final String USER_REGISTERED = "user_registered";
    
    //User attribute keys (for SharedPreferences)
+   public static final String USERREG_ID_KEY = "userreg_id";
    public static final String USERREG_FBID_KEY = "userreg_fbid";
+   public static final String USERREG_EMAIL_KEY = "userreg_email";
    public static final String USERREG_FIRSTNAME_KEY = "userreg_firstname";
    public static final String USERREG_LASTNAME_KEY = "userreg_lastname";
-   public static final String USERREG_PICTURE = "userreg_picture";
+   public static final String USERREG_PICTURE_KEY = "userreg_picture";
    
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;

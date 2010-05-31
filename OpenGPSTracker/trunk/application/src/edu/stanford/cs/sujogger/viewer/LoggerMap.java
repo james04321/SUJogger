@@ -171,7 +171,7 @@ public class LoggerMap extends MapActivity {
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
-	public static final int GET_GRP_SBS_RID = 3;
+	
 	private GamingServiceConnection mGameCon;
 	private ScoreboardUpdateReceiver mReceiver;
 	private ProgressDialog mDialogUpdate;
@@ -528,7 +528,7 @@ public class LoggerMap extends MapActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, LoggerMap.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser().id);
+		mGameCon.setUserId(Common.getRegisteredUser(this).id);
 		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);
 
@@ -1830,7 +1830,7 @@ public class LoggerMap extends MapActivity {
 		//mDbHelper.updateMedDuration();
 		//mDbHelper.updateMedDistance();
 		
-		ScoreBoard[] scores = mDbHelper.getAllStatistics();
+		ScoreBoard[] scores = mDbHelper.getAllStatistics(this);
 		try {
 			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
 		} catch (RemoteException e) {}

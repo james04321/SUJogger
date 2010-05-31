@@ -207,7 +207,7 @@ public class TrackList extends ListActivity
 		   for (int i = 0; i < allStats.length; i++) {
 			   score = new ScoreBoard();
 			   score.app_id = Constants.APP_ID;
-			   score.user_id = Common.getRegisteredUser().id;
+			   score.user_id = Common.getRegisteredUser(this).id;
 			   score.group_id = -1;
 			   score.value = 0;
 			   score.sb_type = String.valueOf(allStats[i]);
@@ -570,11 +570,11 @@ public class TrackList extends ListActivity
    }
    
    private void registerUser() {
-	   if (Common.getRegisteredUser() == null || mFriendFbIds == null) return;
+	   if (Common.getRegisteredUser(this) == null || mFriendFbIds == null) return;
 	   
 	   mDialogFriendInit.dismiss();
        mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
-       User user = Common.getRegisteredUser();
+       User user = Common.getRegisteredUser(this);
        user.friend_fb_ids = mFriendFbIds;
        try {
     	   mGameCon.registerUser(USERREG_RID, user);
@@ -585,6 +585,7 @@ public class TrackList extends ListActivity
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
 			try {
+				Editor editor = mSharedPreferences.edit();
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
@@ -603,9 +604,7 @@ public class TrackList extends ListActivity
 								scoreIds[i] = scores[i].id;
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 							
-							Editor editor = mSharedPreferences.edit();
 						    editor.putBoolean(Constants.USER_REGISTERED, true);
-						    editor.commit();
 							mDialogUserInit.dismiss();
 						}
 						break;
@@ -614,21 +613,23 @@ public class TrackList extends ListActivity
 						if (scoreIds != null)
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 						
-						Editor editor = mSharedPreferences.edit();
+						
 						editor.putBoolean(Constants.USER_REGISTERED, true);
-						editor.commit();
 						mDialogUserInit.dismiss();
 						break;
 					case USERREG_RID:
 						int userId = (Integer)appResponse.object;
-						Common.userRegId = userId;
+						editor.putInt(Constants.USERREG_ID_KEY, userId);
 						
 						try {
-							mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
+							mGameCon.getScoreBoards(GET_SBS_RID, 
+									Common.getRegisteredUser(TrackList.this).id, 
+									-1, null, null);
 						} catch (RemoteException e) {}
 					default: break;
 					}
 				}
+				editor.commit();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
@@ -671,11 +672,15 @@ public class TrackList extends ListActivity
                // process the response here: executed in background thread
                Log.d(TAG, "Response: " + response.toString());
                JSONObject json = Util.parseJson(response);
-               Common.userRegFbId = json.getInt("id");
-               Common.userRegEmail = json.getString("email");
-               Common.userRegFirstName = json.getString("first_name");
-               Common.userRegLastName = json.getString("last_name");
-               Common.userRegFbPhoto = Constants.GRAPH_BASE_URL + Common.userRegFbId + "/picture";
+               
+               Editor editor = mSharedPreferences.edit();
+               editor.putLong(Constants.USERREG_FBID_KEY, json.getLong("id"));
+               editor.putString(Constants.USERREG_EMAIL_KEY, json.getString("email"));
+               editor.putString(Constants.USERREG_FIRSTNAME_KEY, json.getString("first_name"));
+               editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
+               editor.putString(Constants.USERREG_PICTURE_KEY, 
+            		   Constants.GRAPH_BASE_URL + json.getLong("id") + "/picture");
+               editor.commit();
                
                TrackList.this.runOnUiThread(new Runnable() {
                    public void run() {

@@ -1,10 +1,10 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -23,7 +23,6 @@ import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
-import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
@@ -37,6 +36,8 @@ public class AchievementCatList extends ListActivity {
 	private DatabaseHelper mDbHelper;
 	private GamingServiceConnection mGameCon;
 	private AchievementCatListReceiver mReceiver;
+	
+	private ProgressDialog mGetScoresDialog;
 	
 	private Cursor mRecAchEarned;
 	private Cursor mRecAchLost;
@@ -64,6 +65,14 @@ public class AchievementCatList extends ListActivity {
 
 		fillData();
 		registerForContextMenu(getListView());
+		
+		int[] statIds = mDbHelper.getGroupStatisticIds();
+		if (statIds != null && statIds.length > 0) {
+			mGetScoresDialog = ProgressDialog.show(this, "", "Retrieving group statistics...", true);
+			try {
+				mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
+			} catch (RemoteException e){}
+		}
 	}
 
 	@Override
@@ -163,7 +172,7 @@ public class AchievementCatList extends ListActivity {
 					case GET_GRP_SBS_RID:
 						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
 						if (scores != null) {
-							
+							mDbHelper.updateScoreboards(scores);
 						}
 						break;
 					default: break;

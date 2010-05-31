@@ -175,7 +175,7 @@ private ProgressDialog mProgressDialog;
 	  mGamingServiceConn = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
 	  mGamingServiceConn.bind();
-	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
+	  mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
 	     
    }
 

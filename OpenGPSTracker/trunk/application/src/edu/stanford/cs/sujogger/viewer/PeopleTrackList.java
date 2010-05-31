@@ -149,7 +149,7 @@ public class PeopleTrackList extends ListActivity {
     	  mGamingServiceConn = new GamingServiceConnection(this, mReceiver, 
     				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
     	  mGamingServiceConn.bind();
-    	  mGamingServiceConn.setUserId(Common.getRegisteredUser().id);
+    	  mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
           registerForContextMenu( getListView() );
     	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.dialog_download_track_list), true);
     	  trackList = new ArrayList<Track>();
@@ -161,7 +161,7 @@ public class PeopleTrackList extends ListActivity {
     		  names[0] = "name";
     		  names[1] = "duration";
     		  names[2] = "distance";
-			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser().id, -1, "track", names);
+			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser(this).id, -1, "track", names);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

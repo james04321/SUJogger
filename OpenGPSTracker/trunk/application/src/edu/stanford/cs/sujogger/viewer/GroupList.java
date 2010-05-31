@@ -245,7 +245,7 @@ public class GroupList extends ListActivity {
 
 	private void refreshGroups() {
 		try {
-			mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser().id, -1, -1);
+			mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(this).id, -1, -1);
 			mRefreshDialog = ProgressDialog.show(GroupList.this, "", "Refreshing groups...", true);
 		}
 		catch (RemoteException e) {
@@ -317,7 +317,7 @@ public class GroupList extends ListActivity {
 								+ newGroup.name);
 						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
 						GroupList.this.mDbHelper.addUsersToGroup(groupId, new long[] { Common
-								.getRegisteredUser().id });
+								.getRegisteredUser(GroupList.this).id });
 						GroupList.this.mGroupsCursor.requery();
 						GroupList.this.mGroupAdapter.notifyDataSetChanged();
 						GroupList.this.getListView().invalidateViews();
@@ -327,7 +327,8 @@ public class GroupList extends ListActivity {
 						mGroupIdTemp = groupId;
 						initializeStatsForGroup(groupId.intValue());
 						try {
-							mGameCon.addGroupUsers(-1, groupId, new User[] {Common.getRegisteredUser()});
+							mGameCon.addGroupUsers(-1, groupId, 
+									new User[] {Common.getRegisteredUser(GroupList.this)});
 						} catch (RemoteException e) {}
 						break;
 					case SB_CREATE_RID:

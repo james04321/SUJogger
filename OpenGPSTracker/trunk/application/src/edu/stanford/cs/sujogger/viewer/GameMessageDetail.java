@@ -62,7 +62,7 @@ public class GameMessageDetail extends ListActivity {
 		
 		mActions = new LinkedList<Map<String,?>>();
 		
-		if (!(mPeople.getCount() == 1 && mPeople.getInt(1) == Common.getRegisteredUser().id)) {
+		if (!(mPeople.getCount() == 1 && mPeople.getInt(1) == Common.getRegisteredUser(this).id)) {
 			if (mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE)
 				mActions.add(Common.createItem("Accept and start"));
 			if (mPeople.getCount() > 1)
@@ -141,7 +141,7 @@ public class GameMessageDetail extends ListActivity {
 		int i = 0;
 		while(i < recipientIds.length) {
 			mPeople.moveToPosition(i);
-			if (mPeople.getLong(1) != Common.getRegisteredUser().id) {
+			if (mPeople.getLong(1) != Common.getRegisteredUser(this).id) {
 				recipientIds[i] = mPeople.getLong(0);
 				i++;
 			}

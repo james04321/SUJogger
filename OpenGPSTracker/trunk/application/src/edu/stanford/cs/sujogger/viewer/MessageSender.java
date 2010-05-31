@@ -124,7 +124,7 @@ public class MessageSender extends Activity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, MessageSender.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser().id);
+		mGameCon.setUserId(Common.getRegisteredUser(this).id);
 
 		setTitle("New Message");
 		
@@ -387,7 +387,7 @@ public class MessageSender extends Activity {
 				subjectText.getText().toString(), bodyText.getText().toString());
 		User[] recipients = getArrayOfRecipients();
 		
-		mDbHelper.insertGameMessage(Common.getRegisteredUser(), recipients, now, msgObject);
+		mDbHelper.insertGameMessage(Common.getRegisteredUser(this), recipients, now, msgObject);
 		
 		/*
 		try {
