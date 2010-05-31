@@ -40,11 +40,17 @@ public class Constants
    public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
    public static final String FB_APP_ID = "127241693959042";
    public static final String[] FB_PERMISSIONS =
-       new String[] {"read_friendlists", "offline_access"};
+       new String[] {"read_friendlists", "email"};
    
    //First launch flags
    public static final String STATS_INITIALIZED = "stats_initialized";
    public static final String USER_REGISTERED = "user_registered";
+   
+   //User attribute keys (for SharedPreferences)
+   public static final String USERREG_FBID_KEY = "userreg_fbid";
+   public static final String USERREG_FIRSTNAME_KEY = "userreg_firstname";
+   public static final String USERREG_LASTNAME_KEY = "userreg_lastname";
+   public static final String USERREG_PICTURE = "userreg_picture";
    
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;

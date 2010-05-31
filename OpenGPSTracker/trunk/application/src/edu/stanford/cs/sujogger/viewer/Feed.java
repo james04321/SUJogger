@@ -25,6 +25,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
 
@@ -95,7 +96,7 @@ public class Feed extends ListActivity {
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, Feed.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(6);
+		mGameCon.setUserId(Common.getRegisteredUser().id);
 		
 		updateFiltering();
 		fillData();

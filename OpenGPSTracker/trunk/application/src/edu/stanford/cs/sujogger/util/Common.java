@@ -8,8 +8,16 @@ import android.os.Environment;
 import edu.stanford.cs.gaming.sdk.model.User;
 
 public class Common {
-	public final static String ITEM_TITLE = "title";
-	public static final String CACHE_DIRECTORY = Environment.getExternalStorageDirectory() + "/.sujogger-user-image-cache/";
+	public static final String ITEM_TITLE = "title";
+	public static final String CACHE_DIRECTORY = Environment.getExternalStorageDirectory() + 
+		"/.sujogger-user-image-cache/";
+	
+	public static int userRegId = 0;
+	public static String userRegEmail = null;
+	public static int userRegFbId = 0;
+	public static String userRegFirstName = null;
+	public static String userRegLastName = null;
+	public static String userRegFbPhoto = null;
 	
 	public static Map<String, ?> createItem(String title) {
 		Map<String, String> item = new HashMap<String, String>();
@@ -34,14 +42,25 @@ public class Common {
 	}
 	
 	public static User getRegisteredUser() {
+		if (userRegFbId == 0 || userRegFirstName == null || userRegLastName == null ||
+				userRegFbPhoto == null) return null;
+		
 		User user = new User();
+		/*
 		user.id = 6;
 		user.first_name = "James";
 		user.last_name = "Yang";
 		user.email = "jkyang09@stanford.edu";
 		user.fb_id = 12345;
 		user.fb_photo = "http://profile.ak.fbcdn.net/v224/841/70/n213003_7394.jpg";
+		*/
 		
+		user.id = userRegId;
+		user.first_name = userRegFirstName;
+		user.last_name = userRegLastName;
+		user.email = userRegEmail;
+		user.fb_id = userRegFbId;
+		user.fb_photo = userRegFbPhoto;
 		return user;
 	}
 	

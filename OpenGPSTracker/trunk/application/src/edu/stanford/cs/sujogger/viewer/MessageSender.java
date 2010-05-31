@@ -124,7 +124,7 @@ public class MessageSender extends Activity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, MessageSender.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(3);
+		mGameCon.setUserId(Common.getRegisteredUser().id);
 
 		setTitle("New Message");
 		
