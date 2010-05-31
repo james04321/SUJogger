@@ -1369,7 +1369,7 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
 
 	}
-
+/*
 	private void createDataOverlays(long trackId) {
 		Log.d(TAG, "CREATEDATAOVERLAYS");
 		mLastSegmentOverlay = null;
@@ -1431,9 +1431,9 @@ public class LoggerMap extends MapActivity {
 
 	}
 	
-	
+	*/
 	private void updateDataOverlays() {
-	
+	    boolean createOverlayExecuted = false;
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		for (long trackId: mTrackIds) {
 			Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
@@ -1457,7 +1457,8 @@ public class LoggerMap extends MapActivity {
 			}
 			else {
 				Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
-				createDataOverlays(trackId);
+				createDataOverlays();
+				break;
 			}
 		}
 		finally {

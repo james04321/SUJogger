@@ -300,7 +300,7 @@ public class GPSLoggerServiceManager
     */
    public static void shutdown()
    {
-      //      Log.d( TAG, "disconnectFromGPSLoggerService()" );
+      Log.d( TAG, "disconnectFromGPSLoggerService()" );
       try
       {
          mCtx.unbindService( mServiceConnection );

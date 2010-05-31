@@ -206,23 +206,13 @@ public final class R {
    About information
    ***************************
          */
-<<<<<<< HEAD
-        public static final int about_comments=0x7f080081;
-        public static final int about_copyright=0x7f08008b;
-        public static final int about_email=0x7f08008d;
-        public static final int about_website_label=0x7f08008e;
-        public static final int about_website_url=0x7f08008c;
-        public static final int app_name=0x7f080000;
-        public static final int app_search=0x7f08008a;
-=======
         public static final int about_comments=0x7f080083;
-        public static final int about_copyright=0x7f08008c;
-        public static final int about_email=0x7f08008e;
-        public static final int about_website_label=0x7f08008f;
-        public static final int about_website_url=0x7f08008d;
+        public static final int about_copyright=0x7f08008d;
+        public static final int about_email=0x7f08008f;
+        public static final int about_website_label=0x7f080090;
+        public static final int about_website_url=0x7f08008e;
         public static final int app_name=0x7f080000;
-        public static final int app_search=0x7f08008b;
->>>>>>> 8d7f51a21a439f43701a02ef0da8ad4483a6932b
+        public static final int app_search=0x7f08008c;
         public static final int btn_cancel=0x7f080028;
         public static final int btn_install=0x7f08002b;
         public static final int btn_okay=0x7f080027;
@@ -253,13 +243,8 @@ public final class R {
         public static final int dialog_tracking_title=0x7f080006;
         public static final int disableblanking_summary=0x7f080053;
         public static final int disableblanking_title=0x7f080052;
-<<<<<<< HEAD
-        public static final int distance_smallunitname=0x7f080091;
-        public static final int distance_unitname=0x7f080090;
-=======
-        public static final int distance_smallunitname=0x7f080092;
-        public static final int distance_unitname=0x7f080091;
->>>>>>> 8d7f51a21a439f43701a02ef0da8ad4483a6932b
+        public static final int distance_smallunitname=0x7f080093;
+        public static final int distance_unitname=0x7f080092;
         public static final int email_body=0x7f08004b;
         public static final int email_chooser=0x7f080049;
         public static final int email_subject=0x7f08004a;
@@ -300,7 +285,7 @@ public final class R {
         public static final int logcontrol_start=0x7f08002f;
         public static final int logcontrol_stop=0x7f080032;
         public static final int menu_about=0x7f080038;
-        public static final int menu_clear_track=0x7f080089;
+        public static final int menu_clear_track=0x7f08008b;
         public static final int menu_deleteTrack=0x7f080035;
         public static final int menu_downloadTrack=0x7f080088;
         public static final int menu_graphtype=0x7f08003a;
@@ -349,11 +334,7 @@ public final class R {
         public static final int showspeed_title=0x7f08005c;
         public static final int showtraffic_summary=0x7f08005b;
         public static final int showtraffic_title=0x7f08005a;
-<<<<<<< HEAD
-        public static final int speed_unitname=0x7f08008f;
-=======
-        public static final int speed_unitname=0x7f080090;
->>>>>>> 8d7f51a21a439f43701a02ef0da8ad4483a6932b
+        public static final int speed_unitname=0x7f080091;
         public static final int speedsanitycheck_summary=0x7f080061;
         public static final int speedsanitycheck_title=0x7f080060;
         public static final int stat_averagespeed=0x7f08006b;
