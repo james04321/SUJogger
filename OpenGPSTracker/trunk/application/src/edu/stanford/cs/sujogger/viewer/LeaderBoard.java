@@ -25,6 +25,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.LeaderBoardAdapter;
 
@@ -80,7 +81,7 @@ public class LeaderBoard extends ListActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, LeaderBoard.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(6);
+		mGameCon.setUserId(Common.getRegisteredUser().id);
 		
 		mGetUsersGroupsProgress = 0;
 		
