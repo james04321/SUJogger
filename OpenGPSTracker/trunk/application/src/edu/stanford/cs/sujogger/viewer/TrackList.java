@@ -57,7 +57,6 @@ import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
 import android.os.Bundle;
-import android.os.Handler;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -71,6 +70,7 @@ import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
@@ -81,7 +81,6 @@ import com.facebook.android.Facebook.DialogListener;
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
-import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
@@ -120,10 +119,11 @@ public class TrackList extends ListActivity
    
    public static final int CREATE_SB_RID = 1;
    public static final int GET_SBS_RID = 2;
+   public static final int USERREG_RID = 3;
    
    private SharedPreferences mSharedPreferences;
+   private ProgressDialog mDialogFriendInit;
    private ProgressDialog mDialogUserInit;
-   private ProgressDialog mDialogStatisticInit;
    
    private DatabaseHelper mDbHelper;
    private GamingServiceConnection mGameCon;
@@ -131,6 +131,9 @@ public class TrackList extends ListActivity
    
    private Facebook mFacebook;
    private AsyncFacebookRunner mAsyncRunner;
+   
+   //Temp attribute to store FB friends until we get everything we need
+   private long[] mFriendFbIds;
    
    private EditText mTrackNameView;
    private Uri mDialogUri;
@@ -176,7 +179,6 @@ public class TrackList extends ListActivity
       mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
     		  Constants.APP_ID, Constants.APP_API_KEY, TrackList.class.toString());
       mGameCon.bind();
-      mGameCon.setUserId(Common.getRegisteredUser().id);
       
       actions = new LinkedList<Map<String,?>>();
 	  actions.add(Common.createItem("New Track"));
@@ -196,18 +198,8 @@ public class TrackList extends ListActivity
       }
    }
    
-   private void getStatisticsFromServer() {
-	   if (!mSharedPreferences.getBoolean(Constants.STATS_INITIALIZED, false)) {
-		  mDialogStatisticInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
-    	  try {
-    		  mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
-    	  } catch (RemoteException e) {}
-      }
-   }
-   
    private void initializeSelfStatistics() {
-	   //TODO: uncomment this
-	   //try {
+	   try {
 		   ScoreBoard score;
 		   int[] allStats = Stats.ALL_STAT_IDS;
 		   ScoreBoard[] scores = new ScoreBoard[allStats.length];
@@ -220,8 +212,8 @@ public class TrackList extends ListActivity
 			   score.sb_type = String.valueOf(allStats[i]);
 			   scores[i] = score;
 		   }
-		   //mGameCon.createScoreBoards(CREATE_SB_RID, scores);
-	   //} catch (RemoteException e) {}
+		   mGameCon.createScoreBoards(CREATE_SB_RID, scores);
+	   } catch (RemoteException e) {}
    }
 
    @Override
@@ -537,8 +529,8 @@ public class TrackList extends ListActivity
       Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
 	   // Create an array to specify the fields we want to display in the list (only TITLE)
       // and an array of the fields we want to bind those fields to (in this case just text1)
-      String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
-      int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from, R.id.listitem_duration, R.id.listitem_distance };
+      //String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
+      //int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from, R.id.listitem_duration, R.id.listitem_distance };
       // Now create a simple cursor adapter and set it to display
       //trackAdapter = new SimpleCursorAdapter( this, 
     	//	  R.layout.trackitem, tracksCursor, fromColumns, toItems );
@@ -576,6 +568,17 @@ public class TrackList extends ListActivity
       return cursor;
    }
    
+   private void registerUser() {
+	   if (Common.getRegisteredUser() == null || mFriendFbIds == null) return;
+	   
+	   mDialogFriendInit.dismiss();
+       mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
+       
+       try {
+    	   mGameCon.registerUser(USERREG_RID, Common.getRegisteredUser(), mFriendFbIds);
+       } catch (RemoteException e) {}
+   }
+   
    private class ScoreboardReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
@@ -599,9 +602,9 @@ public class TrackList extends ListActivity
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 							
 							Editor editor = mSharedPreferences.edit();
-							editor.putBoolean(Constants.STATS_INITIALIZED, true);
-							editor.commit();
-							mDialogStatisticInit.dismiss();
+						    editor.putBoolean(Constants.USER_REGISTERED, true);
+						    editor.commit();
+							mDialogUserInit.dismiss();
 						}
 						break;
 					case CREATE_SB_RID:
@@ -610,10 +613,17 @@ public class TrackList extends ListActivity
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 						
 						Editor editor = mSharedPreferences.edit();
-						editor.putBoolean(Constants.STATS_INITIALIZED, true);
+						editor.putBoolean(Constants.USER_REGISTERED, true);
 						editor.commit();
-						mDialogStatisticInit.dismiss();
+						mDialogUserInit.dismiss();
 						break;
+					case USERREG_RID:
+						int userId = (Integer)appResponse.object;
+						Common.userRegId = userId;
+						
+						try {
+							mGameCon.getScoreBoards(GET_SBS_RID, Common.getRegisteredUser().id, -1, null, null);
+						} catch (RemoteException e) {}
 					default: break;
 					}
 				}
@@ -628,7 +638,8 @@ public class TrackList extends ListActivity
        public void onComplete(Bundle values) {
            //SessionEvents.onLoginSuccess();
            Log.d(TAG, "Facebook login successfull!!!");
-           mDialogUserInit = ProgressDialog.show(TrackList.this, "", "Retrieving your friends...", true);
+           mDialogFriendInit = ProgressDialog.show(TrackList.this, "", "Retrieving your friends...", true);
+           mAsyncRunner.request("me", new UserInfoRequestListener());
            mAsyncRunner.request("me/friends", new FriendsRequestListener());
        }
 
@@ -641,12 +652,43 @@ public class TrackList extends ListActivity
        }
 
        public void onCancel() {
-           //SessionEvents.onLoginError("Action Canceled");
-    	   
+    	   if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+    		   Toast toast = Toast.makeText(TrackList.this.getApplicationContext(), 
+    				   "Facebook login is required", Toast.LENGTH_SHORT);
+    		   toast.show();
+    		   mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+    				   new LoginDialogListener());
+    	   }
        }
    }
    
-   public class FriendsRequestListener extends BaseRequestListener {
+   private class UserInfoRequestListener extends BaseRequestListener {
+
+       public void onComplete(final String response) {
+           try {
+               // process the response here: executed in background thread
+               Log.d(TAG, "Response: " + response.toString());
+               JSONObject json = Util.parseJson(response);
+               Common.userRegFbId = json.getInt("id");
+               Common.userRegEmail = json.getString("email");
+               Common.userRegFirstName = json.getString("first_name");
+               Common.userRegLastName = json.getString("last_name");
+               Common.userRegFbPhoto = Constants.GRAPH_BASE_URL + Common.userRegFbId + "/picture";
+               
+               TrackList.this.runOnUiThread(new Runnable() {
+                   public void run() {
+                	   registerUser();
+                   }
+               });
+           } catch (JSONException e) {
+               Log.w("Facebook-Example", "JSON Error in response");
+           } catch (FacebookError e) {
+               Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+           }
+       }
+   }
+   
+   private class FriendsRequestListener extends BaseRequestListener {
 
        public void onComplete(final String response) {
            try {
@@ -657,31 +699,20 @@ public class TrackList extends ListActivity
                JSONArray friends = json.getJSONArray("data");
                if (friends == null) return;
                
-               User[] users = new User[friends.length()];
+               //long[] fbIds = new long[friends.length()];
+               long[] fbIds = new long[10];
                JSONObject friend;
-               User user;
-               String[] names;
-               for (int i = 0; i < friends.length(); i++) {
+               for (int i = 0; i < friends.length() && i < 10; i++) {
             	   friend = friends.getJSONObject(i);
-            	   user = new User();
-            	   user.fb_id = friend.getInt("id");
-            	   names = friend.getString("name").split(" ", 2);
-            	   if (names.length > 0)
-            		   user.first_name = names[0];
-            	   if (names.length > 1)
-            		   user.last_name = names[1];
-            	   user.fb_photo = Constants.GRAPH_BASE_URL + user.fb_id + "/picture";
-            	   users[i] = user;
-            	   Log.d(TAG, "firstName = " + user.first_name + "; lastName = " + user.last_name + "; fb_id = " + user.fb_id + "; fb_photo = " + user.fb_photo);
+            	   fbIds[i] = friend.getInt("id");
+            	   Log.d(TAG, "fb_id = " +fbIds[i]);
                }
+               
+               mFriendFbIds = fbIds;
                
                TrackList.this.runOnUiThread(new Runnable() {
                    public void run() {
-                       mDialogUserInit.dismiss();
-                       Editor editor = mSharedPreferences.edit();
-                       editor.putBoolean(Constants.USER_REGISTERED, true);
-                       editor.commit();
-                       getStatisticsFromServer();
+                	   registerUser();
                    }
                });
            } catch (JSONException e) {
