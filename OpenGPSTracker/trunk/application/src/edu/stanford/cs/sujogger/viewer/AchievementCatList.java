@@ -173,6 +173,15 @@ public class AchievementCatList extends ListActivity {
 						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
 						if (scores != null) {
 							mDbHelper.updateScoreboards(scores);
+							Cursor newAchCursor = mDbHelper.updateAchievements();
+							if (newAchCursor.getCount() > 0) {
+								 mRecAchEarned.requery();
+								 mRecAchLost.requery();
+								 mGroupedAdapter.notifyDataSetChanged();
+								 AchievementCatList.this.getListView().invalidateViews();
+							}
+							mGetScoresDialog.dismiss();
+							newAchCursor.close();
 						}
 						break;
 					default: break;
