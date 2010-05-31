@@ -1,10 +1,10 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -17,12 +17,12 @@ import android.view.View;
 import android.widget.ListView;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
-import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
@@ -30,7 +30,15 @@ public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
 	private static final int MENU_LEADERBOARD = 0;
 	
+	//Request IDs
+	private static final int GET_GRP_SBS_RID = 0;
+	
 	private DatabaseHelper mDbHelper;
+	private GamingServiceConnection mGameCon;
+	private AchievementCatListReceiver mReceiver;
+	
+	private ProgressDialog mGetScoresDialog;
+	
 	private Cursor mRecAchEarned;
 	private Cursor mRecAchLost;
 	private SeparatedListAdapter mGroupedAdapter;
@@ -42,7 +50,13 @@ public class AchievementCatList extends ListActivity {
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
-
+		
+		mReceiver = new AchievementCatListReceiver();
+		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
+	    		  Constants.APP_ID, Constants.APP_API_KEY, 
+	    		  AchievementCatList.class.toString());
+		mGameCon.bind();
+		
 		// Create cursors
 		mRecAchEarned = mDbHelper.getRecentAchievementsEarned();
 		startManagingCursor(mRecAchEarned);
@@ -51,6 +65,14 @@ public class AchievementCatList extends ListActivity {
 
 		fillData();
 		registerForContextMenu(getListView());
+		
+		int[] statIds = mDbHelper.getGroupStatisticIds();
+		if (statIds != null && statIds.length > 0) {
+			mGetScoresDialog = ProgressDialog.show(this, "", "Retrieving group statistics...", true);
+			try {
+				mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
+			} catch (RemoteException e){}
+		}
 	}
 
 	@Override
@@ -80,6 +102,7 @@ public class AchievementCatList extends ListActivity {
 	@Override
 	protected void onDestroy() {
 		mDbHelper.close();
+		mGameCon.unbind();
 		super.onDestroy();
 	}
 
@@ -136,7 +159,7 @@ public class AchievementCatList extends ListActivity {
 
 		setListAdapter(mGroupedAdapter);
 	}
-	/*
+	
 	private class AchievementCatListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
@@ -146,7 +169,12 @@ public class AchievementCatList extends ListActivity {
 					Log.d(TAG, appResponse.toString());
 					
 					switch(appResponse.request_id) {
-					
+					case GET_GRP_SBS_RID:
+						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						if (scores != null) {
+							mDbHelper.updateScoreboards(scores);
+						}
+						break;
 					default: break;
 					}
 				}
@@ -156,5 +184,4 @@ public class AchievementCatList extends ListActivity {
 			}
 		}
 	}
-*/
 }

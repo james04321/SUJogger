@@ -453,7 +453,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return statVal;
 	}
 	
-	public ScoreBoard[] scoreBoardArrayFromScores(Cursor scores) {
+	public ScoreBoard[] scoreBoardArrayFromScores(Cursor scores, Context context) {
 		ScoreBoard score;
 		ScoreBoard[] scoreArray = new ScoreBoard[scores.getCount()];
 		int i = 0;
@@ -461,7 +461,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			score = new ScoreBoard();
 			score.id = scores.getInt(2);
 			score.app_id = Constants.APP_ID;
-			score.user_id = scores.getInt(3) > 0 ? 0 : Common.getRegisteredUser().id;
+			score.user_id = scores.getInt(3) > 0 ? 0 : 
+				Common.getRegisteredUser(context).id;
 			score.group_id = scores.getInt(3);
 			score.value = (int)scores.getDouble(4);
 			score.sb_type = scores.getString(1);
@@ -484,21 +485,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return scoreArray;
 	}
 	
-	public ScoreBoard[] getSoloStatistics() {
+	public ScoreBoard[] getSoloStatistics(Context context) {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
 				Stats.GROUP_ID + "=" + 0, null);
-		return scoreBoardArrayFromScores(cursor);
+		return scoreBoardArrayFromScores(cursor, context);
 	}
 	
-	public ScoreBoard[] getGroupStatistics() {
+	public ScoreBoard[] getGroupStatistics(Context context) {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
 				Stats.GROUP_ID + ">" + 0, null);
-		return scoreBoardArrayFromScores(cursor);
+		return scoreBoardArrayFromScores(cursor, context);
 	}
 	
-	public ScoreBoard[] getAllStatistics() {
+	public ScoreBoard[] getAllStatistics(Context context) {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Stats.TABLE, null);
-		return scoreBoardArrayFromScores(cursor);
+		return scoreBoardArrayFromScores(cursor, context);
 	}
 	
 	public int[] getGroupStatisticIds() {

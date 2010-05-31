@@ -96,7 +96,7 @@ public class Feed extends ListActivity {
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, Feed.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser().id);
+		mGameCon.setUserId(Common.getRegisteredUser(this).id);
 		
 		updateFiltering();
 		fillData();
