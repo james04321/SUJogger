@@ -197,7 +197,7 @@ public class PeopleTrackList extends ListActivity {
     		Track track = trackHash.get(objProp[i].obj_id);
     		Log.d(TAG, "ASLAI OBJPROP[i].NAME is " + objProp[i].name);
     		if ("name".equals(objProp[i].name)) {
-    			trackList.add(track);
+    			trackList.add(0, track);
     			track.name = objProp[i].string_val;
 //        		testValues[i] = objProp[i].string_val;
     		} else if ("duration".equals(objProp[i].name)) {
