@@ -98,15 +98,24 @@ public class PublishGPX extends Activity
 					switch(appResponse.request_id) {
 					case 100:
 						int trackId = ((Obj) appResponse.object).id;
+						Log.d(TAG, "TRACKID IS " + trackId);
+
 						Log.d(TAG, "APPRESPONSE OBJECT IS: " + appResponse.object.getClass().getName());
-	//					int trackId = (Integer) appResponse.object;
+	//					int trackId;
+						//trackId = (int) appResponse.object;
 						Obj obj = (Obj) appResponse.appRequest.object;
 						int _id = obj.object_properties[0].int_val;
 					//	Uri uri = new Uri(obj.object_properties[3].string_val);
-						ContentResolver resolver = context.getContentResolver();
+//						ContentResolver resolver = context.getApplicationContext().getContentResolver();
 						ContentValues values = new ContentValues();
+						Log.d(TAG, "TRACKID IS " + trackId);
 						values.put(Tracks.TRACK_ID, trackId);
-						resolver.update(PublishGPX.this.getIntent().getData() , values, Tracks._ID + "=" + _id, null);
+						Log.d(TAG, "URI IS " + PublishGPX.this.getIntent().getData());
+						DatabaseHelper mDbHelper = new DatabaseHelper(PublishGPX.this);
+						mDbHelper.openAndGetDb();	
+						mDbHelper.updateTrack(_id, values);
+						mDbHelper.close();						
+//						resolver.update(PublishGPX.this.getIntent().getData() , values, null, null);
 						 
 						//						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
 //						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
@@ -192,10 +201,13 @@ private ProgressDialog mProgressDialog;
          case DIALOG_FILENAME:
             LayoutInflater factory = LayoutInflater.from( this );
             View view = factory.inflate( R.layout.filenamedialog, null );
+            EditText editText = (EditText) view.findViewById(R.id.fileNameField);
+            Log.d(TAG, "FILENAME IS " + this.getIntent().getExtras().getString("name"));
+            editText.setText(this.getIntent().getExtras().getString("name"));
             mFileNameView = (EditText) view.findViewById( R.id.fileNameField );
             builder = new AlertDialog.Builder( this )
-               .setTitle( R.string.dialog_filename_title )
-               .setMessage( R.string.dialog_filename_message )
+               .setTitle( R.string.dialog_track_title )
+               .setMessage( R.string.dialog_filename_publish )
                .setIcon( android.R.drawable.ic_dialog_alert )
                .setView(view )
                .setPositiveButton( R.string.btn_okay, mOnClickListener )

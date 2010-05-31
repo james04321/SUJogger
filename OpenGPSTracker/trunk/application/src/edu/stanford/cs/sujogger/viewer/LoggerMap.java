@@ -528,6 +528,7 @@ public class LoggerMap extends MapActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, LoggerMap.class.toString());
 		mGameCon.bind();
+		Log.d("HEREHERE", "REGISTEREDUSER IS" + Common.getRegisteredUser());
 		mGameCon.setUserId(Common.getRegisteredUser().id);
 		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);

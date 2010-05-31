@@ -399,6 +399,7 @@ public class TrackList extends ListActivity
             {
                Intent actionIntent = new Intent( Intent.ACTION_RUN );
                actionIntent.setDataAndType( mDialogUri, Tracks.CONTENT_ITEM_TYPE );
+               actionIntent.putExtra("name", mDialogCurrentName);
                actionIntent.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
                startActivity( Intent.createChooser( actionIntent, getString( R.string.chooser_title ) ) );
                handled = true;
@@ -518,7 +519,7 @@ public class TrackList extends ListActivity
       else
       {
          // Got to nothing, make a list of everything
-         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE }, null, null, null );
+         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, null, null, null );
          Log.d(TAG, "displayIntent(): displaying all tracks. count = " + tracksCursor.getCount());
          displayCursor( tracksCursor, true );
       }
@@ -565,7 +566,7 @@ public class TrackList extends ListActivity
    private Cursor doSearchWithIntent( final Intent queryIntent )
    {
       final String queryString = queryIntent.getStringExtra( SearchManager.QUERY );
-      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
+      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
       return cursor;
    }
    

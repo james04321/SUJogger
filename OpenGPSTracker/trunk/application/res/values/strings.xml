@@ -161,4 +161,6 @@
 <string name="dialog_download_track_list">Retrieving track list</string>
 <string name="dialog_download_track">Downloading track</string>
 <string name="menu_clear_track">Clear Tracks</string>
+<string name="dialog_filename_publish">Please enter the track name to be shared to your friends</string>
+<string name="dialog_track_title">Track name</string>
 </resources>

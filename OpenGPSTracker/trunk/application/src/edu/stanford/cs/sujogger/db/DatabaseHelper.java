@@ -276,6 +276,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return id;
 	}
 
+	public long updateTrack(long _id, ContentValues contentValues) {
+//		contentValues.put(Tracks.CREATION_TIME, new Date().getTime());
+		long id = mDb.update(Tracks.TABLE, contentValues, "_id = " + _id , null);
+		return id;
+	}
+	
 	/**
 	 * Deletes a single track and all underlying segments and waypoints
 	 * 
