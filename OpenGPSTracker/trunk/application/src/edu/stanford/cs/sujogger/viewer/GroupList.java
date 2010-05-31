@@ -299,6 +299,9 @@ public class GroupList extends ListActivity {
 							else
 								mRefreshDialog.dismiss();
 						}
+						else {
+							mRefreshDialog.dismiss();
+						}
 						break;
 					case SB_GET_RID:
 						scores = (ScoreBoard[])appResponse.object;
