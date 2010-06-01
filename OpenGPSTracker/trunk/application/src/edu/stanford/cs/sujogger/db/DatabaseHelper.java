@@ -51,7 +51,6 @@ import android.util.Log;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
-import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
@@ -965,7 +964,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public Cursor getUsersForUserIds(long[] userIds) {
 		if (userIds == null) return null;
 		/**
-		 * SELECT users.* FROM users WHERE users._id IN (1,2,...)
+		 * SELECT users.* FROM users WHERE users.user_id IN (1,2,...)
 		 */
 		String idString = "";
 		for (int i = 0; i < userIds.length; i++) {
@@ -1317,7 +1316,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			Users.TABLE + "." + Users.USER_ID + " AND " + 
 			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
-				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE, null);
+				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;
 	}
 	
@@ -1327,7 +1326,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			GroupsTemp.TABLE + "." + GroupsTemp.GROUP_ID + " AND " + 
 			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
-				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE, null);
+				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;
 	}
 }

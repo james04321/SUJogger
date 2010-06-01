@@ -28,6 +28,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
+import edu.stanford.cs.sujogger.util.MessageObject;
 
 public class Feed extends ListActivity {
 	private static final String TAG = "OGT.Feed";
@@ -259,6 +260,16 @@ public class Feed extends ListActivity {
 						User fromUser = msg.fromUser;
 						Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
 						Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+						
+						//Ignore messages that, for some reason, has come from the same person
+						if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
+						
+						mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
+								(MessageObject)msg.msg);
+						
+						mMessages.requery();
+						mAdapter.notifyDataSetChanged();
+						Feed.this.getListView().invalidateViews();
 						break;
 					default: break;
 					}
