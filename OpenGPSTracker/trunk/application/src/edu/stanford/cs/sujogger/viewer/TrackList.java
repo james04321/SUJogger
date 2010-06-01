@@ -86,6 +86,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.BaseRequestListener;
@@ -142,6 +143,9 @@ public class TrackList extends ListActivity
    
    private List<Map<String,?>> actions;
    private TrackListAdapter trackAdapter;
+   private boolean mDownloadedTracks = false;
+   private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
+   private SeparatedListAdapter mGroupedAdapter;
    
    private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
       {
@@ -170,7 +174,15 @@ public class TrackList extends ListActivity
       super.onCreate( savedInstanceState );
       Log.d(TAG, "onCreate()");
       this.setContentView( R.layout.tracklist );
-      
+/*
+     Log.d(TAG, "DOWNLOADEDTRACKS BEFORE " + mDownloadedTracks);
+     if (savedInstanceState != null) {
+    	 Log.d(TAG, "STATE OF DOWNLOADEDTRACK IS " + savedInstanceState.getBoolean("mDownloadedTrack"));
+     }
+     */
+		mDownloadedTracks = savedInstanceState != null ? savedInstanceState.getBoolean(DOWNLOADEDTRACKSFLAG) : false;
+	     Log.d(TAG, "DOWNLOADEDTRACKS AFTER " + mDownloadedTracks);
+
       mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
       
       mDbHelper = new DatabaseHelper(this);
@@ -184,8 +196,11 @@ public class TrackList extends ListActivity
       actions = new LinkedList<Map<String,?>>();
 	  actions.add(Common.createItem("New Track"));
 	  actions.add(Common.createItem("Statistics"));
-	  
-      displayIntent( getIntent() );
+	     Log.d(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
+	  actions.add(Common.createItem("Downloaded Tracks"));	  
+
+	  setTrackList();
+
 
       // Add the context menu (the long press thing)
       registerForContextMenu( getListView() );
@@ -199,6 +214,24 @@ public class TrackList extends ListActivity
       }
    }
    
+
+   private void setTrackList() {
+	   if (mDownloadedTracks) {
+		   actions.remove(2);
+		   actions.add(Common.createItem("My Tracks"));
+		   displayIntent( getIntent() );
+		   mGroupedAdapter.setSectionTitle("Downloaded Tracks", 1);
+		   
+	   } else {
+		   actions.remove(2);
+		   actions.add(Common.createItem("Downloaded Tracks"));
+		   displayIntent( getIntent() );
+		   mGroupedAdapter.setSectionTitle("My Tracks", 1);
+
+	   }
+		  getListView().invalidateViews();
+
+   }
    private void initializeSelfStatistics() {
 	   try {
 		   ScoreBoard score;
@@ -251,6 +284,11 @@ public class TrackList extends ListActivity
 	  Log.v("TrackList", "onRestoreInstanceState");
 	  mDialogUri = state.getParcelable( "URI" );
       mDialogCurrentName = state.getString( "NAME" );
+ //     mDownloadedTracks = state.getBoolean("mDownloadedTracks");
+//	     Log.d(TAG, "RESTORING DOWNLOADED TRACKS " + mDownloadedTracks);
+
+ //     setTrackList();
+
       super.onRestoreInstanceState( state );
    }
    
@@ -261,10 +299,15 @@ public class TrackList extends ListActivity
    @Override
    protected void onSaveInstanceState( Bundle outState )
    {
+	     Log.d(TAG, "SAVING DOWNLOADED TRACKS " + mDownloadedTracks);
+	   
       outState.putParcelable( "URI", mDialogUri );
       outState.putString( "NAME", mDialogCurrentName );
+	  outState.putBoolean(DOWNLOADEDTRACKSFLAG, mDownloadedTracks);
+
       super.onSaveInstanceState( outState );
    }
+
    
    @Override
    protected void onDestroy() {
@@ -313,6 +356,11 @@ public class TrackList extends ListActivity
     	  }
     	  else if (position == 2) {
     		  Log.v("TrackList", "pulling up stats");
+    	  } 
+    	  else if (position == 3) {
+    		  Log.v("TrackList", "Going to Downloaded tracks");
+    		  mDownloadedTracks = !mDownloadedTracks;
+    		  setTrackList();
     	  }
       }
       else if (position > actions.size() + 1){
@@ -519,7 +567,10 @@ public class TrackList extends ListActivity
       else
       {
          // Got to nothing, make a list of everything
-         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, null, null, null );
+    	  String whereClause = null;
+    	  whereClause = "user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id;
+    	  Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, whereClause, null, null );
          Log.d(TAG, "displayIntent(): displaying all tracks. count = " + tracksCursor.getCount());
          displayCursor( tracksCursor, true );
       }
@@ -545,14 +596,14 @@ public class TrackList extends ListActivity
     	  setListAdapter( trackAdapter );
       }
       else {
-    	  SeparatedListAdapter groupedAdapter = new SeparatedListAdapter(this);
-    	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
+    	  mGroupedAdapter = new SeparatedListAdapter(this);
+    	  mGroupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
     			  new String[] {Common.ITEM_TITLE}, 
     			  new int[] {R.id.list_simple_title}));
     	  
-    	  groupedAdapter.addSection("My Tracks", trackAdapter);
+    	  mGroupedAdapter.addSection("My Tracks", trackAdapter);
     	  
-    	  setListAdapter( groupedAdapter );
+    	  setListAdapter( mGroupedAdapter );
       }
    }
    
@@ -566,7 +617,8 @@ public class TrackList extends ListActivity
    private Cursor doSearchWithIntent( final Intent queryIntent )
    {
       final String queryString = queryIntent.getStringExtra( SearchManager.QUERY );
-      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, "name LIKE ?", new String[] { "%" + queryString + "%" }, null );
+      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, 
+    		  "name LIKE ?" + (new String[] { "%" + queryString + "%" }) + " and user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id, null, null );
       return cursor;
    }
    

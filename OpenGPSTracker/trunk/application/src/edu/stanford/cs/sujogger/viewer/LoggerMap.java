@@ -325,6 +325,7 @@ public class LoggerMap extends MapActivity {
 			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
+			values.put(Tracks.USER_ID, Common.getRegisteredUser(LoggerMap.this).id);
 			Uri uri = ContentUris.withAppendedId(Tracks.CONTENT_URI, LoggerMap.this.getLastTrackId());
 			getContentResolver().update(uri, values, null, null);
 			getContentResolver().notifyChange(uri, null);

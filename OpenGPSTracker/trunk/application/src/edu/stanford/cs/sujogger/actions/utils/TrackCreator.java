@@ -119,6 +119,8 @@ public class TrackCreator {
 						Toast toast = Toast.makeText(activity, 
 								"Track " + name + " is downloaded successfully", Toast.LENGTH_SHORT);
 						toast.show();
+						Log.d(TAG, "USER_ID IS " + userId);
+
 						break;
 						
 
