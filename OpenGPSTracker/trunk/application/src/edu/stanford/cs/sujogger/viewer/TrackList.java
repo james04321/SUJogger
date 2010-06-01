@@ -145,6 +145,7 @@ public class TrackList extends ListActivity
    private TrackListAdapter trackAdapter;
    private boolean mDownloadedTracks = false;
    private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
+   private SeparatedListAdapter mGroupedAdapter;
    
    private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
       {
@@ -218,11 +219,16 @@ public class TrackList extends ListActivity
 	   if (mDownloadedTracks) {
 		   actions.remove(2);
 		   actions.add(Common.createItem("My Tracks"));
+		   displayIntent( getIntent() );
+		   mGroupedAdapter.setSectionTitle("Downloaded Tracks", 1);
+		   
 	   } else {
 		   actions.remove(2);
 		   actions.add(Common.createItem("Downloaded Tracks"));
+		   displayIntent( getIntent() );
+		   mGroupedAdapter.setSectionTitle("My Tracks", 1);
+
 	   }
-	      displayIntent( getIntent() );
 		  getListView().invalidateViews();
 
    }
@@ -590,14 +596,14 @@ public class TrackList extends ListActivity
     	  setListAdapter( trackAdapter );
       }
       else {
-    	  SeparatedListAdapter groupedAdapter = new SeparatedListAdapter(this);
-    	  groupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
+    	  mGroupedAdapter = new SeparatedListAdapter(this);
+    	  mGroupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
     			  new String[] {Common.ITEM_TITLE}, 
     			  new int[] {R.id.list_simple_title}));
     	  
-    	  groupedAdapter.addSection("My Tracks", trackAdapter);
+    	  mGroupedAdapter.addSection("My Tracks", trackAdapter);
     	  
-    	  setListAdapter( groupedAdapter );
+    	  setListAdapter( mGroupedAdapter );
       }
    }
    
