@@ -26,6 +26,14 @@ public class SeparatedListAdapter extends BaseAdapter {
 		this.headers.add(section);
 		this.sections.put(section, adapter);
 	}
+	
+	public void setSectionTitle(String section, int idx) {
+		if (idx < 0 || idx >= headers.getCount()) return;
+		headers.remove(headers.getItem(idx));
+		headers.insert(section, idx);
+		headers.notifyDataSetChanged();
+		this.notifyDataSetChanged();
+	}
 
 	public Object getItem(int position) {
 		for(Object section : this.sections.keySet()) {
