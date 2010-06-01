@@ -356,6 +356,10 @@ public class TrackList extends ListActivity
     	  }
     	  else if (position == 2) {
     		  Log.v("TrackList", "pulling up stats");
+    		  Intent intent = new Intent();
+    		  intent.setClass(this, StatisticsView.class);
+    		  intent.putExtra("group_id", -1);
+    		  startActivity(intent);
     	  } 
     	  else if (position == 3) {
     		  Log.v("TrackList", "Going to Downloaded tracks");

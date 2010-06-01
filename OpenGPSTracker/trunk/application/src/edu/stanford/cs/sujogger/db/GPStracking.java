@@ -81,6 +81,11 @@ public final class GPStracking
 		public static final String[] STAT_TYPES_SOLO = new String[] {
 			"Distance ran", "Running time", "Runs", "Partner runs", 
 			"Avg speed"};
+		public static final String[] ALL_STAT_TITLES = new String[] { 
+			"", "Distance ran", "Running time", "Runs", "Partner runs", "Avg speed", "", "","","",
+			"", "Distance ran (Week)", "Running time (Week)", "Runs (Week)", "Partner runs (Week)", "Avg speed (Week)", "", "","","",
+			"", "Distance ran (Month)", "Running time (Month)", "Runs (Month)", "Partner runs (Month)", "Avg speed (Month)", "", "","",""
+			};		
 		
 		public static final String[] STAT_TYPES_GROUP = new String[] {
 			"Distance ran", "Running time", "Runs", "Partner runs"};

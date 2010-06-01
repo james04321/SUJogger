@@ -51,6 +51,7 @@ import android.util.Log;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
+import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.GMRecipients;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
@@ -70,6 +71,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.WaypointsColumns;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.MessageObject;
+import edu.stanford.cs.sujogger.util.Statistic;
 
 /**
  * Class to hold bare-metal database operations exposed as functionality blocks
@@ -173,6 +175,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	//ASLAI
+	public ArrayList<Statistic> getStatistics(long group_id) {
+		ArrayList<Statistic> stats = new ArrayList<Statistic>();
+    	openAndGetDb();	
+		Cursor cursor = mDb.query(Stats.TABLE, new String[] {"value", "statistic_id", "group_id"}, "group_id = " + ((group_id == -1)?0:group_id), null, null, null, "statistic_id");
+	    if (cursor != null) {
+	        int count = cursor.getCount();
+	        if (count == 0)
+	        	return stats;
+	        cursor.moveToFirst();
+	        Statistic stat = null;
+	        for (int i = 0; i < count; i++) {
+	        	stat = new Statistic(cursor.getDouble(0), cursor.getInt(1));
+	        	Log.d("STATISTICS", "STAT IS " + cursor.getDouble(0) + " " + cursor.getInt(1) + " " + cursor.getInt(2)); 
+	        	stats.add(stat);
+	        	cursor.moveToNext();	  
+	        }
+	    } 
+		cursor.close();
+		close();	
+		return stats;
+	}
+	
 	public void updateTrackRemoteId(int _id, int track_id) {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 

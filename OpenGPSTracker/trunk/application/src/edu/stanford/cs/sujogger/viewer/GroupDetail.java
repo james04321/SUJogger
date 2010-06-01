@@ -150,6 +150,11 @@ public class GroupDetail extends ListActivity {
 		tempPosition = tempPosition - (mActions.size() + 1);
 		if (tempPosition == 0) {
 			Log.d(TAG, "onListItemClick(): statistics");
+
+		  Intent intent = new Intent();
+		  intent.setClass(this, StatisticsView.class);
+		  intent.putExtra("group_id", mGroupId);
+		  startActivity(intent);			
 			return;
 		}
 		else if (tempPosition == 1) {
