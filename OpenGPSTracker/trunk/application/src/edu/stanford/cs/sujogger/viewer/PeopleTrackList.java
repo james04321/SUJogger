@@ -155,9 +155,6 @@ public class PeopleTrackList extends ListActivity {
     	  trackList = new ArrayList<Track>();
     	  trackHash = new Hashtable<Integer, Track>();
     	  int user_id = this.getIntent().getExtras().getInt("userId");	
-
-    	  Log.d(TAG, "HERE2");
-
     	  try {
     		  String[] names = new String[3];
     		  names[0] = "name";
