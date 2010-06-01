@@ -990,15 +990,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return userArray;
 	}
 	
-	public Cursor getAllUsersExcludingGroup(long groupId) {
+	public Cursor getAllUsersExcludingGroup(long groupId, int selfId) {
 		//TODO: exclude self
 		/**
-		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
-		 * AND users._id NOT IN 
+		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
+		 * AND users.user_id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users WHERE groups_users.group_id=groupId)
+		 * AND users.user_id <> selfId
 		 * UNION
 		 * SELECT users.* FROM users WHERE users.user_id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users)
+		 * AND users.user_id <> selfId
 		 * ORDER BY users.last_name, users.first_name
 		 */
 		String subQuery = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
@@ -1007,11 +1009,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
 		String whereClause = Users.TABLE + "." + Users.USER_ID + "=" +
-			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
-			" AND " + Users.TABLE + "." + Users._ID + " NOT IN " + subQuery;
+			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " AND " + 
+			Users.TABLE + "." + Users.USER_ID + " NOT IN " + subQuery + " AND " +
+			Users.TABLE + "." + Users.USER_ID + "<>" + selfId;
 		String subQuery2 = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
 			GroupsUsers.TABLE + ")";
-		String whereClause2 = Users.TABLE + "." + Users._ID + " NOT IN " + subQuery2;
+		String whereClause2 = Users.TABLE + "." + Users.USER_ID + " NOT IN " + subQuery2 + " AND " +
+			Users.TABLE + "." + Users.USER_ID + "<>" + selfId;
 		Cursor cursor = mDb.rawQuery("SELECT DISTINCT " + Users.TABLE + ".* FROM " + tables + 
 				" WHERE " + whereClause + " UNION" +
 				" SELECT " + Users.TABLE + ".* FROM " + Users.TABLE + " WHERE " + whereClause2 +
@@ -1191,6 +1195,19 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return mDb.insert(Users.TABLE, null, values) > 0;
 	}
 	
+	public void addFriend(User user) {
+		ContentValues values = new ContentValues();
+		values.put(Users.USER_ID, user.id);
+		values.put(Users.FB_ID, user.fb_id);
+		values.put(Users.FIRST_NAME, user.first_name);
+		values.put(Users.LAST_NAME, user.last_name);
+		values.put(Users.IMG_URL, user.fb_photo);
+		values.put(Users.IS_FRIEND, 1);
+		if (mDb.insert(Users.TABLE, null, values) == 0) {
+			mDb.update(Users.TABLE, values, Users.USER_ID + "=" + user.id, null);
+		}
+	}
+	
 	//Add all users to user table and let table constraints handle duplicates
 	public void addUsers(User[] users) {
 		mDb.beginTransaction();
@@ -1201,6 +1218,31 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		} finally {
 			mDb.endTransaction();
 		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM users", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
+	}
+	
+	public void addFriends(User[] users) {
+		mDb.beginTransaction();
+		try {
+			for (int i = 0; i < users.length; i++)
+				addFriend(users[i]);
+			mDb.setTransactionSuccessful();
+		} finally {
+			mDb.endTransaction();
+		}
+		
+		Cursor cursor = mDb.rawQuery("SELECT * FROM users WHERE is_friend=1", null);
+		DatabaseUtils.dumpCursor(cursor);
+		cursor.close();
+	}
+	
+	public Cursor getAllUsers(Context context) {
+		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
+				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id, null);
+		return cursor;
 	}
 	
 	public void addGroupsTemp(Group[] groups) {

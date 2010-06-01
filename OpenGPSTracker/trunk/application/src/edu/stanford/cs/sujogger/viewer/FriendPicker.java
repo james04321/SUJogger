@@ -3,6 +3,7 @@ package edu.stanford.cs.sujogger.viewer;
 import java.util.Arrays;
 
 import android.app.ListActivity;
+import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -22,6 +23,7 @@ import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.Users;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.UserListAdapter;
 
@@ -46,8 +48,13 @@ public class FriendPicker extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private FriendPickerReceiver mReceiver;
 	
+	private int mGetUsersFriendsProgress = 0;
+	private ProgressDialog mUserWaitDialog;
+	
 	//Request IDs
 	private static final int GRP_ADDUSER_RID = 1;
+	private static final int GET_USERS_RID = 2;
+	private static final int GET_FRIENDS_RID = 3;
 	
 	public FriendPicker() {}
 	
@@ -74,14 +81,13 @@ public class FriendPicker extends ListActivity {
 		
 		Log.d(TAG, "onCreate(): groupId = " + mGroupId + "; groupIdServer = " + mGroupIdServer);
 		
-		if (mMode == MODE_ADD) {
-			mReceiver = new FriendPickerReceiver(); 
-			mGameCon = new GamingServiceConnection(this, mReceiver, 
-					Constants.APP_ID, Constants.APP_API_KEY, FriendPicker.class.toString());
-			mGameCon.bind();
-		}
+		mReceiver = new FriendPickerReceiver(); 
+		mGameCon = new GamingServiceConnection(this, mReceiver, 
+				Constants.APP_ID, Constants.APP_API_KEY, FriendPicker.class.toString());
+		mGameCon.bind();
+		mGameCon.setUserId(Common.getRegisteredUser(this).id);
 		
-		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId);
+		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId, Common.getRegisteredUser(this).id);
 		startManagingCursor(mUsers);
 		
 		clearButton = (Button)findViewById(R.id.fp_clearbutton);
@@ -118,6 +124,12 @@ public class FriendPicker extends ListActivity {
 		});
 		
 		fillData();
+		
+		mUserWaitDialog = ProgressDialog.show(this, "", "Retrieving friends...", true);
+		try {
+			mGameCon.getAppsUser(GET_USERS_RID);
+			mGameCon.getInvitableFriends(GET_FRIENDS_RID);
+		} catch (RemoteException e) {}
 	}
 	
 	@Override
@@ -138,7 +150,7 @@ public class FriendPicker extends ListActivity {
 	@Override
 	protected void onDestroy() {
 		mDbHelper.close();
-		if (mMode == MODE_ADD) mGameCon.unbind();
+		mGameCon.unbind();
 		super.onDestroy();
 	}
 
@@ -182,6 +194,7 @@ public class FriendPicker extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			try {
 				AppResponse appResponse = null;
+				User[] users;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
 					switch(appResponse.request_id) {
@@ -205,6 +218,34 @@ public class FriendPicker extends ListActivity {
 							Toast toast = Toast.makeText(FriendPicker.this, 
 									"Error adding users", Toast.LENGTH_SHORT);
 							toast.show();
+						}
+						break;
+					case GET_USERS_RID:
+						Log.d(TAG, "onRecieve(): request is get users");
+						users = (User[])appResponse.object;
+						if (users != null) {
+							mDbHelper.addUsers(users);
+							mGetUsersFriendsProgress++;
+							if (mGetUsersFriendsProgress >= 2) {
+								mUserWaitDialog.dismiss();
+								mUsers.requery();
+								mUserAdapter.notifyDataSetChanged();
+								FriendPicker.this.getListView().invalidateViews();
+							}
+						}
+						break;
+					case GET_FRIENDS_RID:
+						Log.d(TAG, "onRecieve(): request is get friends");
+						users = (User[])appResponse.object;
+						if (users != null) {
+							mDbHelper.addFriends(users);
+							mGetUsersFriendsProgress++;
+							if (mGetUsersFriendsProgress >= 2) {
+								mUserWaitDialog.dismiss();
+								mUsers.requery();
+								mUserAdapter.notifyDataSetChanged();
+								FriendPicker.this.getListView().invalidateViews();
+							}
 						}
 						break;
 					default: break;

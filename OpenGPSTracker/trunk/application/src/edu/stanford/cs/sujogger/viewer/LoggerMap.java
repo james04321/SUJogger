@@ -1849,19 +1849,6 @@ public class LoggerMap extends MapActivity {
 			
 			Common.displayAchievementToast(Achievements.getTitleForId(newAchCursor.getInt(0)), 
 					newAchCursor.getInt(1) == 0, getApplicationContext(), toastLayout);
-			
-			/*
-			ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
-			image.setImageResource(R.drawable.androidmarker);
-			TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
-			text.setText(Achievements.getTitleForId(newAchCursor.getInt(0)) + " achievement earned!");
-			
-			Toast achToast = new Toast(getApplicationContext());
-			achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-			achToast.setDuration(Toast.LENGTH_LONG);
-			achToast.setView(toastLayout);
-			achToast.show();
-			*/
 		}
 	}
 
