@@ -208,7 +208,7 @@ public class TrackList extends ListActivity
 			   score = new ScoreBoard();
 			   score.app_id = Constants.APP_ID;
 			   score.user_id = Common.getRegisteredUser(this).id;
-			   score.group_id = -1;
+			   score.group_id = 0;
 			   score.value = 0;
 			   score.sb_type = String.valueOf(allStats[i]);
 			   scores[i] = score;
@@ -586,7 +586,7 @@ public class TrackList extends ListActivity
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
 			try {
-				Editor editor = mSharedPreferences.edit();
+				
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
@@ -605,7 +605,9 @@ public class TrackList extends ListActivity
 								scoreIds[i] = scores[i].id;
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 							
-						    editor.putBoolean(Constants.USER_REGISTERED, true);
+							Editor editorGetSb = mSharedPreferences.edit();
+							editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
+							editorGetSb.commit();
 							mDialogUserInit.dismiss();
 						}
 						break;
@@ -614,23 +616,23 @@ public class TrackList extends ListActivity
 						if (scoreIds != null)
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
 						
-						
-						editor.putBoolean(Constants.USER_REGISTERED, true);
+						Editor editorCreateSb = mSharedPreferences.edit();
+						editorCreateSb.putBoolean(Constants.USER_REGISTERED, true);
+						editorCreateSb.commit();
 						mDialogUserInit.dismiss();
 						break;
 					case USERREG_RID:
 						int userId = (Integer)appResponse.object;
-						editor.putInt(Constants.USERREG_ID_KEY, userId);
-						
+						Editor editorUser = mSharedPreferences.edit();
+						editorUser.putInt(Constants.USERREG_ID_KEY, userId);
+						editorUser.commit();
 						try {
 							mGameCon.getScoreBoards(GET_SBS_RID, 
-									Common.getRegisteredUser(TrackList.this).id, 
-									-1, null, null);
+									userId, -1, null, null);
 						} catch (RemoteException e) {}
 					default: break;
 					}
 				}
-				editor.commit();
 			}
 			catch (Exception e) {
 				e.printStackTrace();
