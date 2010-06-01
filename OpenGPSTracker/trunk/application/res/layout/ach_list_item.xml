@@ -10,6 +10,8 @@
                android:layout_height="36dip"
                android:layout_alignParentTop="true"
                android:layout_marginRight="10dip"
+               android:layout_marginLeft="4dip"
+               android:layout_marginTop="4dip"
     />
     
     <TextView android:id="@+id/ach_list_item_description"
