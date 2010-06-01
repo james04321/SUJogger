@@ -12,6 +12,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
 import android.os.Bundle;
+import android.os.RemoteException;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -29,6 +30,7 @@ import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
+import edu.stanford.cs.sujogger.db.GPStracking.Messages;
 import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
@@ -389,12 +391,10 @@ public class MessageSender extends Activity {
 		
 		mDbHelper.insertGameMessage(Common.getRegisteredUser(this), recipients, now, msgObject);
 		
-		/*
 		try {
 			mGameCon.sendMessage(MSG_SEND_RID, msgObject, Messages.TYPE_GM, 
-					Common.getRegisteredUser(), null, recipients, now, Feed.class.toString());	
+					Common.getRegisteredUser(this), null, recipients, now, Feed.class.toString());	
 		} catch (RemoteException e) {}
-		*/
 		
 		Toast toast = Toast.makeText(MessageSender.this, 
 				"Message sent", Toast.LENGTH_SHORT);

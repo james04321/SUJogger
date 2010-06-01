@@ -83,8 +83,8 @@ public final class GPStracking
 			"Avg speed"};
 		public static final String[] ALL_STAT_TITLES = new String[] { 
 			"", "Distance ran", "Running time", "Runs", "Partner runs", "Avg speed", "", "","","",
-			"", "Distance ran (Week)", "Running time (Week)", "Runs (Week)", "Partner runs (Week)", "Avg speed (Week)", "", "","","",
-			"", "Distance ran (Month)", "Running time (Month)", "Runs (Month)", "Partner runs (Month)", "Avg speed (Month)", "", "","",""
+			"", "Distance ran (week)", "Running time (week)", "Runs (week)", "Partner runs (week)", "Avg speed (week)", "", "","","",
+			"", "Distance ran (month)", "Running time (month)", "Runs (month)", "Partner runs (month)", "Avg speed (month)", "", "","",""
 			};		
 		
 		public static final String[] STAT_TYPES_GROUP = new String[] {
@@ -126,6 +126,8 @@ public final class GPStracking
 		public static final String UPDATED_AT = "updated_at";
 		public static final String CATEGORY = "category";
 		public static final String ICON_RESOURCE = "icon_resource";
+		public static final String TITLE = "title";
+		public static final String DESCRIPTION = "description";
 		
 		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
 		static final String IS_GROUP_TYPE = "INTEGER NOT NULL";
@@ -134,38 +136,15 @@ public final class GPStracking
 		static final String UPDATED_AT_TYPE = "INTEGER NOT NULL";
 		static final String CATEGORY_TYPE = "INTEGER NOT NULL DEFAULT 1";
 		static final String ICON_RESOURCE_TYPE = "INTEGER NOT NULL DEFAULT 2130837504";
+		static final String TITLE_TYPE = "TEXT NOT NULL";
+		static final String DESCRIPTION_TYPE = "TEXT NOT NULL";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		static final String TABLE = "achievements";
-		static final String CREATE_STATEMENT =
-			"CREATE TABLE" + Achievements.TABLE +
-			"( " + Achievements._ID + " " + Achievements._ID_TYPE +
-			", " + Achievements.STATISTIC_ID + " " + Achievements.STATISTIC_ID_TYPE +
-			", " + Achievements.IS_GROUP + " " + Achievements.IS_GROUP_TYPE +
-			", " + Achievements.CONDITION + " " + Achievements.CONDITION_TYPE +
-			", " + Achievements.COMPLETED + " " + Achievements.COMPLETED_TYPE +
-			", " + Achievements.UPDATED_AT + " " + Achievements.UPDATED_AT_TYPE +
-			", " + Achievements.CATEGORY + " " + Achievements.CATEGORY_TYPE +
-			");";
 		
-		public static final int ACH_1ST_RUN = 1;
-		public static final int ACH_2ND_RUN = 2;
-		
-		public static String getTitleForId(int id) {
-			switch(id) {
-			case ACH_1ST_RUN: return "1st Run";
-			case ACH_2ND_RUN: return "2nd Run";
-			default: return "No title found";
-			}
-		}
-		
-		public static int getImageForId(int id) {
-			switch(id) {
-			case ACH_1ST_RUN: return R.drawable.androidmarker;
-			case ACH_2ND_RUN: return R.drawable.androidmarker;
-			default: return R.drawable.androidmarker;
-			}
-		}
+		public static final String[] COLUMNS = new String[] {_ID,
+			STATISTIC_ID, IS_GROUP, CONDITION, COMPLETED, UPDATED_AT, CATEGORY, ICON_RESOURCE,
+			TITLE, DESCRIPTION};
 	}
 	
 	public static final class Categories {

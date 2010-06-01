@@ -244,9 +244,9 @@ public class LeaderBoard extends ListActivity {
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		MenuItem item = menu.getItem(0);
 		if (mIsGroup)
-			item.setTitle(R.string.lb_solo);
+			item.setTitle(R.string.lb_solo).setIcon(R.drawable.ic_menu_solo);
 		else
-			item.setTitle(R.string.lb_group);
+			item.setTitle(R.string.lb_group).setIcon(R.drawable.ic_menu_group);
 		return super.onPrepareOptionsMenu(menu);
 	}
 

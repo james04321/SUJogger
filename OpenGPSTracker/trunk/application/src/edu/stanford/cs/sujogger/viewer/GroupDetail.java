@@ -75,7 +75,6 @@ public class GroupDetail extends ListActivity {
 		
 		mInfo = new LinkedList<Map<String,?>>();
 		mInfo.add(Common.createItem("Statistics"));
-		mInfo.add(Common.createItem("Achievements"));
 		
 		fillData();
 	}
@@ -155,10 +154,6 @@ public class GroupDetail extends ListActivity {
 		  intent.setClass(this, StatisticsView.class);
 		  intent.putExtra("group_id", mGroupId);
 		  startActivity(intent);			
-			return;
-		}
-		else if (tempPosition == 1) {
-			Log.d(TAG, "onListItemClick(): achievements");
 			return;
 		}
 		

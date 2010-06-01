@@ -62,7 +62,6 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -86,7 +85,6 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
-import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.BaseRequestListener;
@@ -112,7 +110,6 @@ public class TrackList extends ListActivity
    public static final int DIALOG_FILENAME = 0;
    private static final int DIALOG_RENAME = 23;
    private static final int DIALOG_DELETE = 24;
-   private static final int MENU_SEARCH = 0;
    
    public static final int TRACKSTATUS_IDLE=10;
    public static final int TRACKSTATUS_TRACKING=11;
@@ -314,31 +311,6 @@ public class TrackList extends ListActivity
 	   mDbHelper.close();
 	   mGameCon.unbind();
 	   super.onDestroy();
-   }
-
-   @Override
-   public boolean onCreateOptionsMenu( Menu menu )
-   {
-      boolean result = super.onCreateOptionsMenu( menu );
-
-      menu.add( ContextMenu.NONE, MENU_SEARCH, ContextMenu.NONE, android.R.string.search_go ).setIcon( android.R.drawable.ic_search_category_default ).setAlphabeticShortcut( SearchManager.MENU_KEY );
-      return result;
-   }
-
-   @Override
-   public boolean onOptionsItemSelected( MenuItem item )
-   {
-      boolean handled = false;
-      switch( item.getItemId() )
-      {
-         case MENU_SEARCH:
-            onSearchRequested();
-            handled = true;
-            break;
-         default:
-            handled = super.onOptionsItemSelected( item );
-      }
-      return handled;
    }
 
    @Override

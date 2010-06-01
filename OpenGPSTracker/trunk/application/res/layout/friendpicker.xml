@@ -5,18 +5,6 @@
 	android:layout_height="wrap_content"
 	android:orientation="vertical">
 	
-	<RelativeLayout 
-		android:layout_width="fill_parent"
-		android:layout_height="wrap_content" 
-		android:id="@+id/fp_top_control_bar">
-		
-		<EditText 
-			android:id="@+id/friendpicker_search" 
-			android:layout_width="fill_parent"
-			android:layout_height="wrap_content" 
-			android:hint="@string/fp_search_hint"/>
-	</RelativeLayout>
-	
 	<LinearLayout 
 		android:id="@+id/fp_bottom_control_bar"
 		android:layout_width="fill_parent" 
@@ -43,8 +31,7 @@
 	<ListView 
 		android:id="@android:id/list" 
 		android:layout_width="fill_parent"
-		android:layout_height="0dip" 
+		android:layout_height="fill_parent" 
 		android:choiceMode="multipleChoice"
-		android:layout_below="@id/fp_top_control_bar" 
 		android:layout_above="@id/fp_bottom_control_bar"/>
 </RelativeLayout>

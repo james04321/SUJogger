@@ -17,6 +17,7 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
 import android.view.ContextMenu;
@@ -54,6 +55,7 @@ public class GroupList extends ListActivity {
 
 	private GamingServiceConnection mGameCon;
 	private GroupListReceiver mReceiver;
+	private Handler mHandler = new Handler();
 
 	private static final int MENU_REFRESH = 0;
 
@@ -83,6 +85,16 @@ public class GroupList extends ListActivity {
 			}
 		}
 	};
+	
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			try {
+				mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(GroupList.this).id, -1, -1);
+				mRefreshDialog = ProgressDialog.show(GroupList.this, "", "Refreshing groups...", true);
+			}
+			catch (RemoteException e) {}
+		}
+	};
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -107,6 +119,10 @@ public class GroupList extends ListActivity {
 
 		fillData();
 		registerForContextMenu(getListView());
+		
+		//Wait 100ms before sending request, because sometimes, the activity doesn't
+		//bind to the service quickly enough
+		mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	@Override
@@ -150,7 +166,8 @@ public class GroupList extends ListActivity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
 
-		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh);
+		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
+			.setIcon(R.drawable.ic_menu_refresh);
 		return result;
 	}
 
@@ -244,12 +261,7 @@ public class GroupList extends ListActivity {
 	}
 
 	private void refreshGroups() {
-		try {
-			mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(this).id, -1, -1);
-			mRefreshDialog = ProgressDialog.show(GroupList.this, "", "Refreshing groups...", true);
-		}
-		catch (RemoteException e) {
-		}
+		mHandler.post(mRefreshTask);
 	}
 
 	private void initializeStatsForGroup(int groupId) {

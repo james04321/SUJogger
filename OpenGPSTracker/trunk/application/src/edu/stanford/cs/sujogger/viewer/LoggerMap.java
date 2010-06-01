@@ -814,7 +814,7 @@ public class LoggerMap extends MapActivity {
 		// ContextMenu.NONE, R.string.menu_insertnote ).setIcon(
 		// R.drawable.ic_menu_myplaces );
 		menu.add(ContextMenu.NONE, MENU_CLEARTRACK, ContextMenu.NONE, R.string.menu_clear_track)
-		.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('C');
+		.setIcon(R.drawable.ic_menu_close_clear_cancel).setAlphabeticShortcut('C');
 		menu.add(ContextMenu.NONE, MENU_STATS, ContextMenu.NONE, R.string.menu_statistics).setIcon(
 				R.drawable.ic_menu_picture).setAlphabeticShortcut('S');
 		menu.add(ContextMenu.NONE, MENU_SHARE, ContextMenu.NONE, R.string.menu_shareTrack).setIcon(
@@ -1819,16 +1819,16 @@ public class LoggerMap extends MapActivity {
 	
 	private void updateUserStats(double dist, long duration) {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
-		
+		int selfId = Common.getRegisteredUser(this).id;
 		if (dist > 0 && duration > 0) {
 			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, -1, dist);
 			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, -1, (double) duration);
 			
-			mDbHelper.updateDistanceRan();
-			mDbHelper.updateRunningTime();
+			mDbHelper.updateDistanceRan(selfId);
+			mDbHelper.updateRunningTime(selfId);
 		}
 		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
-		mDbHelper.updateNumRuns();
+		mDbHelper.updateNumRuns(selfId);
 		mDbHelper.updateAvgSpeed();
 		//mDbHelper.updateMedDuration();
 		//mDbHelper.updateMedDistance();
@@ -1847,16 +1847,8 @@ public class LoggerMap extends MapActivity {
 			View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
 					(ViewGroup) findViewById(R.id.toast_layout_root));
 			
-			ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
-			image.setImageResource(R.drawable.androidmarker);
-			TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
-			text.setText(Achievements.getTitleForId(newAchCursor.getInt(0)) + " achievement earned!");
-			
-			Toast achToast = new Toast(getApplicationContext());
-			achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
-			achToast.setDuration(Toast.LENGTH_LONG);
-			achToast.setView(toastLayout);
-			achToast.show();
+			Common.displayAchievementToast(newAchCursor.getString(8), 
+					newAchCursor.getInt(1) == 0, getApplicationContext(), toastLayout);
 		}
 	}
 

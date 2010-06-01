@@ -28,6 +28,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
+import edu.stanford.cs.sujogger.util.MessageObject;
 
 public class Feed extends ListActivity {
 	private static final String TAG = "OGT.Feed";
@@ -52,7 +53,6 @@ public class Feed extends ListActivity {
 	//Options menu items
 	private static final int MENU_FILTER = 0;
 	private static final int MENU_COMPOSE = 1;
-	private static final int MENU_REFRESH = 2;
 	
 	//Dialogs
 	private static final int DIALOG_FILTER = 1;
@@ -160,9 +160,10 @@ public class Feed extends ListActivity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
-		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter);
-		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose);
-		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.feed_menu_refresh);
+		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
+			.setIcon(R.drawable.ic_menu_agenda);
+		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose)
+			.setIcon(R.drawable.ic_menu_compose);
 		return result;
 	}
 	
@@ -178,10 +179,6 @@ public class Feed extends ListActivity {
 		case MENU_COMPOSE:
 			Intent i = new Intent(this, MessageSender.class);
 			startActivity(i);
-			handled = true;
-			break;
-		case MENU_REFRESH:
-			refresh();
 			handled = true;
 			break;
 		default:
@@ -259,6 +256,16 @@ public class Feed extends ListActivity {
 						User fromUser = msg.fromUser;
 						Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
 						Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+						
+						//Ignore messages that, for some reason, has come from the same person
+						if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
+						
+						mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
+								(MessageObject)msg.msg);
+						
+						mMessages.requery();
+						mAdapter.notifyDataSetChanged();
+						Feed.this.getListView().invalidateViews();
 						break;
 					default: break;
 					}
