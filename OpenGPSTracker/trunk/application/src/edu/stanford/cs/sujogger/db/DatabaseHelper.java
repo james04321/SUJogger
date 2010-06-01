@@ -709,14 +709,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * AND statistics.group_id=0
 		 * AND achievements.is_group=0;
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
-		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
+		 * OR (statistics.value < achievements.condition AND achievements.completed = 1))
 		 * UNION
 		 * SELECT achievements._id, achievements.completed FROM achievements, statistics
 		 * WHERE achievements.statistic_id=statistics.statistic_id
 		 * AND statistics.group_id>0
 		 * AND achievements.is_group=1;
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
-		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
+		 * OR (statistics.value < achievements.condition AND achievements.completed = 1))
 		 */
 		
 		String selectClause = Achievements.TABLE + "." + Achievements._ID + "," +
@@ -730,7 +730,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
-			Stats.TABLE + "." + Stats.VALUE + "<=" + 
+			Stats.TABLE + "." + Stats.VALUE + "<" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
 		String whereClause2 = 
@@ -741,7 +741,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
-			Stats.TABLE + "." + Stats.VALUE + "<=" + 
+			Stats.TABLE + "." + Stats.VALUE + "<" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
 		
@@ -789,13 +789,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		if (updateLostWhereClause != "") {
-			Log.d(TAG, "updateEarnedWhereClause = " + updateLostWhereClause);
+			Log.d(TAG, "updateLostWhereClause = " + updateLostWhereClause);
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 0);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
 			mDb.update(Achievements.TABLE, updateValues, updateLostWhereClause, null);
 		}
 		
+		Log.d(TAG, "dumping new achievements");
 		DatabaseUtils.dumpCursor(cursor);
 		cursor.moveToPosition(-1);
 		return cursor;

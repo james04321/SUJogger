@@ -1847,6 +1847,10 @@ public class LoggerMap extends MapActivity {
 			View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
 					(ViewGroup) findViewById(R.id.toast_layout_root));
 			
+			Common.displayAchievementToast(Achievements.getTitleForId(newAchCursor.getInt(0)), 
+					newAchCursor.getInt(1) == 0, getApplicationContext(), toastLayout);
+			
+			/*
 			ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
 			image.setImageResource(R.drawable.androidmarker);
 			TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
@@ -1857,6 +1861,7 @@ public class LoggerMap extends MapActivity {
 			achToast.setDuration(Toast.LENGTH_LONG);
 			achToast.setView(toastLayout);
 			achToast.show();
+			*/
 		}
 	}
 

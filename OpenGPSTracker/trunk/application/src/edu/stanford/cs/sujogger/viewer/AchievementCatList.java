@@ -14,15 +14,18 @@ import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.ListView;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
+import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
@@ -188,6 +191,12 @@ public class AchievementCatList extends ListActivity {
 								 mRecAchLost.requery();
 								 mGroupedAdapter.notifyDataSetChanged();
 								 AchievementCatList.this.getListView().invalidateViews();
+								 
+								 newAchCursor.moveToNext();
+								 View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
+											(ViewGroup) findViewById(R.id.toast_layout_root));
+								 Common.displayAchievementToast(Achievements.getTitleForId(newAchCursor.getInt(0)), 
+										 newAchCursor.getInt(1) == 0, getApplicationContext(), toastLayout);
 							}
 							mGetScoresDialog.dismiss();
 							newAchCursor.close();

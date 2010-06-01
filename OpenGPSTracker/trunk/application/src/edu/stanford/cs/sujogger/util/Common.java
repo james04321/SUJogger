@@ -7,7 +7,15 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.view.Gravity;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.User;
+import edu.stanford.cs.sujogger.R;
+import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 
 public class Common {
 	public static final String ITEM_TITLE = "title";
@@ -106,5 +114,20 @@ public class Common {
 		UnitsI18n mUnits = new UnitsI18n(context, null);
 		double speed = mUnits.conversionFromMeterAndMiliseconds(val, 1);
 		return String.format("%.2f %s", speed, mUnits.getSpeedUnit());
+	}
+	
+	public static void displayAchievementToast(String title, boolean earned, Context context, View toastLayout) {
+		ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
+		image.setImageResource(R.drawable.androidmarker);
+		TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
+		String suffix = "achievement earned!";
+		if (!earned) suffix = "achievement lost";
+		text.setText(title + " " + suffix);
+		
+		Toast achToast = new Toast(context);
+		achToast.setGravity(Gravity.CENTER_VERTICAL, 0, 0);
+		achToast.setDuration(Toast.LENGTH_LONG);
+		achToast.setView(toastLayout);
+		achToast.show();
 	}
 }
