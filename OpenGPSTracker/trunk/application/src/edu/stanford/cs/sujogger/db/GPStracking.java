@@ -115,7 +115,7 @@ public final class GPStracking
 		public static final long RECENT_INTERVAL = 259200000; //3 days
 		
 		public static final String STATISTIC_ID = "statistic_id";
-		public static final String GROUP_ID = "group_id";
+		public static final String IS_GROUP = "is_group";
 		public static final String CONDITION = "condition";
 		public static final String COMPLETED = "completed";
 		public static final String UPDATED_AT = "updated_at";
@@ -123,7 +123,7 @@ public final class GPStracking
 		public static final String ICON_RESOURCE = "icon_resource";
 		
 		static final String STATISTIC_ID_TYPE = "INTEGER NOT NULL";
-		static final String GROUP_ID_TYPE = "INTEGER NOT NULL";
+		static final String IS_GROUP_TYPE = "INTEGER NOT NULL";
 		static final String CONDITION_TYPE = "REAL NOT NULL";
 		static final String COMPLETED_TYPE = "INTEGER NOT NULL";
 		static final String UPDATED_AT_TYPE = "INTEGER NOT NULL";
@@ -136,7 +136,7 @@ public final class GPStracking
 			"CREATE TABLE" + Achievements.TABLE +
 			"( " + Achievements._ID + " " + Achievements._ID_TYPE +
 			", " + Achievements.STATISTIC_ID + " " + Achievements.STATISTIC_ID_TYPE +
-			", " + Achievements.GROUP_ID + " " + Achievements.GROUP_ID_TYPE +
+			", " + Achievements.IS_GROUP + " " + Achievements.IS_GROUP_TYPE +
 			", " + Achievements.CONDITION + " " + Achievements.CONDITION_TYPE +
 			", " + Achievements.COMPLETED + " " + Achievements.COMPLETED_TYPE +
 			", " + Achievements.UPDATED_AT + " " + Achievements.UPDATED_AT_TYPE +
