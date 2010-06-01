@@ -38,8 +38,7 @@ public class AchievementList extends ListActivity {
 		mAchCursor = mDbHelper.getAchievementsInCat(mCat, Categories.getMaskForSingleCat(mCat));
 		startManagingCursor(mAchCursor);
 		
-		this.setTitle(this.getString(R.string.app_name) + ": " + 
-				Categories.getNameForCat(mCat) + " Achievements");
+		this.setTitle(Categories.getNameForCat(mCat) + " Achievements");
 		
 		fillData();
 	}

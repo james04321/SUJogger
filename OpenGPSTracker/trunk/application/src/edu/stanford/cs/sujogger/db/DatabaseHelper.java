@@ -746,10 +746,22 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String selectClause = Achievements.TABLE + "." + Achievements._ID + "," +
 			Achievements.TABLE + "." + Achievements.COMPLETED;
 		String tables = Achievements.TABLE + ", " + Stats.TABLE;
-		String whereClause = 
+		String whereClause1 = 
 			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
 			Stats.TABLE + "." + Stats.STATISTIC_ID + " AND " +
 			Stats.TABLE + "." + Stats.GROUP_ID + "=0 AND " +
+			Achievements.TABLE + "." + Achievements.IS_GROUP + "=0 AND" +
+			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
+			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
+			Stats.TABLE + "." + Stats.VALUE + "<=" + 
+			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
+		String whereClause2 = 
+			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
+			Stats.TABLE + "." + Stats.STATISTIC_ID + " AND " +
+			Stats.TABLE + "." + Stats.GROUP_ID + ">0 AND " +
+			Achievements.TABLE + "." + Achievements.IS_GROUP + "=1 AND" +
 			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
@@ -758,7 +770,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
 		
 		cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + tables + " WHERE " + 
-				whereClause, null);
+				whereClause1 + " UNION SELECT " + selectClause + " FROM " +
+				tables + " WHERE " + whereClause2, null);
 		
 		/**
 		 * UPDATE achievements SET completed=1, updated_at=current_time WHERE
@@ -767,7 +780,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		int i = 0;
 		String updateEarnedWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 0) continue;
+			if (cursor.getInt(1) == 1) continue;
 			if (i == 0)
 				updateEarnedWhereClause += Achievements._ID + "=" + cursor.getString(0);
 			else
@@ -791,7 +804,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		i = 0;
 		String updateLostWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 1) continue;
+			if (cursor.getInt(1) == 0) continue;
 			if (i == 0)
 				updateLostWhereClause += Achievements._ID + "=" + cursor.getString(0);
 			else
@@ -814,7 +827,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	private Cursor getRecentAchievements(int conditionVal) {
 		long timeThreshold = System.currentTimeMillis() - Achievements.RECENT_INTERVAL;
-		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
 				Achievements.UPDATED_AT + ">=" + timeThreshold + " AND " + Achievements.COMPLETED + "=" + conditionVal, null, null, null, Achievements.UPDATED_AT + " desc");
 		
 		return cursor;
@@ -830,7 +843,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public Cursor getAchievementsInCat(int cat, int bitmask) {
 		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
+				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
 		
 		return cursor;
@@ -838,7 +851,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public int getAchievementCountForCat(int cat, int bitmask) {
 		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY}, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
 		
 		int count = cursor.getCount();
@@ -849,7 +862,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public int getCompletedAchievementCountForCat(int cat, int bitmask) {
 		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.GROUP_ID, Achievements.COMPLETED, Achievements.CATEGORY}, 
+				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY}, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat + " AND " + Achievements.COMPLETED + "=1", null, null, null, null);
 		
 		int count = cursor.getCount();

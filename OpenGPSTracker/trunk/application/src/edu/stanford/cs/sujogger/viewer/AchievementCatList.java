@@ -29,6 +29,7 @@ import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
 	private static final int MENU_LEADERBOARD = 0;
+	private static final int MENU_REFRESH = 1;
 	
 	//Request IDs
 	private static final int GET_GRP_SBS_RID = 0;
@@ -66,6 +67,10 @@ public class AchievementCatList extends ListActivity {
 		fillData();
 		registerForContextMenu(getListView());
 		
+		refreshAchievements();
+	}
+	
+	private void refreshAchievements() {
 		int[] statIds = mDbHelper.getGroupStatisticIds();
 		if (statIds != null && statIds.length > 0) {
 			mGetScoresDialog = ProgressDialog.show(this, "", "Retrieving group statistics...", true);
@@ -127,6 +132,7 @@ public class AchievementCatList extends ListActivity {
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
 		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option);
+		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh);
 		return result; 
 	}
 	
@@ -139,6 +145,9 @@ public class AchievementCatList extends ListActivity {
 			Intent i = new Intent(this, LeaderBoard.class);
 			startActivity(i);
 			handled = true;
+			break;
+		case MENU_REFRESH:
+			refreshAchievements();
 			break;
 		default:
 			handled = super.onOptionsItemSelected(item);
