@@ -116,9 +116,9 @@ public class Common {
 		return String.format("%.2f %s", speed, mUnits.getSpeedUnit());
 	}
 	
-	public static void displayAchievementToast(String title, boolean earned, Context context, View toastLayout) {
+	public static void displayAchievementToast(String title, int imgRes, boolean earned, Context context, View toastLayout) {
 		ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
-		image.setImageResource(R.drawable.androidmarker);
+		image.setImageResource(imgRes);
 		TextView text = (TextView) toastLayout.findViewById(R.id.toast_ach_desc);
 		String suffix = "achievement earned!";
 		if (!earned) suffix = "achievement lost";
