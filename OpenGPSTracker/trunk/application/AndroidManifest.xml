@@ -137,6 +137,14 @@
                <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
          </activity>
+
+         <activity
+            android:name=".viewer.StatisticsView"
+            android:launchMode="singleTop" >
+            <intent-filter>
+               <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+         </activity>
          
          <activity
             android:name=".viewer.GroupList"
