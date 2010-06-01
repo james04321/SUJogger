@@ -707,11 +707,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * SELECT achievements._id, achievements.completed FROM achievements, statistics 
 		 * WHERE achievements.statistic_id=statistics.statistic_id
 		 * AND statistics.group_id=0
+		 * AND achievements.is_group=0;
+		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
+		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
+		 * UNION
+		 * SELECT achievements._id, achievements.completed FROM achievements, statistics
+		 * WHERE achievements.statistic_id=statistics.statistic_id
+		 * AND statistics.group_id>0
+		 * AND achievements.is_group=1;
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
 		 * OR (statistics.value <= achievements.condition AND achievements.completed = 1))
 		 */
 		
-		String selectClause = Achievements.TABLE + "." + Achievements._ID;
+		String selectClause = Achievements.TABLE + "." + Achievements._ID + "," +
+			Achievements.TABLE + "." + Achievements.COMPLETED;
 		String tables = Achievements.TABLE + ", " + Stats.TABLE;
 		String whereClause = 
 			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
@@ -732,22 +741,46 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * _id = 1 OR _id...
 		 */
 		int i = 0;
-		String updateWhereClause = "";
+		String updateEarnedWhereClause = "";
 		while (cursor.moveToNext()) {
+			if (cursor.getInt(1) == 0) continue;
 			if (i == 0)
-				updateWhereClause += Achievements._ID + "=" + cursor.getString(0);
+				updateEarnedWhereClause += Achievements._ID + "=" + cursor.getString(0);
 			else
-				updateWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
+				updateEarnedWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
 			i++;
 		}
 		
-		if (updateWhereClause != "") {
-			Log.d(TAG, "whereClause = " + updateWhereClause);
+		if (updateEarnedWhereClause != "") {
+			Log.d(TAG, "updateEarnedWhereClause = " + updateEarnedWhereClause);
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 1);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
-			
-			mDb.update(Achievements.TABLE, updateValues, updateWhereClause, null);
+			mDb.update(Achievements.TABLE, updateValues, updateEarnedWhereClause, null);
+		}
+		
+		/**
+		 * UPDATE achievements SET completed=0, updated_at=current_time WHERE
+		 * _id = 1 OR _id...
+		 */
+		cursor.moveToPosition(-1);
+		i = 0;
+		String updateLostWhereClause = "";
+		while (cursor.moveToNext()) {
+			if (cursor.getInt(1) == 1) continue;
+			if (i == 0)
+				updateLostWhereClause += Achievements._ID + "=" + cursor.getString(0);
+			else
+				updateLostWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
+			i++;
+		}
+		
+		if (updateLostWhereClause != "") {
+			Log.d(TAG, "updateEarnedWhereClause = " + updateLostWhereClause);
+			ContentValues updateValues = new ContentValues();
+			updateValues.put(Achievements.COMPLETED, 0);
+			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
+			mDb.update(Achievements.TABLE, updateValues, updateLostWhereClause, null);
 		}
 		
 		DatabaseUtils.dumpCursor(cursor);
