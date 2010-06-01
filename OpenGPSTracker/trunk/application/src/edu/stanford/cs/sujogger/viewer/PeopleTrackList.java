@@ -154,6 +154,8 @@ public class PeopleTrackList extends ListActivity {
     	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.dialog_download_track_list), true);
     	  trackList = new ArrayList<Track>();
     	  trackHash = new Hashtable<Integer, Track>();
+    	  int user_id = this.getIntent().getExtras().getInt("userId");	
+
     	  Log.d(TAG, "HERE2");
 
     	  try {
@@ -161,7 +163,7 @@ public class PeopleTrackList extends ListActivity {
     		  names[0] = "name";
     		  names[1] = "duration";
     		  names[2] = "distance";
-			mGamingServiceConn.getObjProperties(120, Common.getRegisteredUser(this).id, -1, "track", names);
+			mGamingServiceConn.getObjProperties(120, user_id, -1, "track", names);
 		} catch (RemoteException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
