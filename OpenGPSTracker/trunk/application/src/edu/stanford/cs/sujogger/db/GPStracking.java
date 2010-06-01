@@ -54,8 +54,8 @@ public final class GPStracking
 		public static final int NUM_RUNS_ID = 3;
 		public static final int NUM_PARTNER_RUNS_ID = 4;
 		public static final int AVG_SPEED_ID = 5;
-		public static final int MED_DURATION_ID = 6;
-		public static final int MED_DISTANCE_ID = 7;
+		//public static final int MED_DURATION_ID = 6;
+		//public static final int MED_DISTANCE_ID = 7;
 		
 		public static final int DISTANCE_RAN_WEEK_ID = 11;
 		public static final int RUNNING_TIME_WEEK_ID = 12;
@@ -71,7 +71,7 @@ public final class GPStracking
 		
 		public static final int[] ALL_STAT_IDS = new int[] {
 			DISTANCE_RAN_ID, RUNNING_TIME_ID, NUM_RUNS_ID, NUM_PARTNER_RUNS_ID, AVG_SPEED_ID,
-			MED_DURATION_ID, MED_DISTANCE_ID, DISTANCE_RAN_WEEK_ID, RUNNING_TIME_WEEK_ID,
+			DISTANCE_RAN_WEEK_ID, RUNNING_TIME_WEEK_ID,
 			NUM_RUNS_WEEK_ID, NUM_PARTNER_RUNS_WEEK_ID, AVG_SPEED_WEEK_ID, DISTANCE_RAN_MONTH_ID,
 			RUNNING_TIME_MONTH_ID, NUM_RUNS_MONTH_ID, NUM_PARTNER_RUNS_MONTH_ID, AVG_SPEED_MONTH_ID};
 		

@@ -756,7 +756,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		int i = 0;
 		String updateEarnedWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 0) continue;
+			if (cursor.getInt(1) == 1) continue;
 			if (i == 0)
 				updateEarnedWhereClause += Achievements._ID + "=" + cursor.getString(0);
 			else
@@ -780,7 +780,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		i = 0;
 		String updateLostWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 1) continue;
+			if (cursor.getInt(1) == 0) continue;
 			if (i == 0)
 				updateLostWhereClause += Achievements._ID + "=" + cursor.getString(0);
 			else
