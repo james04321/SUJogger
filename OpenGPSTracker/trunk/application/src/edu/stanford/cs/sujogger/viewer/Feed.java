@@ -53,7 +53,6 @@ public class Feed extends ListActivity {
 	//Options menu items
 	private static final int MENU_FILTER = 0;
 	private static final int MENU_COMPOSE = 1;
-	private static final int MENU_REFRESH = 2;
 	
 	//Dialogs
 	private static final int DIALOG_FILTER = 1;
@@ -161,9 +160,10 @@ public class Feed extends ListActivity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
-		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter);
-		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose);
-		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.feed_menu_refresh);
+		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
+			.setIcon(R.drawable.ic_menu_agenda);
+		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose)
+			.setIcon(R.drawable.ic_menu_compose);
 		return result;
 	}
 	
@@ -179,10 +179,6 @@ public class Feed extends ListActivity {
 		case MENU_COMPOSE:
 			Intent i = new Intent(this, MessageSender.class);
 			startActivity(i);
-			handled = true;
-			break;
-		case MENU_REFRESH:
-			refresh();
 			handled = true;
 			break;
 		default:

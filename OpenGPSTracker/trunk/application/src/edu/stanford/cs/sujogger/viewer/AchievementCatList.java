@@ -134,8 +134,10 @@ public class AchievementCatList extends ListActivity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
-		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option);
-		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh);
+		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option)
+			.setIcon(R.drawable.ic_menu_sort_by_size);
+		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
+			.setIcon(R.drawable.ic_menu_refresh);
 		return result; 
 	}
 	

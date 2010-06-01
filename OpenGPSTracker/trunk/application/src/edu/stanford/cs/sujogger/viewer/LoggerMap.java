@@ -814,7 +814,7 @@ public class LoggerMap extends MapActivity {
 		// ContextMenu.NONE, R.string.menu_insertnote ).setIcon(
 		// R.drawable.ic_menu_myplaces );
 		menu.add(ContextMenu.NONE, MENU_CLEARTRACK, ContextMenu.NONE, R.string.menu_clear_track)
-		.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('C');
+		.setIcon(R.drawable.ic_menu_block).setAlphabeticShortcut('C');
 		menu.add(ContextMenu.NONE, MENU_STATS, ContextMenu.NONE, R.string.menu_statistics).setIcon(
 				R.drawable.ic_menu_picture).setAlphabeticShortcut('S');
 		menu.add(ContextMenu.NONE, MENU_SHARE, ContextMenu.NONE, R.string.menu_shareTrack).setIcon(
