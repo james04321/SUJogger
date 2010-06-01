@@ -38,7 +38,7 @@ public class GroupListAdapter extends CursorAdapter {
 		grpTitle.setText(name);
 		
 		TextView grpReadCount = (TextView)view.findViewById(R.id.grp_indicator);
-		grpReadCount.setText(String.valueOf(2));
+		grpReadCount.setText(String.valueOf(cursor.getInt(3)));
 		//grpReadCount.setBackgroundResource(R.layout.grp_read_counter_bg);
 	}
 

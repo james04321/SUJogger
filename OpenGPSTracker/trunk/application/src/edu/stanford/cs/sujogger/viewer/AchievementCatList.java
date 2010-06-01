@@ -8,7 +8,9 @@ import android.content.Intent;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
+import android.os.SystemClock;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -33,19 +35,33 @@ public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
 	private static final int MENU_LEADERBOARD = 0;
 	private static final int MENU_REFRESH = 1;
-	
-	//Request IDs
+
+	// Request IDs
 	private static final int GET_GRP_SBS_RID = 0;
-	
+
 	private DatabaseHelper mDbHelper;
 	private GamingServiceConnection mGameCon;
 	private AchievementCatListReceiver mReceiver;
-	
+	private Handler mHandler = new Handler();
+
 	private ProgressDialog mGetScoresDialog;
-	
+
 	private Cursor mRecAchEarned;
 	private Cursor mRecAchLost;
 	private SeparatedListAdapter mGroupedAdapter;
+
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			int[] statIds = mDbHelper.getGroupStatisticIds();
+			if (statIds != null && statIds.length > 0) {
+				mGetScoresDialog = ProgressDialog.show(AchievementCatList.this, "", 
+						"Retrieving group statistics...", true);
+				try {
+					mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
+				} catch (RemoteException e) {}
+			}
+		}
+	};
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -54,13 +70,12 @@ public class AchievementCatList extends ListActivity {
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
-		
+
 		mReceiver = new AchievementCatListReceiver();
-		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
-	    		  Constants.APP_ID, Constants.APP_API_KEY, 
-	    		  AchievementCatList.class.toString());
+		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, Constants.APP_ID,
+				Constants.APP_API_KEY, AchievementCatList.class.toString());
 		mGameCon.bind();
-		
+
 		// Create cursors
 		mRecAchEarned = mDbHelper.getRecentAchievementsEarned();
 		startManagingCursor(mRecAchEarned);
@@ -70,17 +85,13 @@ public class AchievementCatList extends ListActivity {
 		fillData();
 		registerForContextMenu(getListView());
 		
-		refreshAchievements();
+		//Wait 100ms before sending request, because sometimes, the activity doesn't
+		//bind to the service quickly enough
+		mHandler.postDelayed(mRefreshTask, 100);
 	}
-	
+
 	private void refreshAchievements() {
-		int[] statIds = mDbHelper.getGroupStatisticIds();
-		if (statIds != null && statIds.length > 0) {
-			mGetScoresDialog = ProgressDialog.show(this, "", "Retrieving group statistics...", true);
-			try {
-				mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
-			} catch (RemoteException e){}
-		}
+		mHandler.post(mRefreshTask);
 	}
 
 	@Override
@@ -121,30 +132,30 @@ public class AchievementCatList extends ListActivity {
 		Log.v(TAG, "position = " + position + "; id = " + id);
 		Object item = mGroupedAdapter.getItem(position);
 		if (item.getClass() == Integer.class) {
-			Log.d(TAG, "starting AchGridView for cat = " + (Integer)item);
-			
+			Log.d(TAG, "starting AchGridView for cat = " + (Integer) item);
+
 			Intent i = new Intent(this, AchievementList.class);
-	        i.putExtra(Categories.TABLE, (Integer)item);
-	        startActivity(i);
+			i.putExtra(Categories.TABLE, (Integer) item);
+			startActivity(i);
 		}
 	}
-	
+
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
-		
-		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option)
-			.setIcon(R.drawable.ic_menu_sort_by_size);
-		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
-			.setIcon(R.drawable.ic_menu_refresh);
-		return result; 
+
+		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option).setIcon(
+				R.drawable.ic_menu_sort_by_size);
+		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh).setIcon(
+				R.drawable.ic_menu_refresh);
+		return result;
 	}
-	
+
 	@Override
 	public boolean onOptionsItemSelected(MenuItem item) {
 		boolean handled = false;
-		
+
 		switch (item.getItemId()) {
 		case MENU_LEADERBOARD:
 			Intent i = new Intent(this, LeaderBoard.class);
@@ -158,14 +169,15 @@ public class AchievementCatList extends ListActivity {
 			handled = super.onOptionsItemSelected(item);
 			break;
 		}
-		
+
 		return handled;
 	}
 
 	private void fillData() {
 		mGroupedAdapter = new SeparatedListAdapter(this);
 
-		mGroupedAdapter.addSection("Recently Earned", new AchListAdapter(this, mRecAchEarned, true));
+		mGroupedAdapter
+				.addSection("Recently Earned", new AchListAdapter(this, mRecAchEarned, true));
 		mGroupedAdapter.addSection("Recently Lost", new AchListAdapter(this, mRecAchLost, true));
 
 		mGroupedAdapter.addSection("Difficulty", new AchCatAdapter(this, mDbHelper, 0));
@@ -173,7 +185,7 @@ public class AchievementCatList extends ListActivity {
 
 		setListAdapter(mGroupedAdapter);
 	}
-	
+
 	private class AchievementCatListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
@@ -181,30 +193,31 @@ public class AchievementCatList extends ListActivity {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					
-					switch(appResponse.request_id) {
+
+					switch (appResponse.request_id) {
 					case GET_GRP_SBS_RID:
-						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
 						if (scores != null) {
 							mDbHelper.updateScoreboards(scores);
 							Cursor newAchCursor = mDbHelper.updateAchievements();
 							if (newAchCursor.getCount() > 0) {
-								 mRecAchEarned.requery();
-								 mRecAchLost.requery();
-								 mGroupedAdapter.notifyDataSetChanged();
-								 AchievementCatList.this.getListView().invalidateViews();
-								 
-								 newAchCursor.moveToNext();
-								 View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
-											(ViewGroup) findViewById(R.id.toast_layout_root));
-								 Common.displayAchievementToast(Achievements.getTitleForId(newAchCursor.getInt(0)), 
-										 newAchCursor.getInt(1) == 0, getApplicationContext(), toastLayout);
+								mRecAchEarned.requery();
+								mRecAchLost.requery();
+								mGroupedAdapter.notifyDataSetChanged();
+								AchievementCatList.this.getListView().invalidateViews();
+
+								newAchCursor.moveToNext();
+								View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
+										(ViewGroup) findViewById(R.id.toast_layout_root));
+								Common.displayAchievementToast(newAchCursor.getString(8), newAchCursor
+										.getInt(1) == 0, getApplicationContext(), toastLayout);
 							}
 							mGetScoresDialog.dismiss();
 							newAchCursor.close();
 						}
 						break;
-					default: break;
+					default:
+						break;
 					}
 				}
 			}

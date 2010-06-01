@@ -15,6 +15,7 @@ import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.util.Common;
+import edu.stanford.cs.sujogger.util.Constants;
 
 import edu.stanford.cs.sujogger.util.Statistic;
 
@@ -84,7 +85,7 @@ public class StatisticsView extends ListActivity {
 				case Stats.AVG_SPEED_ID:
 				case Stats.AVG_SPEED_WEEK_ID:
 				case Stats.AVG_SPEED_MONTH_ID:
-					valueText.setText(Common.speedString(context, value));
+					valueText.setText(Common.speedString(context, value/((double)Constants.SPEED_CONVERSION_RATIO)));
 					break;
 				case Stats.NUM_RUNS_ID:
 				case Stats.NUM_RUNS_WEEK_ID:

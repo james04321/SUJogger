@@ -26,17 +26,15 @@ public class AchListAdapter extends CursorAdapter {
 
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
-		int achId = cursor.getInt(0);
-		int iconResourceId = cursor.getInt(4);
-		int completed = cursor.getInt(2);
+		int completed = cursor.getInt(4);
 		
 		TextView achTitle = (TextView)view.findViewById(R.id.ach_list_item_title);
-		achTitle.setText(Achievements.getTitleForId(achId));
+		achTitle.setText(cursor.getString(8));
 		if (completed == 0)
 			achTitle.setTextColor(Color.GRAY);
 		
 		ImageView achIcon = (ImageView)view.findViewById(R.id.ach_list_item_image);
-		achIcon.setImageResource(iconResourceId);
+		achIcon.setImageResource(cursor.getInt(7));
 	}
 
 	@Override

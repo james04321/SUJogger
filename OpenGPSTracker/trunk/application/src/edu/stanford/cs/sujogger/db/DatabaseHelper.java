@@ -541,7 +541,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	//If groupId < 0, update ALL statistics with the given statisticId
-	public void increaseStatistic(long statisticId, long groupId, double val) {		
+	public void increaseStatistic(long statisticId, long groupId, double val) {
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
 		
@@ -560,11 +560,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	// Updates distances run in the past week / month
-	public void updateDistanceRan() {
+	public void updateDistanceRan(int selfId) {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.DISTANCE_RAN_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -572,18 +572,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DISTANCE + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.DISTANCE_RAN_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 	}
 	
 	// Updates total running time in the past week / month
-	public void updateRunningTime() {
+	public void updateRunningTime(int selfId) {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.RUNNING_TIME_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -591,18 +591,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"sum(" + Tracks.DURATION + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.RUNNING_TIME_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
 	}
 	
 	// Updates number of runs in the past week / month
-	public void updateNumRuns() {
+	public void updateNumRuns(int selfId) {
 		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
 		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.NUM_RUNS_WEEK_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -610,7 +610,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
 		cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
 				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
-				Tracks.USER_ID + "=" + 0, null, null, null, null);
+				Tracks.USER_ID + "=" + selfId, null, null, null, null);
 		if (cursor.getCount() > 0 && cursor.moveToFirst())
 			setStatistic(Stats.NUM_RUNS_MONTH_ID, 0, cursor.getDouble(0));
 		cursor.close();
@@ -620,17 +620,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID, 0);
 		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_ID, 0, totalDist / totalTime);
+			setStatistic(Stats.AVG_SPEED_ID, 0, 
+					totalDist / totalTime * Constants.SPEED_CONVERSION_RATIO);
 		
 		double totalDistWeek = getStatisticReal(Stats.DISTANCE_RAN_WEEK_ID, 0);
 		double totalTimeWeek = getStatisticReal(Stats.RUNNING_TIME_WEEK_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_WEEK_ID, 0, totalDistWeek / totalTimeWeek);
+			setStatistic(Stats.AVG_SPEED_WEEK_ID, 0, 
+					totalDistWeek / totalTimeWeek * Constants.SPEED_CONVERSION_RATIO);
 		
 		double totalDistMonth = getStatisticReal(Stats.DISTANCE_RAN_MONTH_ID, 0);
 		double totalTimeMonth = getStatisticReal(Stats.RUNNING_TIME_MONTH_ID, 0);
 		if (totalTime != 0)
-			setStatistic(Stats.AVG_SPEED_MONTH_ID, 0, totalDistMonth / totalTimeMonth);
+			setStatistic(Stats.AVG_SPEED_MONTH_ID, 0, 
+					totalDistMonth / totalTimeMonth * Constants.SPEED_CONVERSION_RATIO);
 	}
 	/*
 	public void updateMedDuration() {
@@ -734,12 +737,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
 		 * OR (statistics.value < achievements.condition AND achievements.completed = 1))
 		 * UNION
-		 * SELECT achievements._id, achievements.completed FROM achievements, statistics
-		 * WHERE achievements.statistic_id=statistics.statistic_id
-		 * AND statistics.group_id>0
-		 * AND achievements.is_group=1;
-		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
-		 * OR (statistics.value < achievements.condition AND achievements.completed = 1))
+		 * SELECT achievements._id, achievements.completed FROM achievements LEFT JOIN 
+		 * (SELECT statistic_id, max(value) as max_value FROM statistics 
+		 * WHERE group_id>0 GROUP BY statistic_id) group_stats 
+		 * ON achievements.statistic_id=group_stats.statistic_id WHERE achievements.is_group=1 
+		 * AND ((group_stats.max_value >= achievements.condition AND achievements.completed = 0)
+		 * OR (group_stats.max_value < achievements.condition AND achievements.completed = 1))
 		 */
 		
 		String selectClause = Achievements.TABLE + "." + Achievements._ID + "," +
@@ -756,34 +759,35 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			Stats.TABLE + "." + Stats.VALUE + "<" + 
 			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
-		String whereClause2 = 
-			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
-			Stats.TABLE + "." + Stats.STATISTIC_ID + " AND " +
-			Stats.TABLE + "." + Stats.GROUP_ID + ">0 AND " +
-			Achievements.TABLE + "." + Achievements.IS_GROUP + "=1 AND" +
-			"((" + Stats.TABLE + "." + Stats.VALUE + ">=" + 
-			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+		
+		String innerQuery = "SELECT " + Stats.STATISTIC_ID + 
+			", max(" + Stats.VALUE + ") as max_value FROM " + Stats.TABLE + " WHERE " +
+			Stats.GROUP_ID + ">0 GROUP BY " + Stats.STATISTIC_ID;
+		String tables2 = Achievements.TABLE + " LEFT JOIN (" + innerQuery + ") group_stats";
+		String joinCondition = Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
+			"group_stats." + Stats.STATISTIC_ID;
+		String whereClause2 = Achievements.TABLE + "." + Achievements.IS_GROUP + "=1 AND" +
+			"((group_stats.max_value>=" + Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=0" + ") OR (" +
-			Stats.TABLE + "." + Stats.VALUE + "<" + 
-			Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
+			"group_stats.max_value<" + Achievements.TABLE + "." + Achievements.CONDITION + " AND " +
 			Achievements.TABLE + "." + Achievements.COMPLETED + "=1" + "))";
 		
 		cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + tables + " WHERE " + 
 				whereClause1 + " UNION SELECT " + selectClause + " FROM " +
-				tables + " WHERE " + whereClause2, null);
+				tables2 + " ON " + joinCondition + " WHERE " + whereClause2, null);
 		
 		/**
 		 * UPDATE achievements SET completed=1, updated_at=current_time WHERE
-		 * _id = 1 OR _id...
+		 * _id in (1,2...)
 		 */
 		int i = 0;
 		String updateEarnedWhereClause = "";
 		while (cursor.moveToNext()) {
 			if (cursor.getInt(1) == 1) continue;
 			if (i == 0)
-				updateEarnedWhereClause += Achievements._ID + "=" + cursor.getString(0);
+				updateEarnedWhereClause += cursor.getString(0);
 			else
-				updateEarnedWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
+				updateEarnedWhereClause += "," + cursor.getString(0);
 			i++;
 		}
 		
@@ -792,12 +796,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 1);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
-			mDb.update(Achievements.TABLE, updateValues, updateEarnedWhereClause, null);
+			int result = mDb.update(Achievements.TABLE, updateValues, 
+					Achievements._ID + " IN (" + updateEarnedWhereClause + ")", null);
+			Log.d(TAG, "num rows updated from updateEarned = " + result);
 		}
 		
 		/**
 		 * UPDATE achievements SET completed=0, updated_at=current_time WHERE
-		 * _id = 1 OR _id...
+		 * _id in (1,2...)
 		 */
 		cursor.moveToPosition(-1);
 		i = 0;
@@ -805,9 +811,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		while (cursor.moveToNext()) {
 			if (cursor.getInt(1) == 0) continue;
 			if (i == 0)
-				updateLostWhereClause += Achievements._ID + "=" + cursor.getString(0);
+				updateLostWhereClause += cursor.getString(0);
 			else
-				updateLostWhereClause += " OR " + Achievements._ID + "=" + cursor.getString(0);
+				updateLostWhereClause += "," + cursor.getString(0);
 			i++;
 		}
 		
@@ -816,7 +822,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 0);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
-			mDb.update(Achievements.TABLE, updateValues, updateLostWhereClause, null);
+			int result = mDb.update(Achievements.TABLE, updateValues, 
+					Achievements._ID + " IN (" + updateLostWhereClause + ")", null);
+			Log.d(TAG, "num rows updated from updateLost = " + result);
 		}
 		
 		Log.d(TAG, "dumping new achievements");
@@ -827,7 +835,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	private Cursor getRecentAchievements(int conditionVal) {
 		long timeThreshold = System.currentTimeMillis() - Achievements.RECENT_INTERVAL;
-		Cursor cursor = mDb.query(Achievements.TABLE, new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, Achievements.COLUMNS, 
 				Achievements.UPDATED_AT + ">=" + timeThreshold + " AND " + Achievements.COMPLETED + "=" + conditionVal, null, null, null, Achievements.UPDATED_AT + " desc");
 		
 		return cursor;
@@ -842,16 +850,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getAchievementsInCat(int cat, int bitmask) {
-		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY, Achievements.ICON_RESOURCE}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, Achievements.COLUMNS, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
 		
 		return cursor;
 	}
 	
 	public int getAchievementCountForCat(int cat, int bitmask) {
-		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, Achievements.COLUMNS, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat, null, null, null, null);
 		
 		int count = cursor.getCount();
@@ -861,8 +867,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public int getCompletedAchievementCountForCat(int cat, int bitmask) {
-		Cursor cursor = mDb.query(Achievements.TABLE, 
-				new String[] {Achievements._ID, Achievements.IS_GROUP, Achievements.COMPLETED, Achievements.CATEGORY}, 
+		Cursor cursor = mDb.query(Achievements.TABLE, Achievements.COLUMNS, 
 				Achievements.CATEGORY + "&" + bitmask + "=" + cat + " AND " + Achievements.COMPLETED + "=1", null, null, null, null);
 		
 		int count = cursor.getCount();
@@ -909,7 +914,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * SELECT groups._id, groups.group_id, groups.name, ifnull(subtotal.count,0) 
 		 * FROM groups LEFT JOIN 
 		 * (SELECT groups.*, count(groups_users._id) AS count FROM groups, groups_users 
-		 * WHERE groups._id=groups_users.group_id) subtotal ON groups._id=subtotal._id;		
+		 * WHERE groups.group_id=groups_users.group_id GROUP BY groups.group_id) subtotal ON groups.group_id=subtotal.group_id;		
 		 */
 		
 		String selectClause = 
@@ -917,13 +922,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			Groups.TABLE + "." + Groups.GROUP_ID + ", " + 
 			Groups.TABLE + "." + Groups.NAME + ", " + 
 			"ifnull(subtotal.count,0)";
-		String outerCondition = Groups.TABLE + "." + Groups._ID + "=subtotal._id";
+		String outerCondition = Groups.TABLE + "." + Groups.GROUP_ID + "=subtotal.group_id";
 		
-		String innerSelectClause = Groups.TABLE + 
-			".*, count(" + GroupsUsers.TABLE + "." + GroupsUsers._ID + ") AS count";
+		String innerSelectClause = Groups.TABLE + ".*, count(" + 
+			GroupsUsers.TABLE + "." + GroupsUsers._ID + ") AS count";
 		String innerTables = Groups.TABLE + ", " + GroupsUsers.TABLE;
 		String innerWhereClause = Groups.TABLE + "." + Groups.GROUP_ID + "=" + 
-			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID;
+			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + " GROUP BY " +
+			Groups.TABLE + "." + Groups.GROUP_ID;
 		String innerQuery = "SELECT " + innerSelectClause + " FROM " + innerTables + 
 			" WHERE " + innerWhereClause;
 		
@@ -949,7 +955,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public Cursor getUsersForGroup(long groupId) {
 		/**
-		 * SELECT users.* FROM users, groups_users WHERE users._id=groups_users.user_id
+		 * SELECT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
 		 * AND groups_users.group_id=groupId
 		 */
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
@@ -1014,7 +1020,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	public Cursor getAllUsersExcludingGroup(long groupId, int selfId) {
-		//TODO: exclude self
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
 		 * AND users.user_id NOT IN 
@@ -1080,6 +1085,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				for (int j = 0; j < users.length; j++)
 					userIds[j] = users[j].id;
 				addUsersToGroup(groups[i].id, userIds);
+				addUsers(groups[i].users);
 			}
 			mDb.setTransactionSuccessful();
 		} finally {

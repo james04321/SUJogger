@@ -36,6 +36,8 @@ public class Constants
    public static final String TMPICTUREFILE_PATH = EXTERNAL_DIR+"media_tmp";
    public static final Uri NAME_URI = Uri.parse( "content://" + GPStracking.AUTHORITY+".string" );
    
+   public static final int SPEED_CONVERSION_RATIO = 3600000; //ms in 1hr
+   
    //Facebook integration
    public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
    public static final String FB_APP_ID = "127241693959042";
