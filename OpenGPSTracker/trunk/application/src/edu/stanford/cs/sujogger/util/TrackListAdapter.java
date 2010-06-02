@@ -11,7 +11,7 @@ import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
 
 public class TrackListAdapter extends CursorAdapter {
-
+	
 	public TrackListAdapter(Context context, Cursor c) {
 		super(context, c);
 		// TODO Auto-generated constructor stub

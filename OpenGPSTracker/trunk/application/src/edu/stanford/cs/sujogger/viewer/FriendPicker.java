@@ -124,6 +124,7 @@ public class FriendPicker extends ListActivity {
 		});
 		
 		fillData();
+		updateButtons(mUserAdapter.getNumChecked());
 		
 		mUserWaitDialog = ProgressDialog.show(this, "", "Retrieving friends...", true);
 		try {
@@ -168,6 +169,10 @@ public class FriendPicker extends ListActivity {
 		int numChecked = mUserAdapter.toggleItemAtPosition(position);
 		Log.d(TAG, "onListItemClicked(): numChecked = " + numChecked);
 		
+		updateButtons(numChecked);
+	}
+	
+	private void updateButtons(int numChecked) {
 		if (numChecked > 0) {
 			clearButton.setEnabled(true);
 			if (numChecked == 1)

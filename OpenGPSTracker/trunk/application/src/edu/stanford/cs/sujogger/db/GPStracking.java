@@ -271,6 +271,7 @@ public final class GPStracking
 		public static final String SUBJECT = "subject";
 		public static final String BODY = "body";
 		public static final String IS_BCAST = "is_bcast";
+		public static final String DID_START = "did_start";
 		
 		static final String FROM_USER_TYPE = "INTEGER NOT NULL";
 		static final String TYPE_TYPE = "INTEGER NOT NULL";
@@ -280,6 +281,7 @@ public final class GPStracking
 		static final String SUBJECT_TYPE = "TEXT NOT NULL";
 		static final String BODY_TYPE = "TEXT";
 		static final String IS_BCAST_TYPE = "INTEGER NOT NULL DEFAULT 0";
+		static final String DID_START_TYPE = "INTEGER NOT NULL DEFAULT 0";
 		static final String _ID_TYPE = "INTEGER PRIMARY KEY AUTOINCREMENT";
 		
 		public static final String TABLE = "game_messages";

@@ -1001,6 +1001,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					newUser.fb_id = userCursor.getInt(2);
 					newUser.first_name = userCursor.getString(3);
 					newUser.last_name = userCursor.getString(4);
+					newUser.fb_photo = userCursor.getString(5);
 					users[pos] = newUser;
 					pos++;
 				}
@@ -1211,6 +1212,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				mDb.endTransaction();
 			}
 		}
+	}
+	
+	//Sets the did_start attribute to 1 for a specific message
+	public boolean setMessageToStarted(long msgId) {
+		ContentValues values = new ContentValues();
+		values.put(GameMessages.DID_START, 1);
+		return mDb.update(GameMessages.TABLE, values, GameMessages._ID + "=" + msgId, null) == 1;
 	}
 	
 	public boolean addUser(User user) {
