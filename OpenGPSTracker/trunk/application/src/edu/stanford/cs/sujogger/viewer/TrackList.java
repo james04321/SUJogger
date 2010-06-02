@@ -586,10 +586,23 @@ public class TrackList extends ListActivity
    }
    
    private long getTrackIdFromRowPosition(long pos) {
-	   pos = pos - (actions.size() + 1);
-	   Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
-	   pos = tracksCursor.getCount() - pos + 1;
-	   return pos;
+	   
+	   
+	  String whereClause = null;
+ 	  whereClause = "user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id;
+ 	  Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+      Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, 
+    		  new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, 
+    		  Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, 
+    		  whereClause, null, null );
+      pos = pos - (actions.size() + 2);
+      Log.d(TAG, "pos = " + pos);
+	   //Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
+	  // pos = tracksCursor.getCount() - pos + 1;
+      tracksCursor.moveToPosition((int)pos);
+	   long trackId = tracksCursor.getLong(0);
+	   Log.d(TAG, "name = " + tracksCursor.getString(1));
+	   return trackId;
    }
    
    private Cursor doSearchWithIntent( final Intent queryIntent )
