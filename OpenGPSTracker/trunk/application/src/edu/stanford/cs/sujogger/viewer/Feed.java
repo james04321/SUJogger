@@ -7,9 +7,13 @@ import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -41,11 +45,13 @@ public class Feed extends ListActivity {
 	private Cursor mMessages;
 	private int mFilterMode;
 	private GameMessageAdapter mAdapter;
+	private SharedPreferences mSharedPreferences;
 	
 	private GamingServiceConnection mGameCon;
 	private FeedReceiver mReceiver;
 	
-	
+	//Request IDs
+	private static final int GET_MSG_RID = 1;
 	
 	//Views
 	private RadioGroup mFilterOptions;
@@ -53,6 +59,7 @@ public class Feed extends ListActivity {
 	//Options menu items
 	private static final int MENU_FILTER = 0;
 	private static final int MENU_COMPOSE = 1;
+	private static final int MENU_REFRESH = 2;
 	
 	//Dialogs
 	private static final int DIALOG_FILTER = 1;
@@ -91,6 +98,8 @@ public class Feed extends ListActivity {
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 		mMessages = null;
+		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		mReceiver = new FeedReceiver(); 
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
@@ -164,6 +173,8 @@ public class Feed extends ListActivity {
 			.setIcon(R.drawable.ic_menu_agenda);
 		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose)
 			.setIcon(R.drawable.ic_menu_compose);
+		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
+		.setIcon(R.drawable.ic_menu_refresh);
 		return result;
 	}
 	
@@ -180,6 +191,10 @@ public class Feed extends ListActivity {
 			Intent i = new Intent(this, MessageSender.class);
 			startActivity(i);
 			handled = true;
+			break;
+		case MENU_REFRESH:
+			Log.d(TAG, "refreshing...");
+			refresh();
 			break;
 		default:
 			handled = super.onOptionsItemSelected(item);
@@ -234,7 +249,13 @@ public class Feed extends ListActivity {
 	}
 	
 	private void refresh() {
-		
+		int lastConciergeId = mSharedPreferences.getInt(
+				Constants.LAST_CONCIERGE_ID_KEY, 1);
+		Log.d(TAG, "lastConciergeId = " + lastConciergeId);
+		int limit = lastConciergeId == 1 ? 10 : -1;
+		try {
+			mGameCon.getMessages(GET_MSG_RID, lastConciergeId, limit);
+		} catch (RemoteException e) {}
 	}
 	
 	private void fillData() {
@@ -253,6 +274,13 @@ public class Feed extends ListActivity {
 					switch(appResponse.request_id) {
 					case MessageSender.MSG_SEND_RID:
 						Message msg = (Message)appResponse.object;
+						
+						int lastConciergeId = appResponse.last_concierge_id;
+						Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
+						Editor editor = mSharedPreferences.edit();
+						editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
+						editor.commit();
+						
 						User fromUser = msg.fromUser;
 						Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
 						Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);

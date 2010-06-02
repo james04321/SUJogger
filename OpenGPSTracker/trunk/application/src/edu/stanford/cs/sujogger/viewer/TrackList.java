@@ -116,9 +116,11 @@ public class TrackList extends ListActivity
    public static final int PUBLISH_TRACK=100;
    public static final int DOWNLOAD_TRACK=101;
    
+   //Request IDs
    public static final int CREATE_SB_RID = 1;
    public static final int GET_SBS_RID = 2;
    public static final int USERREG_RID = 3;
+   public static final int GET_CG_RID = 4;
    
    private SharedPreferences mSharedPreferences;
    private ProgressDialog mDialogFriendInit;
@@ -584,10 +586,23 @@ public class TrackList extends ListActivity
    }
    
    private long getTrackIdFromRowPosition(long pos) {
-	   pos = pos - (actions.size() + 1);
-	   Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
-	   pos = tracksCursor.getCount() - pos + 1;
-	   return pos;
+	   
+	   
+	  String whereClause = null;
+ 	  whereClause = "user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id;
+ 	  Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+      Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, 
+    		  new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, 
+    		  Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, 
+    		  whereClause, null, null );
+      pos = pos - (actions.size() + 2);
+      Log.d(TAG, "pos = " + pos);
+	   //Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
+	  // pos = tracksCursor.getCount() - pos + 1;
+      tracksCursor.moveToPosition((int)pos);
+	   long trackId = tracksCursor.getLong(0);
+	   Log.d(TAG, "name = " + tracksCursor.getString(1));
+	   return trackId;
    }
    
    private Cursor doSearchWithIntent( final Intent queryIntent )

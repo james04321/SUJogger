@@ -1,6 +1,6 @@
 /*
  * This file is auto-generated.  DO NOT MODIFY.
- * Original file: /Volumes/Data/aslai/dev/cs294s/SUJogger/OpenGPSTracker/trunk/application/src/edu/stanford/cs/sujogger/logger/IGPSLoggerServiceRemote.aidl
+ * Original file: /Users/james04321/android_dev/SUJogger/OpenGPSTracker/trunk/application/src/edu/stanford/cs/sujogger/logger/IGPSLoggerServiceRemote.aidl
  */
 package edu.stanford.cs.sujogger.logger;
 public interface IGPSLoggerServiceRemote extends android.os.IInterface

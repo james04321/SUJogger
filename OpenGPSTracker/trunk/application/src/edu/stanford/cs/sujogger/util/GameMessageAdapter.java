@@ -64,9 +64,9 @@ public class GameMessageAdapter extends CursorAdapter {
 		int type = cursor.getInt(2);
 		long sendTime = cursor.getLong(3);
 		String subject = cursor.getString(6);
-		String firstName = cursor.getString(12);
-		String lastName = cursor.getString(13);
-		String imgUrl = cursor.getString(14);
+		String firstName = cursor.getString(13);
+		String lastName = cursor.getString(14);
+		String imgUrl = cursor.getString(15);
 		
 		if (type == GameMessages.TYPE_INVITE)
 			view.setBackgroundColor(Color.rgb(0, 40, 0));

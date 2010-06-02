@@ -8,7 +8,7 @@
     <string name="service_gpsenabled">GPS is enabled, commencing logging.</string>
     
     <string name="dialog_tracking_title">Tracking control</string>
-	<string name="dialog_routename_title">Track Name (Optional)</string>
+	<string name="dialog_routename_title">Track Name</string>
     <string name="dialog_routename_message">Please enter the name of the track</string>
     <string name="dialog_notrack_title">No track is selected</string>
     <string name="dialog_notrack_message">Please select a track first before exporting</string>

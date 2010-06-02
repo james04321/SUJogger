@@ -482,6 +482,8 @@ public class GPStrackingProvider extends ContentProvider {
 				args.put(Tracks.TRACK_ID, givenValues.getAsString(Tracks.TRACK_ID));
 			if (givenValues.getAsString(Tracks.USER_ID) != null)
 				args.put(Tracks.USER_ID, givenValues.getAsString(Tracks.USER_ID));
+			if (givenValues.getAsString(Tracks.IS_PARTNER) != null)
+				args.put(Tracks.IS_PARTNER, givenValues.getAsString(Tracks.IS_PARTNER));
 			notifyUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
 			break;
 		default:

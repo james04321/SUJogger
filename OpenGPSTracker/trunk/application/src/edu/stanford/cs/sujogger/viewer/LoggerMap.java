@@ -142,6 +142,7 @@ public class LoggerMap extends MapActivity {
 	private static final int DIALOG_TEXT = 32;
 	private static final int DIALOG_NAME = 33;
 	private static final String TAG = "OGT.LoggerMap";
+	public static final String PARTNER_RUN_KEY = "partner_run";
 	private MapView mMapView = null;
 	private MyLocationOverlay mMylocation;
 	private CheckBox mSatellite;
@@ -168,6 +169,7 @@ public class LoggerMap extends MapActivity {
 	private SharedPreferences mSharedPreferences;
 //	private GPSLoggerServiceManager GPSLoggerServiceManager;
 	private DatabaseHelper mDbHelper;
+	private boolean mIsPartnerRun;
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
@@ -323,6 +325,7 @@ public class LoggerMap extends MapActivity {
 		public void onClick(DialogInterface dialog, int which) {
 			String trackName = mTrackNameView.getText().toString();
 			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
+			
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
 			values.put(Tracks.USER_ID, Common.getRegisteredUser(LoggerMap.this).id);
@@ -554,7 +557,10 @@ public class LoggerMap extends MapActivity {
 				(TextView) findViewById(R.id.speedview00) };
 		mSpeedtexts = speeds;
 		mLastGPSSpeedView = (TextView) findViewById(R.id.currentSpeed);
-
+		
+		Bundle extras = getIntent().getExtras();
+		mIsPartnerRun = extras != null ? extras.getBoolean(PARTNER_RUN_KEY) : false;
+		
 		onRestoreInstanceState(load);
 	}
 
@@ -676,6 +682,9 @@ public class LoggerMap extends MapActivity {
 			Log.d(TAG, "Moving to last track ");
 			moveToLastTrack(); // 3rd just try the last track
 		}
+		
+		if (load != null && load.containsKey(PARTNER_RUN_KEY))
+			mIsPartnerRun = load.getBoolean(PARTNER_RUN_KEY);
 
 		if (load != null && load.containsKey("zoom")) {
 			this.mMapController.setZoom(load.getInt("zoom"));
@@ -692,7 +701,8 @@ public class LoggerMap extends MapActivity {
 			GeoPoint lastPoint = getLastTrackPoint();
 			this.mMapView.getController().animateTo(lastPoint);
 		}
-		redrawOverlays();		
+		redrawOverlays();
+		Log.d(TAG, "onRestoreInstanceState(): mIsPartnerRun = " + mIsPartnerRun);
 	}
 
 	@Override
@@ -705,6 +715,7 @@ public class LoggerMap extends MapActivity {
 		GeoPoint point = this.mMapView.getMapCenter();
 		save.putInt("e6lat", point.getLatitudeE6());
 		save.putInt("e6long", point.getLongitudeE6());
+		save.putBoolean(PARTNER_RUN_KEY, mIsPartnerRun);
 	}
 
 	/*
@@ -1815,6 +1826,8 @@ public class LoggerMap extends MapActivity {
 		ContentValues values = new ContentValues();
 		values.put(Tracks.DURATION, new Long(duration));
 		values.put(Tracks.DISTANCE, new Double(distanceTraveled));
+		if (mIsPartnerRun)
+			values.put(Tracks.IS_PARTNER, 1);
 		Log.d(TAG, "calculateTrackStatistics(): duration = " + duration
 				+ "; distanceTraveled = " + distanceTraveled);
 		resolver.update(trackUri, values, null, null);
@@ -1833,6 +1846,10 @@ public class LoggerMap extends MapActivity {
 			mDbHelper.updateRunningTime(selfId);
 		}
 		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
+		if (mIsPartnerRun) {
+			mDbHelper.increaseStatisticByOne(Stats.NUM_PARTNER_RUNS_ID, -1);
+			mDbHelper.updateNumPartnerRuns(selfId);
+		}
 		mDbHelper.updateNumRuns(selfId);
 		mDbHelper.updateAvgSpeed();
 		//mDbHelper.updateMedDuration();
