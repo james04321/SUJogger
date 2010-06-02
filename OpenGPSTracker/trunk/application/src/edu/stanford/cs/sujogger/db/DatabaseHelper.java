@@ -730,14 +730,14 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		Cursor cursor = null;
 		
 		/**
-		 * SELECT achievements._id, achievements.completed FROM achievements, statistics 
+		 * SELECT achievements.* FROM achievements, statistics 
 		 * WHERE achievements.statistic_id=statistics.statistic_id
 		 * AND statistics.group_id=0
 		 * AND achievements.is_group=0;
 		 * AND ((statistics.value >= achievements.condition AND achievements.completed = 0)
 		 * OR (statistics.value < achievements.condition AND achievements.completed = 1))
 		 * UNION
-		 * SELECT achievements._id, achievements.completed FROM achievements LEFT JOIN 
+		 * SELECT achievements.* FROM achievements LEFT JOIN 
 		 * (SELECT statistic_id, max(value) as max_value FROM statistics 
 		 * WHERE group_id>0 GROUP BY statistic_id) group_stats 
 		 * ON achievements.statistic_id=group_stats.statistic_id WHERE achievements.is_group=1 
@@ -745,8 +745,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * OR (group_stats.max_value < achievements.condition AND achievements.completed = 1))
 		 */
 		
-		String selectClause = Achievements.TABLE + "." + Achievements._ID + "," +
-			Achievements.TABLE + "." + Achievements.COMPLETED;
+		String selectClause = Achievements.TABLE + ".*";
 		String tables = Achievements.TABLE + ", " + Stats.TABLE;
 		String whereClause1 = 
 			Achievements.TABLE + "." + Achievements.STATISTIC_ID + "=" + 
@@ -783,7 +782,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		int i = 0;
 		String updateEarnedWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 1) continue;
+			if (cursor.getInt(4) == 1) continue;
 			if (i == 0)
 				updateEarnedWhereClause += cursor.getString(0);
 			else
@@ -809,7 +808,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		i = 0;
 		String updateLostWhereClause = "";
 		while (cursor.moveToNext()) {
-			if (cursor.getInt(1) == 0) continue;
+			if (cursor.getInt(4) == 0) continue;
 			if (i == 0)
 				updateLostWhereClause += cursor.getString(0);
 			else

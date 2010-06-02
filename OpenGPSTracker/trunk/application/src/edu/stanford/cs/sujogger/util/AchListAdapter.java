@@ -32,6 +32,11 @@ public class AchListAdapter extends CursorAdapter {
 		achTitle.setText(cursor.getString(8));
 		if (completed == 0)
 			achTitle.setTextColor(Color.GRAY);
+		else
+			achTitle.setTextColor(Color.WHITE);
+		
+		TextView achDescription = (TextView)view.findViewById(R.id.ach_list_item_description);
+		achDescription.setText(cursor.getString(9));
 		
 		ImageView achIcon = (ImageView)view.findViewById(R.id.ach_list_item_image);
 		achIcon.setImageResource(cursor.getInt(7));

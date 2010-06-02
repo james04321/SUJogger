@@ -209,8 +209,9 @@ public class AchievementCatList extends ListActivity {
 								newAchCursor.moveToNext();
 								View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
 										(ViewGroup) findViewById(R.id.toast_layout_root));
-								Common.displayAchievementToast(newAchCursor.getString(8), newAchCursor
-										.getInt(1) == 0, getApplicationContext(), toastLayout);
+								Common.displayAchievementToast(newAchCursor.getString(8), 
+										newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
+										getApplicationContext(), toastLayout);
 							}
 							mGetScoresDialog.dismiss();
 							newAchCursor.close();

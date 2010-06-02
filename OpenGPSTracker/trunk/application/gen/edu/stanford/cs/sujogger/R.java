@@ -150,8 +150,8 @@ public final class R {
     public static final class id {
         public static final int LinearLayout01=0x7f090002;
         public static final int TableRow01=0x7f090058;
-        public static final int ach_list_item_image=0x7f090004;
-        public static final int ach_list_item_root=0x7f090003;
+        public static final int ach_list_item_description=0x7f090004;
+        public static final int ach_list_item_image=0x7f090003;
         public static final int ach_list_item_title=0x7f090005;
         public static final int achievementcat_fraction=0x7f09000a;
         public static final int achievementcat_name=0x7f090009;
