@@ -102,7 +102,7 @@ public class ExportGPX extends Activity
    {
       Builder builder;
       switch (id)
-      {
+      { 
          case DIALOG_FILENAME:
             LayoutInflater factory = LayoutInflater.from( this );
             View view = factory.inflate( R.layout.filenamedialog, null );
