@@ -202,8 +202,11 @@ private ProgressDialog mProgressDialog;
             LayoutInflater factory = LayoutInflater.from( this );
             View view = factory.inflate( R.layout.filenamedialog, null );
             EditText editText = (EditText) view.findViewById(R.id.fileNameField);
+            if (this.getIntent() != null && this.getIntent().getExtras() != null) {
             Log.d(TAG, "FILENAME IS " + this.getIntent().getExtras().getString("name"));
             editText.setText(this.getIntent().getExtras().getString("name"));
+            } else 
+            	Log.d(TAG, "NO INTENT IN ONCREATEDIALOG");
             mFileNameView = (EditText) view.findViewById( R.id.fileNameField );
             builder = new AlertDialog.Builder( this )
                .setTitle( R.string.dialog_track_title )

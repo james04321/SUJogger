@@ -880,7 +880,7 @@ public class LoggerMap extends MapActivity {
 			startActivity(i);
 			handled = true;
 			break;
-		case MENU_CLEARTRACK:
+		case MENU_CLEARTRACK: 
 			clearOverlays();
 			handled = true;
 			break;			
@@ -916,6 +916,8 @@ public class LoggerMap extends MapActivity {
 			trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
 			actionIntent.setDataAndType(trackUri, Tracks.CONTENT_ITEM_TYPE);
 			actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+			actionIntent.putExtra("name", this.getTitle());
+			Log.d(TAG, "MENU_TRACKLIST " + this.getTitle());
 			startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
 			handled = true;
 			break;
@@ -1542,6 +1544,9 @@ public class LoggerMap extends MapActivity {
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
 		editor.commit();
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		overlays.clear(); 
+		overlays.add(mMylocation);
 	}
 	/**
 	 * Alter this to set a new track as current.
