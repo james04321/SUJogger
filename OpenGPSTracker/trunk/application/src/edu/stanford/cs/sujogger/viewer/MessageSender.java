@@ -321,6 +321,7 @@ public class MessageSender extends Activity {
 	}
 	
 	private void updateRecipients() {
+		Log.d(TAG, "updateRecipients()");
 		if (mGroupId == 0 && mUsers == null) {
 			if (mMessageType == GameMessages.TYPE_GENERIC)
 				msgRecipientText.setText("To: All");
