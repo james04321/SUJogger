@@ -196,33 +196,36 @@ public class AchievementCatList extends ListActivity {
 
 					switch (appResponse.request_id) {
 					case GET_GRP_SBS_RID:
-						ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
-						if (scores != null) {
-							mDbHelper.updateScoreboards(scores);
-							Cursor newAchCursor = mDbHelper.updateAchievements();
-							if (newAchCursor.getCount() > 0) {
-								mRecAchEarned.requery();
-								mRecAchLost.requery();
-								mGroupedAdapter.notifyDataSetChanged();
-								AchievementCatList.this.getListView().invalidateViews();
-
-								newAchCursor.moveToNext();
-								View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
-										(ViewGroup) findViewById(R.id.toast_layout_root));
-								Common.displayAchievementToast(newAchCursor.getString(8), 
-										newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
-										getApplicationContext(), toastLayout);
+						final ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
+						AchievementCatList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores != null) {
+									mDbHelper.updateScoreboards(scores);
+									Cursor newAchCursor = mDbHelper.updateAchievements();
+									if (newAchCursor.getCount() > 0) {
+										mRecAchEarned.requery();
+										mRecAchLost.requery();
+										mGroupedAdapter.notifyDataSetChanged();
+										AchievementCatList.this.getListView().invalidateViews();
+	
+										newAchCursor.moveToNext();
+										View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
+												(ViewGroup) findViewById(R.id.toast_layout_root));
+										Common.displayAchievementToast(newAchCursor.getString(8), 
+												newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
+												getApplicationContext(), toastLayout);
+									}
+									mGetScoresDialog.dismiss();
+									newAchCursor.close();
+								}
 							}
-							mGetScoresDialog.dismiss();
-							newAchCursor.close();
-						}
+						});
 						break;
 					default:
 						break;
 					}
 				}
-			}
-			catch (Exception e) {
+			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}

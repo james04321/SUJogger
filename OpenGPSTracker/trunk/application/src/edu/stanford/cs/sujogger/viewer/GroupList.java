@@ -294,26 +294,30 @@ public class GroupList extends ListActivity {
 					ScoreBoard[] scores;
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:
-						Group[] groups = (Group[]) (appResponse.object);
-						if (groups != null) {
-							ArrayList<Group> newGroups = mDbHelper.updateGroups(groups);
-							if (newGroups != null && newGroups.size() > 0) {
-								GroupList.this.mGroupsCursor.requery();
-								GroupList.this.mGroupAdapter.notifyDataSetChanged();
-								GroupList.this.getListView().invalidateViews();
-								Log.d(TAG, "onReceive(): getting scoreboards for new groups");
-								try {
-									//Get ScoreBoards for each previously unseen group
-									for (int i = 0; i < newGroups.size(); i++)
-										mGameCon.getScoreBoards(SB_GET_RID, -1, newGroups.get(i).id, null, null);
-								} catch (RemoteException e) {}
+						final Group[] groups = (Group[]) (appResponse.object);
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (groups != null) {
+									ArrayList<Group> newGroups = mDbHelper.updateGroups(groups);
+									if (newGroups != null && newGroups.size() > 0) {
+										GroupList.this.mGroupsCursor.requery();
+										GroupList.this.mGroupAdapter.notifyDataSetChanged();
+										GroupList.this.getListView().invalidateViews();
+										Log.d(TAG, "onReceive(): getting scoreboards for new groups");
+										try {
+											//Get ScoreBoards for each previously unseen group
+											for (int i = 0; i < newGroups.size(); i++)
+												mGameCon.getScoreBoards(SB_GET_RID, -1, newGroups.get(i).id, null, null);
+										} catch (RemoteException e) {}
+									}
+									else
+										mRefreshDialog.dismiss();
+								}
+								else {
+									mRefreshDialog.dismiss();
+								}
 							}
-							else
-								mRefreshDialog.dismiss();
-						}
-						else {
-							mRefreshDialog.dismiss();
-						}
+						});
 						break;
 					case SB_GET_RID:
 						scores = (ScoreBoard[])appResponse.object;
