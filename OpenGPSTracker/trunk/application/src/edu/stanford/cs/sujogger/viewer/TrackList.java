@@ -116,9 +116,11 @@ public class TrackList extends ListActivity
    public static final int PUBLISH_TRACK=100;
    public static final int DOWNLOAD_TRACK=101;
    
+   //Request IDs
    public static final int CREATE_SB_RID = 1;
    public static final int GET_SBS_RID = 2;
    public static final int USERREG_RID = 3;
+   public static final int GET_CG_RID = 4;
    
    private SharedPreferences mSharedPreferences;
    private ProgressDialog mDialogFriendInit;

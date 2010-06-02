@@ -440,6 +440,7 @@ public final class GPStracking
       public static final String DISTANCE      = "distance";
       public static final String TRACK_ID      = "track_id";
       public static final String USER_ID       = "user_id";
+      public static final String IS_PARTNER    = "is_partner";
       
       static final String NAME_TYPE            = "TEXT";
       static final String CREATION_TIME_TYPE   = "INTEGER NOT NULL";
@@ -447,6 +448,7 @@ public final class GPStracking
       static final String DISTANCE_TYPE        = "REAL";
       static final String TRACK_ID_TYPE        = "INTEGER";
       static final String USER_ID_TYPE         = "INTEGER NOT NULL DEFAULT 0";
+      static final String IS_PARTNER_TYPE      = "INTEGER NOT NULL DEFAULT 0";
       static final String _ID_TYPE             = "INTEGER PRIMARY KEY AUTOINCREMENT";
    }
    

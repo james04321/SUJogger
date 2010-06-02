@@ -137,8 +137,8 @@ public class GameMessageDetail extends ListActivity {
 		Log.d(TAG, "startTrack()");
 		mDbHelper.setMessageToStarted(mMessage.getLong(0));
 		
-		Intent intent = new Intent();
-		intent.setClass( this, LoggerMap.class );
+		Intent intent = new Intent(this, LoggerMap.class);
+		intent.putExtra(LoggerMap.PARTNER_RUN_KEY, true);
 		startActivity(intent);
 	}
 	

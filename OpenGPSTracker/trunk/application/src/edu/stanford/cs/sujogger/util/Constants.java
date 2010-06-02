@@ -56,6 +56,8 @@ public class Constants
    public static final String USERREG_LASTNAME_KEY = "userreg_lastname";
    public static final String USERREG_PICTURE_KEY = "userreg_picture";
    
+   public static final String LAST_CONCIERGE_ID_KEY = "last_concierge_id";
+   
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;
    public static final String APP_API_KEY = "";
