@@ -30,9 +30,11 @@ public class GameMessageDetail extends ListActivity {
 	private int mMessageType;
 	private DatabaseHelper mDbHelper;
 	private Cursor mMessage;
+	private long[] mReplyRecipientIds;
 	private Cursor mPeople;
 	private SeparatedListAdapter mGroupAdapter;
 	private List<Map<String,?>> mActions;
+	private int mDidStart;
 
 	public GameMessageDetail() {}
 	
@@ -57,15 +59,28 @@ public class GameMessageDetail extends ListActivity {
 		startManagingCursor(mPeople);
 		
 		mMessageType = mMessage.getInt(2);
+		mDidStart = mMessage.getInt(9);
+		
+		
+		mReplyRecipientIds = new long[mPeople.getCount()-1];
+		int i = 0;
+		mPeople.moveToPosition(-1);
+		while(i < mReplyRecipientIds.length && mPeople.moveToNext()) {
+			if (mPeople.getLong(1) != Common.getRegisteredUser(this).id) {
+				mReplyRecipientIds[i] = mPeople.getLong(1);
+				i++;
+			}
+		}
+		
+		Log.d(TAG, Arrays.toString(mReplyRecipientIds));
 		
 		mPeople.moveToFirst();
-		
 		
 		mActions = new LinkedList<Map<String,?>>();
 		
 		if (!(mPeople.getCount() == 1 && mPeople.getInt(1) == Common.getRegisteredUser(this).id)) {
 			if ((mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE) &&
-					mMessage.getInt(9) == 0)
+					mDidStart == 0)
 				mActions.add(Common.createItem("Accept and start"));
 			if (mPeople.getCount() > 1)
 				mActions.add(Common.createItem("Reply all"));
@@ -112,7 +127,7 @@ public class GameMessageDetail extends ListActivity {
 		
 		if (mActions.size() > 0) {
 			if ((mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE) &&
-					mMessage.getInt(9) == 0) {
+					mDidStart == 0) {
 				if (position == 3) {
 					startTrack();
 					return;
@@ -145,20 +160,8 @@ public class GameMessageDetail extends ListActivity {
 	private void startMessageSender() {
 		Log.d(TAG, "startMessageSender()");
 		
-		long[] recipientIds = new long[mPeople.getCount()-1];
-		int i = 0;
-		mPeople.moveToPosition(-1);
-		while(i < recipientIds.length && mPeople.moveToNext()) {
-			if (mPeople.getLong(1) != Common.getRegisteredUser(this).id) {
-				recipientIds[i] = mPeople.getLong(1);
-				i++;
-			}
-		}
-		
-		Log.d(TAG, Arrays.toString(recipientIds));
-		
 		Intent intent = new Intent(this, MessageSender.class);
-		intent.putExtra(Users.TABLE, recipientIds);
+		intent.putExtra(Users.TABLE, mReplyRecipientIds);
 		if (mMessageType == GameMessages.TYPE_GENERIC)
 			intent.putExtra(GameMessages.SUBJECT, "Re: " + mMessage.getString(6));
 		startActivity(intent);

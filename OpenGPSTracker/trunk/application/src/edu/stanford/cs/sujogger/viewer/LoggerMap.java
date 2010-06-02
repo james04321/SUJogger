@@ -325,6 +325,7 @@ public class LoggerMap extends MapActivity {
 		public void onClick(DialogInterface dialog, int which) {
 			String trackName = mTrackNameView.getText().toString();
 			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
+			
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
 			values.put(Tracks.USER_ID, Common.getRegisteredUser(LoggerMap.this).id);
@@ -1845,8 +1846,10 @@ public class LoggerMap extends MapActivity {
 			mDbHelper.updateRunningTime(selfId);
 		}
 		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
-		if (mIsPartnerRun)
+		if (mIsPartnerRun) {
 			mDbHelper.increaseStatisticByOne(Stats.NUM_PARTNER_RUNS_ID, -1);
+			mDbHelper.updateNumPartnerRuns(selfId);
+		}
 		mDbHelper.updateNumRuns(selfId);
 		mDbHelper.updateAvgSpeed();
 		//mDbHelper.updateMedDuration();

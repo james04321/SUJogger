@@ -616,6 +616,27 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		cursor.close();
 	}
 	
+	// Updates number of partner runs in the past week / month
+	public void updateNumPartnerRuns(int selfId) {
+		long timeWeekThreshold = System.currentTimeMillis() - Stats.WEEK_INTERVAL;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeWeekThreshold + " AND " + 
+				Tracks.USER_ID + "=" + selfId + " AND " + Tracks.IS_PARTNER + "=" + 1, 
+				null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.NUM_PARTNER_RUNS_WEEK_ID, 0, cursor.getDouble(0));
+		cursor.close();
+		
+		long timeMonthThreshold = System.currentTimeMillis() - Stats.MONTH_INTERVAL;
+		cursor = mDb.query(Tracks.TABLE, new String[] {"count(" + Tracks._ID + ")"}, 
+				Tracks.CREATION_TIME + ">=" + timeMonthThreshold + " AND " + 
+				Tracks.USER_ID + "=" + selfId + " AND " + Tracks.IS_PARTNER + "=" + 1, 
+				null, null, null, null);
+		if (cursor.getCount() > 0 && cursor.moveToFirst())
+			setStatistic(Stats.NUM_PARTNER_RUNS_MONTH_ID, 0, cursor.getDouble(0));
+		cursor.close();
+	}
+	
 	public void updateAvgSpeed() {
 		double totalDist = getStatisticReal(Stats.DISTANCE_RAN_ID, 0);
 		double totalTime = getStatisticReal(Stats.RUNNING_TIME_ID, 0);
@@ -678,9 +699,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					Stats.STATISTIC_ID + "=" + allStats[i], null);
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	public void insertScoreboards(ScoreBoard[] scores) {
@@ -699,9 +720,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	public void updateScoreboards(ScoreBoard[] scores) {
@@ -717,9 +738,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	/**
@@ -827,7 +848,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		Log.d(TAG, "dumping new achievements");
-		DatabaseUtils.dumpCursor(cursor);
+		//DatabaseUtils.dumpCursor(cursor);
 		cursor.moveToPosition(-1);
 		return cursor;
 	}
@@ -1092,9 +1113,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM groups_users", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM groups_users", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 		
 		return newGroups;
 	}
@@ -1255,9 +1276,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM users", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM users", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	public void addFriends(User[] users) {
@@ -1270,9 +1291,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM users WHERE is_friend=1", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM users WHERE is_friend=1", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	public Cursor getAllUsers(Context context) {
@@ -1318,9 +1339,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.endTransaction();
 		}
 		
-		Cursor cursor = mDb.rawQuery("SELECT * FROM scoreboard", null);
-		DatabaseUtils.dumpCursor(cursor);
-		cursor.close();
+		//Cursor cursor = mDb.rawQuery("SELECT * FROM scoreboard", null);
+		//DatabaseUtils.dumpCursor(cursor);
+		//cursor.close();
 	}
 	
 	public Cursor getScoresWithUsers(int statisticId) {

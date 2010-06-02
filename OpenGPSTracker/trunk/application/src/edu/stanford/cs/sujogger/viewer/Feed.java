@@ -272,7 +272,7 @@ public class Feed extends ListActivity {
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
 					switch(appResponse.request_id) {
-					case GET_MSG_RID:
+					case MessageSender.MSG_SEND_RID:
 						Message msg = (Message)appResponse.object;
 						
 						int lastConciergeId = appResponse.last_concierge_id;
