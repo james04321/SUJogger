@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>LoggerMap</name>
+	<name>JoggerApp</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -35,6 +35,11 @@
 			<name>FacebookSDK</name>
 			<type>2</type>
 			<locationURI>_android_FacebookSDK/src</locationURI>
+		</link>
+		<link>
+			<name>com_facebook_android</name>
+			<type>2</type>
+			<locationURI>_android_com_facebook_android/src</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
