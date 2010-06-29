@@ -20,6 +20,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
@@ -47,6 +48,8 @@ public class Feed extends ListActivity {
 	private GameMessageAdapter mAdapter;
 	private SharedPreferences mSharedPreferences;
 	
+	private Button mComposeButton;
+	
 	private GamingServiceConnection mGameCon;
 	private FeedReceiver mReceiver;
 	
@@ -58,7 +61,6 @@ public class Feed extends ListActivity {
 	
 	//Options menu items
 	private static final int MENU_FILTER = 0;
-	private static final int MENU_COMPOSE = 1;
 	private static final int MENU_REFRESH = 2;
 	
 	//Dialogs
@@ -87,7 +89,7 @@ public class Feed extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.list_simple);
+		this.setContentView(R.layout.feed);
 		
 		mFilterMode = savedInstanceState != null ? savedInstanceState.getInt(FILTER_MODE_KEY) : -1;
 		if (mFilterMode == -1) {
@@ -106,6 +108,14 @@ public class Feed extends ListActivity {
 				Constants.APP_ID, Constants.APP_API_KEY, Feed.class.toString());
 		mGameCon.bind();
 		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		
+		mComposeButton = (Button)findViewById(R.id.composebutton);
+		mComposeButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Intent i = new Intent(Feed.this, MessageSender.class);
+				startActivity(i);
+			}
+		});
 		
 		updateFiltering();
 		fillData();
@@ -171,8 +181,6 @@ public class Feed extends ListActivity {
 		
 		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
 			.setIcon(R.drawable.ic_menu_agenda);
-		menu.add(ContextMenu.NONE, MENU_COMPOSE, ContextMenu.NONE, R.string.feed_menu_compose)
-			.setIcon(R.drawable.ic_menu_compose);
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
 		.setIcon(R.drawable.ic_menu_refresh);
 		return result;
@@ -185,11 +193,6 @@ public class Feed extends ListActivity {
 		switch (item.getItemId()) {
 		case MENU_FILTER:
 			showDialog(DIALOG_FILTER);
-			handled = true;
-			break;
-		case MENU_COMPOSE:
-			Intent i = new Intent(this, MessageSender.class);
-			startActivity(i);
 			handled = true;
 			break;
 		case MENU_REFRESH:

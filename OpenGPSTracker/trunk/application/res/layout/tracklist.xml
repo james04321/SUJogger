@@ -1,13 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-      android:layout_width="fill_parent"
-        android:layout_height="wrap_content">
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:orientation="vertical">
+    
+    <LinearLayout 
+		android:id="@+id/bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal"
+		android:padding="6dip"
+		android:background="@drawable/toolbar_bg_grey">
+		
+		<Button 
+			android:id="@+id/startbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Start a new run" 
+			android:textStyle="bold"
+			android:textColor="#FFFFFF"
+			android:background="@drawable/custom_btn_green"
+			android:layout_weight="1"/>
+	</LinearLayout>
     
     <ListView android:id="@+id/android:list"
           android:layout_width="fill_parent"
-            android:layout_height="wrap_content"/>
-    <TextView android:id="@+id/android:empty"
-          android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/no_tracks"/>
-</LinearLayout>
+          android:layout_height="fill_parent"
+          android:layout_above="@id/bottom_control_bar"/>
+</RelativeLayout>

@@ -10,20 +10,19 @@ import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
-import android.os.SystemClock;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ListView;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
-import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
@@ -33,7 +32,6 @@ import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 
 public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
-	private static final int MENU_LEADERBOARD = 0;
 	private static final int MENU_REFRESH = 1;
 
 	// Request IDs
@@ -45,6 +43,8 @@ public class AchievementCatList extends ListActivity {
 	private Handler mHandler = new Handler();
 
 	private ProgressDialog mGetScoresDialog;
+	private Button mStatisticsButton;
+	private Button mLeaderboardsButton;
 
 	private Cursor mRecAchEarned;
 	private Cursor mRecAchLost;
@@ -66,7 +66,7 @@ public class AchievementCatList extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.list_simple);
+		this.setContentView(R.layout.ach_list);
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
@@ -81,7 +81,25 @@ public class AchievementCatList extends ListActivity {
 		startManagingCursor(mRecAchEarned);
 		mRecAchLost = mDbHelper.getRecentAchievementsLost();
 		startManagingCursor(mRecAchLost);
-
+		
+		mStatisticsButton = (Button)findViewById(R.id.statisticsbutton);
+		mStatisticsButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Intent intent = new Intent();
+				intent.setClass(AchievementCatList.this, StatisticsView.class);
+				intent.putExtra("group_id", -1);
+				startActivity(intent);
+			}
+		});
+		
+		mLeaderboardsButton = (Button)findViewById(R.id.leaderboardsbutton);
+		mLeaderboardsButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Intent i = new Intent(AchievementCatList.this, LeaderBoard.class);
+				startActivity(i);
+			}
+		});
+		
 		fillData();
 		registerForContextMenu(getListView());
 		
@@ -144,9 +162,7 @@ public class AchievementCatList extends ListActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
-
-		menu.add(ContextMenu.NONE, MENU_LEADERBOARD, ContextMenu.NONE, R.string.lb_option).setIcon(
-				R.drawable.ic_menu_sort_by_size);
+		
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh).setIcon(
 				R.drawable.ic_menu_refresh);
 		return result;
@@ -157,11 +173,6 @@ public class AchievementCatList extends ListActivity {
 		boolean handled = false;
 
 		switch (item.getItemId()) {
-		case MENU_LEADERBOARD:
-			Intent i = new Intent(this, LeaderBoard.class);
-			startActivity(i);
-			handled = true;
-			break;
 		case MENU_REFRESH:
 			refreshAchievements();
 			break;

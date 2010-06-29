@@ -41,7 +41,6 @@ import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
 import android.content.ContentResolver;
 import android.content.ContentUris;
@@ -64,13 +63,11 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 import android.os.Handler;
-import android.os.PowerManager;
 import android.os.RemoteException;
 import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
-import android.view.Gravity;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
@@ -81,7 +78,6 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -99,7 +95,6 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
-import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
@@ -119,9 +114,9 @@ import edu.stanford.cs.sujogger.util.UnitsI18n;
  */
 public class LoggerMap extends MapActivity {
 	private static final int ZOOM_LEVEL = 16;
-	// MENU'S
+	
+	// Menus
 	private static final int MENU_SETTINGS = 1;
-	private static final int MENU_TRACKING = 2;
 	private static final int MENU_TRACKLIST = 3;
 	private static final int MENU_STATS = 4;
 	private static final int MENU_ABOUT = 5;
@@ -134,15 +129,17 @@ public class LoggerMap extends MapActivity {
 	private static final int MENU_VOICE = 11;
 	private static final int MENU_VIDEO = 12;
 	private static final int MENU_SHARE = 13;
+	
+	// Dialogs
 	private static final int DIALOG_TRACKNAME = 23;
 	private static final int DIALOG_NOTRACK = 24;
-	private static final int DIALOG_LOGCONTROL = 26;
-	private static final int DIALOG_INSTALL_ABOUT = 29;
 	private static final int DIALOG_LAYERS = 31;
 	private static final int DIALOG_TEXT = 32;
 	private static final int DIALOG_NAME = 33;
 	private static final String TAG = "OGT.LoggerMap";
 	public static final String PARTNER_RUN_KEY = "partner_run";
+	
+	// Views
 	private MapView mMapView = null;
 	private MyLocationOverlay mMylocation;
 	private CheckBox mSatellite;
@@ -155,6 +152,8 @@ public class LoggerMap extends MapActivity {
 	private TextView mLastGPSSpeedView = null;
 	private EditText mNoteNameView;
 	private EditText mNoteTextView;
+	private Button mStartButton;
+	private Button mResumeButton;
 
 	private double mAverageSpeed = 4.4704;
 	//ASLAI
@@ -335,49 +334,6 @@ public class LoggerMap extends MapActivity {
 			updateTitleBar();
 		}
 	};
-	private final DialogInterface.OnClickListener mOiAboutDialogListener = new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int which) {
-			Uri oiDownload = Uri.parse("market://details?id=org.openintents.about");
-			Intent oiAboutIntent = new Intent(Intent.ACTION_VIEW, oiDownload);
-			try {
-				startActivity(oiAboutIntent);
-			}
-			catch (ActivityNotFoundException e) {
-				oiDownload = Uri
-						.parse("http://openintents.googlecode.com/files/AboutApp-1.0.0.apk");
-				oiAboutIntent = new Intent(Intent.ACTION_VIEW, oiDownload);
-				startActivity(oiAboutIntent);
-			}
-		}
-	};
-	private final View.OnClickListener mLoggingControlListener = new View.OnClickListener() {
-		public void onClick(View v) {
-			int id = v.getId();
-			switch (id) {
-			case R.id.logcontrol_start:
-				Log.d(TAG, "mLoggingControlListener: start GPS logging...");
-				long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
-				moveToTrack(loggerTrackId, true, true);
-				showDialog(DIALOG_TRACKNAME);
-				break;
-			case R.id.logcontrol_pause:
-				GPSLoggerServiceManager.pauseGPSLogging();
-				break;
-			case R.id.logcontrol_resume:
-				GPSLoggerServiceManager.resumeGPSLogging();
-				break;
-			case R.id.logcontrol_stop:
-				GPSLoggerServiceManager.stopGPSLogging();
-				Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
-				syncGroupStats();
-				break;
-			default:
-				break;
-			}
-			updateBlankingBehavior();
-			dismissDialog(DIALOG_LOGCONTROL);
-		}
-	};
 	private final OnCheckedChangeListener mCheckedChangeListener = new OnCheckedChangeListener() {
 		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
 			int which = buttonView.getId();
@@ -551,6 +507,58 @@ public class LoggerMap extends MapActivity {
 		mMapView.setStreetView(false);
 		mMapView.setSatellite(mSharedPreferences.getBoolean(Constants.SATELLITE, false));
 		mMapView.setTraffic(mSharedPreferences.getBoolean(Constants.TRAFFIC, false));
+		
+		mStartButton = (Button)findViewById(R.id.startbutton);
+		mStartButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				int state = GPSLoggerServiceManager.getLoggingState();
+				switch (state) {
+				case Constants.STOPPED:
+					mStartButton.setText("Stop");
+					mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
+					mResumeButton.setVisibility(View.VISIBLE);
+					mResumeButton.setText("Pause");
+					
+					Log.d(TAG, "mLoggingControlListener: start GPS logging...");
+					long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
+					moveToTrack(loggerTrackId, true, true);
+					showDialog(DIALOG_TRACKNAME);
+					break;
+				case Constants.LOGGING:
+				case Constants.PAUSED:
+					mStartButton.setText("Start");
+					mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
+					mResumeButton.setVisibility(View.GONE);
+					
+					GPSLoggerServiceManager.stopGPSLogging();
+					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
+					syncGroupStats();
+					break;
+				default:
+					break;
+				}
+			}
+		});
+		
+		mResumeButton = (Button)findViewById(R.id.resumebutton);
+		mResumeButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				int state = GPSLoggerServiceManager.getLoggingState();
+				switch (state) {
+				case Constants.STOPPED: break;
+				case Constants.LOGGING:
+					GPSLoggerServiceManager.pauseGPSLogging();
+					mResumeButton.setText("Resume");
+					break;
+				case Constants.PAUSED:
+					GPSLoggerServiceManager.resumeGPSLogging();
+					mResumeButton.setText("Pause");
+					break;
+				default:
+					break;
+				}
+			}
+		});
 
 		TextView[] speeds = { (TextView) findViewById(R.id.speedview02),
 				(TextView) findViewById(R.id.speedview01),
@@ -589,7 +597,6 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "onResume");
 		mDbHelper.openAndGetDb();
 		updateTitleBar();
-		updateBlankingBehavior();
 		updateSpeedbarVisibility();
 		updateSpeedDisplayVisibility();
 		mMylocation.enableCompass();
@@ -817,8 +824,8 @@ public class LoggerMap extends MapActivity {
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
-		menu.add(ContextMenu.NONE, MENU_TRACKING, ContextMenu.NONE, R.string.menu_tracking)
-				.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('T');
+		//menu.add(ContextMenu.NONE, MENU_TRACKING, ContextMenu.NONE, R.string.menu_tracking)
+		//		.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('T');
 		menu.add(ContextMenu.NONE, MENU_LAYERS, ContextMenu.NONE, R.string.menu_showLayers)
 				.setIcon(R.drawable.ic_menu_mapmode).setAlphabeticShortcut('L');
 		// SubMenu notemenu = menu.addSubMenu( ContextMenu.NONE, MENU_NOTE,
@@ -877,11 +884,6 @@ public class LoggerMap extends MapActivity {
 
 		Uri trackUri;
 		switch (item.getItemId()) {
-		case MENU_TRACKING:
-			showDialog(DIALOG_LOGCONTROL);
-			updateBlankingBehavior();
-			handled = true;
-			break;
 		case MENU_LAYERS:
 			showDialog(DIALOG_LAYERS);
 			handled = true;
@@ -913,14 +915,6 @@ public class LoggerMap extends MapActivity {
 				showDialog(DIALOG_NOTRACK);
 			}
 			handled = true;
-			break;
-		case MENU_ABOUT:
-			/*
-			 * Intent intent = new Intent( AboutIntents.ACTION_SHOW_ABOUT_DIALOG
-			 * ); try { startActivityForResult( intent, MENU_ABOUT ); } catch
-			 * (ActivityNotFoundException e) { showDialog( DIALOG_INSTALL_ABOUT
-			 * ); }
-			 */
 			break;
 		case MENU_SHARE:
 			Intent actionIntent = new Intent(Intent.ACTION_RUN);
@@ -1009,24 +1003,6 @@ public class LoggerMap extends MapActivity {
 					.setNegativeButton(R.string.btn_cancel, null);
 			dialog = builder.create();
 			return dialog;
-		case DIALOG_LOGCONTROL:
-			Log.d(TAG, "onCreateDialog(): creating log control dialog");
-			builder = new AlertDialog.Builder(this);
-			factory = LayoutInflater.from(this);
-			view = factory.inflate(R.layout.logcontrol, null);
-			builder.setTitle(R.string.dialog_tracking_title).setIcon(
-					android.R.drawable.ic_dialog_alert)
-					.setNegativeButton(R.string.btn_cancel, null).setView(view);
-			dialog = builder.create();
-			return dialog;
-		case DIALOG_INSTALL_ABOUT:
-			builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.dialog_nooiabout).setMessage(
-					R.string.dialog_nooiabout_message).setIcon(android.R.drawable.ic_dialog_alert)
-					.setPositiveButton(R.string.btn_install, mOiAboutDialogListener)
-					.setNegativeButton(R.string.btn_cancel, null);
-			dialog = builder.create();
-			return dialog;
 		case DIALOG_TEXT:
 			builder = new AlertDialog.Builder(this);
 			factory = LayoutInflater.from(this);
@@ -1061,55 +1037,11 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
-		int state = GPSLoggerServiceManager.getLoggingState();
 		switch (id) {
-		case DIALOG_LOGCONTROL:
-			Button start = (Button) dialog.findViewById(R.id.logcontrol_start);
-			Button pause = (Button) dialog.findViewById(R.id.logcontrol_pause);
-			Button resume = (Button) dialog.findViewById(R.id.logcontrol_resume);
-			Button stop = (Button) dialog.findViewById(R.id.logcontrol_stop);
-			start.setOnClickListener(mLoggingControlListener);
-			pause.setOnClickListener(mLoggingControlListener);
-			resume.setOnClickListener(mLoggingControlListener);
-			stop.setOnClickListener(mLoggingControlListener);
-			switch (state) {
-			case Constants.STOPPED:
-				start.setEnabled(true);
-				pause.setEnabled(false);
-				resume.setEnabled(false);
-				stop.setEnabled(false);
-				break;
-			case Constants.LOGGING:
-				start.setEnabled(false);
-				pause.setEnabled(true);
-				resume.setEnabled(false);
-				stop.setEnabled(true);
-				break;
-			case Constants.PAUSED:
-				start.setEnabled(false);
-				pause.setEnabled(false);
-				resume.setEnabled(true);
-				stop.setEnabled(true);
-				break;
-			default:
-				Log.e(TAG, String.format("State %d of logging, enabling and hope for the best....",
-						state));
-				start.setEnabled(true);
-				pause.setEnabled(true);
-				resume.setEnabled(true);
-				stop.setEnabled(true);
-				break;
-			}
-			break;
 		case DIALOG_LAYERS:
 			mSatellite.setChecked(mSharedPreferences.getBoolean(Constants.SATELLITE, false));
 			mTraffic.setChecked(mSharedPreferences.getBoolean(Constants.TRAFFIC, false));
 			mSpeed.setChecked(mSharedPreferences.getBoolean(Constants.SPEED, false));
-			// TODO: remove unnecessary preferences
-			// mCompass.setChecked( mSharedPreferences.getBoolean(
-			// Constants.COMPASS, false ) );
-			// mLocation.setChecked( mSharedPreferences.getBoolean(
-			// Constants.LOCATION, false ) );
 			break;
 		default:
 			break;
@@ -1213,22 +1145,6 @@ public class LoggerMap extends MapActivity {
 		finally {
 			if (trackCursor != null) {
 				trackCursor.close();
-			}
-		}
-	}
-
-	private void updateBlankingBehavior() {
-		// TODO: remove unnecessary preferences
-		boolean disableblanking = false;// mSharedPreferences.getBoolean(
-										// Constants.DISABLEBLANKING, false );
-		if (disableblanking) {
-			if (mWakeLock == null) {
-				PowerManager pm = (PowerManager) this.getSystemService(Context.POWER_SERVICE);
-				mWakeLock = pm.newWakeLock(PowerManager.SCREEN_DIM_WAKE_LOCK, TAG);
-			}
-			if (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING && !mWakeLock.isHeld()) {
-				mWakeLock.acquire();
-				Log.w(TAG, "Acquired lock to keep screen on!");
 			}
 		}
 	}

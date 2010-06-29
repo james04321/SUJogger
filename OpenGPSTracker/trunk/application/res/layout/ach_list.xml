@@ -1,10 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout android:id="@+id/LinearLayout01"
-	android:layout_height="wrap_content" xmlns:android="http://schemas.android.com/apk/res/android"
-	android:layout_width="fill_parent" android:padding="6dip"
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
 	android:orientation="vertical">
-
-
-
-
-</LinearLayout>
+    
+    <LinearLayout 
+		android:id="@+id/bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal"
+		android:paddingTop="6dip"
+		android:paddingLeft="2dip"
+		android:paddingRight="2dip"
+		android:background="@drawable/toolbar_bg_grey">
+		
+		<Button 
+			android:id="@+id/statisticsbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Statistics" 
+			android:layout_weight="1"/>
+		<Button 
+			android:id="@+id/leaderboardsbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Leaderboards" 
+			android:layout_weight="1"/>
+	</LinearLayout>
+    
+    <ListView android:id="@+id/android:list"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:layout_above="@id/bottom_control_bar"/>
+</RelativeLayout>

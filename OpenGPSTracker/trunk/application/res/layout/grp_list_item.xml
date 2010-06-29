@@ -21,7 +21,7 @@
 			android:gravity="center"
 			android:textStyle="bold"
 			android:textAppearance="?android:attr/textAppearanceSmall"
-			android:layout_width="30dip"
+			android:layout_width="20dip"
     		android:layout_height="20dip"
     		android:layout_marginTop="6dip"
     		android:background="@+layout/grp_read_counter_bg"

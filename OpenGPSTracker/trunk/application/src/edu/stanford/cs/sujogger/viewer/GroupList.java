@@ -25,6 +25,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -52,7 +53,9 @@ public class GroupList extends ListActivity {
 	private SeparatedListAdapter mGroupAdapter;
 	private List<Map<String, ?>> actions;
 	private int mGroupIdTemp;
-
+	
+	private Button mNewGroupButton;
+	
 	private GamingServiceConnection mGameCon;
 	private GroupListReceiver mReceiver;
 	private Handler mHandler = new Handler();
@@ -99,7 +102,7 @@ public class GroupList extends ListActivity {
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.list_simple);
+		this.setContentView(R.layout.grouplist);
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
@@ -115,8 +118,15 @@ public class GroupList extends ListActivity {
 		startManagingCursor(mGroupsCursor);
 
 		actions = new LinkedList<Map<String, ?>>();
-		actions.add(Common.createItem("New group"));
-
+		actions.add(Common.createItem("Friends"));
+		
+		mNewGroupButton = (Button)findViewById(R.id.newgroupbutton);
+		mNewGroupButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				showDialog(DIALOG_GRPNAME);
+			}
+		});
+		
 		fillData();
 		registerForContextMenu(getListView());
 		
@@ -194,8 +204,7 @@ public class GroupList extends ListActivity {
 		Log.v(TAG, "position = " + position + "; id = " + id);
 
 		if (position == 1) {
-			Log.d(TAG, "pulling up new group dialog");
-			showDialog(DIALOG_GRPNAME);
+			
 		}
 		else {
 			Object item = mGroupAdapter.getItem(position);

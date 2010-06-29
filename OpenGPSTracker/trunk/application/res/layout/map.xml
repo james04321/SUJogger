@@ -4,12 +4,42 @@
    android:layout_width="fill_parent"
    android:layout_height="fill_parent"
 >
+
+	<LinearLayout 
+		android:id="@+id/map_bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal"
+		android:padding="6dip"
+		android:background="@drawable/toolbar_bg_grey">
+		
+		<Button 
+			android:id="@+id/startbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Start tracking" 
+			android:textColor="#FFFFFF"
+			android:textStyle="bold"
+			android:visibility="visible"
+			android:background="@drawable/custom_btn_green"
+			android:layout_weight="1"/>
+		<Button 
+			android:id="@+id/resumebutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Resume" 
+			android:visibility="gone"
+			android:layout_weight="1"/>
+	</LinearLayout>
+	
    <com.google.android.maps.MapView
       android:id="@+id/myMapView"
       android:layout_width="fill_parent"
       android:layout_height="fill_parent"
       android:enabled="true"
       android:clickable="true"
+      android:layout_above="@id/map_bottom_control_bar"
       android:apiKey="037PA6ekPCjNDkZ7ifg3b6Q5KceF3y97cXj7P4w" />
       <!-- Anthony's API Key: 037PA6ekPCjNDkZ7ifg3b6Q5KceF3y97cXj7P4w -->
    <!--  Release: 065bMo1pfY8EpTskGACc-A_sOAfK5y_LZcgYU8Q -->
