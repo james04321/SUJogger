@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:layout_width="wrap_content" 
+	android:layout_height="wrap_content"
+	android:orientation="vertical">
+    
+    <LinearLayout 
+		android:id="@+id/bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal"
+		android:paddingTop="6dip"
+		android:paddingLeft="2dip"
+		android:paddingRight="2dip"
+		android:background="@drawable/toolbar_bg_grey">
+		
+		<Button 
+			android:id="@+id/newgroupbutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="New Group" 
+			android:layout_weight="1"/>
+	</LinearLayout>
+    
+    <ListView android:id="@+id/android:list"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:layout_above="@id/bottom_control_bar"/>
+</RelativeLayout>

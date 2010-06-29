@@ -65,6 +65,7 @@ import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
+import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
@@ -87,6 +88,7 @@ import edu.stanford.cs.sujogger.actions.Statistics;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
+import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
 import edu.stanford.cs.sujogger.util.BaseRequestListener;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
@@ -99,544 +101,536 @@ import edu.stanford.cs.sujogger.util.TrackListAdapter;
  * @version $Id: TrackList.java 468 2010-03-28 13:47:13Z rcgroot $
  * @author rene (c) Jan 11, 2009, Sogeti B.V.
  */
-public class TrackList extends ListActivity
-{
-   private static final String TAG = "OGT.TrackList";
-   private static final int MENU_DETELE = 0;
-   private static final int MENU_SHARE = 1;
-   private static final int MENU_RENAME = 2;
-   private static final int MENU_STATS = 3;
+public class TrackList extends ListActivity {
+	private static final String TAG = "OGT.TrackList";
+	private static final int MENU_DETELE = 0;
+	private static final int MENU_SHARE = 1;
+	private static final int MENU_RENAME = 2;
+	private static final int MENU_STATS = 3;
 
-   public static final int DIALOG_FILENAME = 0;
-   private static final int DIALOG_RENAME = 23;
-   private static final int DIALOG_DELETE = 24;
-   
-   public static final int TRACKSTATUS_IDLE=10;
-   public static final int TRACKSTATUS_TRACKING=11;
-   public static final int PUBLISH_TRACK=100;
-   public static final int DOWNLOAD_TRACK=101;
-   
-   //Request IDs
-   public static final int CREATE_SB_RID = 1;
-   public static final int GET_SBS_RID = 2;
-   public static final int USERREG_RID = 3;
-   public static final int GET_CG_RID = 4;
-   
-   private SharedPreferences mSharedPreferences;
-   private ProgressDialog mDialogFriendInit;
-   private ProgressDialog mDialogUserInit;
-   
-   private DatabaseHelper mDbHelper;
-   private GamingServiceConnection mGameCon;
-   private ScoreboardReceiver mReceiver;
-   
-   private Facebook mFacebook;
-   private AsyncFacebookRunner mAsyncRunner;
-   
-   //Temp attribute to store FB friends until we get everything we need
-   private long[] mFriendFbIds;
-   
-   private EditText mTrackNameView;
-   private Uri mDialogUri;
-   private String mDialogCurrentName = "";
-   
-   private List<Map<String,?>> actions;
-   private TrackListAdapter trackAdapter;
-   private boolean mDownloadedTracks = false;
-   private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
-   private SeparatedListAdapter mGroupedAdapter;
-   
-   private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener()
-      {
-         public void onClick( DialogInterface dialog, int which )
-         {
-            getContentResolver().delete( mDialogUri, null, null );
-            getListView().invalidateViews();
-         }
-      };
-   private OnClickListener mRenameOnClickListener = new DialogInterface.OnClickListener()
-      {
-         public void onClick( DialogInterface dialog, int which )
-         {
-            //         Log.d( TAG, "Context item selected: "+mDialogUri+" with name "+mDialogCurrentName );
+	public static final int DIALOG_FILENAME = 0;
+	private static final int DIALOG_RENAME = 23;
+	private static final int DIALOG_DELETE = 24;
 
-            String trackName = mTrackNameView.getText().toString();
-            ContentValues values = new ContentValues();
-            values.put( Tracks.NAME, trackName );
-            TrackList.this.getContentResolver().update( mDialogUri, values, null, null );
-         }
-      };
+	public static final int TRACKSTATUS_IDLE = 10;
+	public static final int TRACKSTATUS_TRACKING = 11;
+	public static final int PUBLISH_TRACK = 100;
+	public static final int DOWNLOAD_TRACK = 101;
 
-   @Override
-   protected void onCreate( Bundle savedInstanceState )
-   {
-      super.onCreate( savedInstanceState );
-      Log.d(TAG, "onCreate()");
-      this.setContentView( R.layout.tracklist );
-/*
-     Log.d(TAG, "DOWNLOADEDTRACKS BEFORE " + mDownloadedTracks);
-     if (savedInstanceState != null) {
-    	 Log.d(TAG, "STATE OF DOWNLOADEDTRACK IS " + savedInstanceState.getBoolean("mDownloadedTrack"));
-     }
-     */
-		mDownloadedTracks = savedInstanceState != null ? savedInstanceState.getBoolean(DOWNLOADEDTRACKSFLAG) : false;
-	     Log.d(TAG, "DOWNLOADEDTRACKS AFTER " + mDownloadedTracks);
+	// Request IDs
+	public static final int CREATE_SB_RID = 1;
+	public static final int GET_SBS_RID = 2;
+	public static final int USERREG_RID = 3;
+	public static final int GET_CG_RID = 4;
 
-      mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
-      
-      mDbHelper = new DatabaseHelper(this);
-      mDbHelper.openAndGetDb();
-      
-      mReceiver = new ScoreboardReceiver(); 
-      mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, 
-    		  Constants.APP_ID, Constants.APP_API_KEY, TrackList.class.toString());
-      mGameCon.bind();
-      
-      actions = new LinkedList<Map<String,?>>();
-	  actions.add(Common.createItem("New Track"));
-	  actions.add(Common.createItem("Statistics"));
-	     Log.d(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
-	  actions.add(Common.createItem("Downloaded Tracks"));	  
+	private SharedPreferences mSharedPreferences;
+	private ProgressDialog mDialogFriendInit;
+	private ProgressDialog mDialogUserInit;
+	private Button mStartButton;
 
-	  setTrackList();
+	private DatabaseHelper mDbHelper;
+	private GamingServiceConnection mGameCon;
+	private ScoreboardReceiver mReceiver;
 
+	private Facebook mFacebook;
+	private AsyncFacebookRunner mAsyncRunner;
 
-      // Add the context menu (the long press thing)
-      registerForContextMenu( getListView() );
-      
-      if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
-    	  mFacebook = new Facebook();
-    	  mAsyncRunner = new AsyncFacebookRunner(mFacebook);
-    	  
-    	  mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
-                  new LoginDialogListener());
-      }
-   }
-   
+	// Temp attribute to store FB friends until we get everything we need
+	private long[] mFriendFbIds;
 
-   private void setTrackList() {
-	   if (mDownloadedTracks) {
-		   actions.remove(2);
-		   actions.add(Common.createItem("My Tracks"));
-		   displayIntent( getIntent() );
-		   mGroupedAdapter.setSectionTitle("Downloaded Tracks", 1);
-		   
-	   } else {
-		   actions.remove(2);
-		   actions.add(Common.createItem("Downloaded Tracks"));
-		   displayIntent( getIntent() );
-		   mGroupedAdapter.setSectionTitle("My Tracks", 1);
+	private EditText mTrackNameView;
+	private Uri mDialogUri;
+	private String mDialogCurrentName = "";
 
-	   }
-		  getListView().invalidateViews();
+	private List<Map<String, ?>> actions;
+	private TrackListAdapter trackAdapter;
+	private boolean mDownloadedTracks = false;
+	private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
+	private SeparatedListAdapter mGroupedAdapter;
 
-   }
-   private void initializeSelfStatistics() {
-	   try {
-		   ScoreBoard score;
-		   int[] allStats = Stats.ALL_STAT_IDS;
-		   ScoreBoard[] scores = new ScoreBoard[allStats.length];
-		   for (int i = 0; i < allStats.length; i++) {
-			   score = new ScoreBoard();
-			   score.app_id = Constants.APP_ID;
-			   score.user_id = Common.getRegisteredUser(this).id;
-			   score.group_id = 0;
-			   score.value = 0;
-			   score.sb_type = String.valueOf(allStats[i]);
-			   scores[i] = score;
-		   }
-		   mGameCon.createScoreBoards(CREATE_SB_RID, scores);
-	   } catch (RemoteException e) {}
-   }
+	private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			getContentResolver().delete(mDialogUri, null, null);
+			getListView().invalidateViews();
+		}
+	};
+	private OnClickListener mRenameOnClickListener = new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			// Log.d( TAG,
+			// "Context item selected: "+mDialogUri+" with name "+mDialogCurrentName
+			// );
 
-   @Override
-   public void onNewIntent( Intent newIntent )
-   {
-	   Log.d(TAG, "onNewIntent()");
-	   displayIntent( newIntent );
-   }
-   
-   @Override
-   protected void onRestart() {
-	   Log.d(TAG, "onRestart()");
-	   
-	   trackAdapter.notifyDataSetChanged();
-	   getListView().invalidate();
-	   getListView().invalidateViews();
-	   super.onRestart();
-   }
-   
-   @Override
-   protected void onResume() {
-	   trackAdapter.notifyDataSetChanged();
-	   getListView().invalidate();
-	   getListView().invalidateViews();
-	   super.onResume();
-   }
-   /*
-    * (non-Javadoc)
-    * @see android.app.ListActivity#onRestoreInstanceState(android.os.Bundle)
-    */
-   @Override
-   protected void onRestoreInstanceState( Bundle state )
-   {
-	  Log.v("TrackList", "onRestoreInstanceState");
-	  mDialogUri = state.getParcelable( "URI" );
-      mDialogCurrentName = state.getString( "NAME" );
- //     mDownloadedTracks = state.getBoolean("mDownloadedTracks");
-//	     Log.d(TAG, "RESTORING DOWNLOADED TRACKS " + mDownloadedTracks);
+			String trackName = mTrackNameView.getText().toString();
+			ContentValues values = new ContentValues();
+			values.put(Tracks.NAME, trackName);
+			TrackList.this.getContentResolver().update(mDialogUri, values, null, null);
+		}
+	};
 
- //     setTrackList();
+	@Override
+	protected void onCreate(Bundle savedInstanceState) {
+		super.onCreate(savedInstanceState);
+		Log.d(TAG, "onCreate()");
+		this.setContentView(R.layout.tracklist);
+		/*
+		 * Log.d(TAG, "DOWNLOADEDTRACKS BEFORE " + mDownloadedTracks); if
+		 * (savedInstanceState != null) { Log.d(TAG,
+		 * "STATE OF DOWNLOADEDTRACK IS " +
+		 * savedInstanceState.getBoolean("mDownloadedTrack")); }
+		 */
+		mDownloadedTracks = savedInstanceState != null ? savedInstanceState
+				.getBoolean(DOWNLOADEDTRACKSFLAG) : false;
+		Log.d(TAG, "DOWNLOADEDTRACKS AFTER " + mDownloadedTracks);
 
-      super.onRestoreInstanceState( state );
-   }
-   
-   /*
-    * (non-Javadoc)
-    * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
-    */
-   @Override
-   protected void onSaveInstanceState( Bundle outState )
-   {
-	     Log.d(TAG, "SAVING DOWNLOADED TRACKS " + mDownloadedTracks);
-	   
-      outState.putParcelable( "URI", mDialogUri );
-      outState.putString( "NAME", mDialogCurrentName );
-	  outState.putBoolean(DOWNLOADEDTRACKSFLAG, mDownloadedTracks);
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
-      super.onSaveInstanceState( outState );
-   }
+		mDbHelper = new DatabaseHelper(this);
+		mDbHelper.openAndGetDb();
 
-   
-   @Override
-   protected void onDestroy() {
-	   mDbHelper.close();
-	   mGameCon.unbind();
-	   super.onDestroy();
-   }
+		mReceiver = new ScoreboardReceiver();
+		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, Constants.APP_ID,
+				Constants.APP_API_KEY, TrackList.class.toString());
+		mGameCon.bind();
 
-   @Override
-   protected void onListItemClick( ListView l, View v, int position, long id )
-   {
-      super.onListItemClick( l, v, position, id );
-      
-      Log.v("TrackList", "position = " + position + "; id = " + id);
-      if (position < actions.size() + 1) {
-    	  if (position == 1) {
-    		  Log.v("TrackList", "creating new track");
-    		  Intent intent = new Intent();
-    		  intent.setClass( this, LoggerMap.class );
-    		  startActivity(intent);
-    	  }
-    	  else if (position == 2) {
-    		  Log.v("TrackList", "pulling up stats");
-    		  Intent intent = new Intent();
-    		  intent.setClass(this, StatisticsView.class);
-    		  intent.putExtra("group_id", -1);
-    		  startActivity(intent);
-    	  } 
-    	  else if (position == 3) {
-    		  Log.v("TrackList", "Going to Downloaded tracks");
-    		  mDownloadedTracks = !mDownloadedTracks;
-    		  setTrackList();
-    	  }
-      }
-      else if (position > actions.size() + 1){
-	      Intent intent = new Intent();
-	      intent.setData( ContentUris.withAppendedId( Tracks.CONTENT_URI, getTrackIdFromRowPosition(id)) );
-	      
-	      //TODO: eliminate the if statement (no one starts a TrackList activity anymore)
-	      ComponentName caller = this.getCallingActivity();
-	      if( caller != null )
-	      {
-	         setResult( RESULT_OK, intent );
-	         finish();
-	      }
-	      else
-	      {
-	         intent.setClass( this, LoggerMap.class );
-	         startActivity( intent );
-	      }
-      }
-   }
+		actions = new LinkedList<Map<String, ?>>();
+		Log.d(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
+		actions.add(Common.createItem("Downloaded Tracks"));
 
-   @Override
-   public void onCreateContextMenu( ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo )
-   {
-      if( menuInfo instanceof AdapterView.AdapterContextMenuInfo )
-      {
-         AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
-         if (itemInfo.position < actions.size() + 1) return;
-         TextView textView = (TextView) itemInfo.targetView.findViewById( android.R.id.text1 );
-         if( textView != null )
-         {
-            menu.setHeaderTitle( textView.getText() );
-         }
-      }
-      menu.add( 0, MENU_STATS, 0, R.string.menu_statistics );
-      menu.add( 0, MENU_SHARE, 0, R.string.menu_shareTrack );
-      menu.add( 0, MENU_RENAME, 0, R.string.menu_renameTrack );
-      menu.add( 0, MENU_DETELE, 0, R.string.menu_deleteTrack );
-   }
+		mStartButton = (Button) findViewById(R.id.startbutton);
+		mStartButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				Log.v("TrackList", "creating new track");
+				Intent intent = new Intent();
+				intent.setClass(TrackList.this, LoggerMap.class);
+				startActivity(intent);
+			}
+		});
 
-   @Override
-   public boolean onContextItemSelected( MenuItem item )
-   {
-      boolean handled = false;
-      AdapterView.AdapterContextMenuInfo info;
-      try
-      {
-         info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
-      }
-      catch( ClassCastException e )
-      {
-         Log.e( TAG, "Bad menuInfo", e );
-         return handled;
-      }
-      
-      //TODO: cursor is obtained incorrectly
-      long trackId = getTrackIdFromRowPosition(info.position);
-      
-      Uri trackUri = ContentUris.withAppendedId( Tracks.CONTENT_URI, trackId);
-      Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
-      ContentResolver resolver = this.getApplicationContext().getContentResolver();
-      Cursor trackCursor = null;
-      try
-      {
-         trackCursor = resolver.query( trackUri, new String[] { Tracks.NAME }, null, null, null );
-         if( trackCursor != null && trackCursor.moveToLast() )
-         {
-            String trackName = trackCursor.getString( 0 );
-            this.setTitle( this.getString( R.string.app_name ) + ": " + trackName );
-         }
-         
-       //Cursor cursor = (Cursor) getListAdapter().getItem(  );
-         mDialogUri = trackUri;
-         mDialogCurrentName = trackCursor.getString(0);
-         switch( item.getItemId() )
-         {
-            case MENU_DETELE:
-            {
-               showDialog( DIALOG_DELETE );
-               handled = true;
-               break;
-            }
-            case MENU_SHARE:
-            {
-               Intent actionIntent = new Intent( Intent.ACTION_RUN );
-               actionIntent.setDataAndType( mDialogUri, Tracks.CONTENT_ITEM_TYPE );
-               actionIntent.putExtra("name", mDialogCurrentName);
-               actionIntent.addFlags( Intent.FLAG_GRANT_READ_URI_PERMISSION );
-               startActivity( Intent.createChooser( actionIntent, getString( R.string.chooser_title ) ) );
-               handled = true;
-               break;
-            }
-            case MENU_RENAME:
-            {
-               showDialog( DIALOG_RENAME );
-               handled = true;
-               break;
-            }
-            case MENU_STATS:
-            {
-               Intent actionIntent = new Intent( this, Statistics.class );
-               actionIntent.setData( mDialogUri );
-               startActivity( actionIntent );
-               handled = true;
-               break;
-            }
-            default:
-               handled = super.onContextItemSelected( item );
-               break;
-         }
-      }
-      finally
-      {
-         if( trackCursor != null )
-         {
-            trackCursor.close();
-         }
-      }
-      
-      return handled;
-   }
+		setTrackList();
 
-   /*
-    * (non-Javadoc)
-    * @see android.app.Activity#onCreateDialog(int)
-    */
-   @Override
-   protected Dialog onCreateDialog( int id )
-   {
-      Dialog dialog = null;
-      Builder builder = null;
-      View view;
-      switch( id )
-      {
-      	case DIALOG_RENAME:
-            LayoutInflater factory = LayoutInflater.from( this );
-            view = factory.inflate( R.layout.namedialog, null );
-            mTrackNameView = (EditText) view.findViewById( R.id.nameField );
+		// Add the context menu (the long press thing)
+		registerForContextMenu(getListView());
 
-            builder = new AlertDialog.Builder( this ).setTitle( R.string.dialog_routename_title ).setMessage( R.string.dialog_routename_message ).setIcon( android.R.drawable.ic_dialog_alert )
-                  .setPositiveButton( R.string.btn_okay, mRenameOnClickListener ).setNegativeButton( R.string.btn_cancel, null ).setView( view );
-            dialog = builder.create();
-            return dialog;
-         case DIALOG_DELETE:
-            builder = new AlertDialog.Builder( TrackList.this ).setTitle( R.string.dialog_deletetitle ).setIcon( android.R.drawable.ic_dialog_alert ).setNegativeButton( android.R.string.cancel, null )
-                  .setPositiveButton( android.R.string.ok, mDeleteOnClickListener );
-            dialog = builder.create();
-            String messageFormat = this.getResources().getString( R.string.dialog_deleteconfirmation );
-            String message = String.format( messageFormat, "" );
-            ( (AlertDialog) dialog ).setMessage( message );
-            return dialog;
-         default:
-            return super.onCreateDialog( id );
-      }
-   }
+		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+			mFacebook = new Facebook();
+			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
 
-   /*
-    * (non-Javadoc)
-    * @see android.app.Activity#onPrepareDialog(int, android.app.Dialog)
-    */
-   @Override
-   protected void onPrepareDialog( int id, Dialog dialog )
-   {
-      super.onPrepareDialog( id, dialog );
-      switch( id )
-      {
-         case DIALOG_RENAME:
-        	if (mDialogCurrentName == null) {
-        		mTrackNameView.setText( "" );
-        		mTrackNameView.setSelection( 0, 0 );
-        	}
-        	else {
-        		mTrackNameView.setText( mDialogCurrentName );
-        		mTrackNameView.setSelection( 0, mDialogCurrentName.length() );
-        	}
-            break;
-         case DIALOG_DELETE:
-            AlertDialog alert = (AlertDialog) dialog;
-            String messageFormat = this.getResources().getString( R.string.dialog_deleteconfirmation );
-            String message = String.format( messageFormat, mDialogCurrentName );
-            alert.setMessage( message );
-            break;
-      }
-   }
-   
-   private void displayIntent( Intent intent )
-   {
-      Log.d(TAG, "displayIntent()");
-	   final String queryAction = intent.getAction();
-      Cursor tracksCursor = null;
-      if( Intent.ACTION_SEARCH.equals( queryAction ) )
-      {
-         // Got to SEARCH a query for tracks, make a list
-         tracksCursor = doSearchWithIntent( intent );
-         displayCursor( tracksCursor, false );
-      }
-      else if( Intent.ACTION_VIEW.equals( queryAction ) )
-      {
-         // Got to VIEW a single track, instead had it of to the LoggerMap
-         Intent notificationIntent = new Intent( this, LoggerMap.class );
-         notificationIntent.setData( intent.getData() );
-         startActivity( notificationIntent );
-      }
-      else
-      {
-         // Got to nothing, make a list of everything
-    	  String whereClause = null;
-    	  whereClause = "user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id;
-    	  Log.d(TAG, "WHERECLAUSE IS " + whereClause);
-         tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, whereClause, null, null );
-         Log.d(TAG, "displayIntent(): displaying all tracks. count = " + tracksCursor.getCount());
-         displayCursor( tracksCursor, true );
-      }
-      
-   }
+			mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+					new LoginDialogListener());
+		}
+	}
 
-   private void displayCursor( Cursor tracksCursor, boolean showGlobal )
-   {
-      Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
-	   // Create an array to specify the fields we want to display in the list (only TITLE)
-      // and an array of the fields we want to bind those fields to (in this case just text1)
-      //String[] fromColumns = new String[] { Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
-      //int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from, R.id.listitem_duration, R.id.listitem_distance };
-      // Now create a simple cursor adapter and set it to display
-      //trackAdapter = new SimpleCursorAdapter( this, 
-    	//	  R.layout.trackitem, tracksCursor, fromColumns, toItems );
-      
-      trackAdapter = new TrackListAdapter(this, tracksCursor);
-       
-      
-      //showGlobal = false;
-      if (!showGlobal) {
-    	  setListAdapter( trackAdapter );
-      }
-      else {
-    	  mGroupedAdapter = new SeparatedListAdapter(this);
-    	  mGroupedAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
-    			  new String[] {Common.ITEM_TITLE}, 
-    			  new int[] {R.id.list_simple_title}));
-    	  
-    	  mGroupedAdapter.addSection("My Tracks", trackAdapter);
-    	  
-    	  setListAdapter( mGroupedAdapter );
-      }
-   }
-   
-   private long getTrackIdFromRowPosition(long pos) {
-	   
-	   
-	  String whereClause = null;
- 	  whereClause = "user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id;
- 	  Log.d(TAG, "WHERECLAUSE IS " + whereClause);
-      Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, 
-    		  new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, 
-    		  Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, 
-    		  whereClause, null, null );
-      pos = pos - (actions.size() + 2);
-      Log.d(TAG, "pos = " + pos);
-	   //Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID }, null, null, null );
-	  // pos = tracksCursor.getCount() - pos + 1;
-      tracksCursor.moveToPosition((int)pos);
-	   long trackId = tracksCursor.getLong(0);
-	   Log.d(TAG, "name = " + tracksCursor.getString(1));
-	   return trackId;
-   }
-   
-   private Cursor doSearchWithIntent( final Intent queryIntent )
-   {
-      final String queryString = queryIntent.getStringExtra( SearchManager.QUERY );
-      Cursor cursor = managedQuery( Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID }, 
-    		  "name LIKE ?" + (new String[] { "%" + queryString + "%" }) + " and user_id " + (mDownloadedTracks?"!=":"=") + Common.getRegisteredUser(this).id, null, null );
-      return cursor;
-   }
-   
-   private void registerUser() {
-	   if (Common.getRegisteredUser(this) == null || mFriendFbIds == null) return;
-	   
-	   mDialogFriendInit.dismiss();
-       mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
-       User user = Common.getRegisteredUser(this);
-       user.friend_fb_ids = mFriendFbIds;
-       try {
-    	   mGameCon.registerUser(USERREG_RID, user);
-       } catch (RemoteException e) {}
-   }
-   
-   private class ScoreboardReceiver extends BroadcastReceiver {
+	private void setTrackList() {
+		if (mDownloadedTracks) {
+			actions.remove(0);
+			actions.add(Common.createItem("My Tracks"));
+			displayIntent(getIntent());
+			mGroupedAdapter.setSectionTitle("Downloaded Tracks", 1);
+
+		}
+		else {
+			actions.remove(0);
+			actions.add(Common.createItem("Downloaded Tracks"));
+			displayIntent(getIntent());
+			mGroupedAdapter.setSectionTitle("My Tracks", 1);
+
+		}
+		getListView().invalidateViews();
+
+	}
+
+	private void initializeSelfStatistics() {
+		try {
+			ScoreBoard score;
+			int[] allStats = Stats.ALL_STAT_IDS;
+			ScoreBoard[] scores = new ScoreBoard[allStats.length];
+			for (int i = 0; i < allStats.length; i++) {
+				score = new ScoreBoard();
+				score.app_id = Constants.APP_ID;
+				score.user_id = Common.getRegisteredUser(this).id;
+				score.group_id = 0;
+				score.value = 0;
+				score.sb_type = String.valueOf(allStats[i]);
+				scores[i] = score;
+			}
+			mGameCon.createScoreBoards(CREATE_SB_RID, scores);
+		}
+		catch (RemoteException e) {
+		}
+	}
+
+	@Override
+	public void onNewIntent(Intent newIntent) {
+		Log.d(TAG, "onNewIntent()");
+		displayIntent(newIntent);
+	}
+
+	@Override
+	protected void onRestart() {
+		Log.d(TAG, "onRestart()");
+
+		trackAdapter.notifyDataSetChanged();
+		getListView().invalidate();
+		getListView().invalidateViews();
+		super.onRestart();
+	}
+
+	@Override
+	protected void onResume() {
+		trackAdapter.notifyDataSetChanged();
+		getListView().invalidate();
+		getListView().invalidateViews();
+		super.onResume();
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.ListActivity#onRestoreInstanceState(android.os.Bundle)
+	 */
+	@Override
+	protected void onRestoreInstanceState(Bundle state) {
+		Log.v("TrackList", "onRestoreInstanceState");
+		mDialogUri = state.getParcelable("URI");
+		mDialogCurrentName = state.getString("NAME");
+		// mDownloadedTracks = state.getBoolean("mDownloadedTracks");
+		// Log.d(TAG, "RESTORING DOWNLOADED TRACKS " + mDownloadedTracks);
+
+		// setTrackList();
+
+		super.onRestoreInstanceState(state);
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onSaveInstanceState(android.os.Bundle)
+	 */
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		Log.d(TAG, "SAVING DOWNLOADED TRACKS " + mDownloadedTracks);
+
+		outState.putParcelable("URI", mDialogUri);
+		outState.putString("NAME", mDialogCurrentName);
+		outState.putBoolean(DOWNLOADEDTRACKSFLAG, mDownloadedTracks);
+
+		super.onSaveInstanceState(outState);
+	}
+
+	@Override
+	protected void onDestroy() {
+		mDbHelper.close();
+		mGameCon.unbind();
+		super.onDestroy();
+	}
+
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		super.onListItemClick(l, v, position, id);
+
+		Log.v("TrackList", "position = " + position + "; id = " + id);
+		if (position < actions.size() + 1) {
+			if (position == 1) {
+				Log.v("TrackList", "Going to Downloaded tracks");
+				mDownloadedTracks = !mDownloadedTracks;
+				setTrackList();
+			}
+		}
+		else if (position > actions.size() + 1) {
+			Intent intent = new Intent();
+			intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI,
+					getTrackIdFromRowPosition(id)));
+
+			// TODO: eliminate the if statement (no one starts a TrackList
+			// activity anymore)
+			ComponentName caller = this.getCallingActivity();
+			if (caller != null) {
+				setResult(RESULT_OK, intent);
+				finish();
+			}
+			else {
+				intent.setClass(this, LoggerMap.class);
+				startActivity(intent);
+			}
+		}
+	}
+
+	@Override
+	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+		if (menuInfo instanceof AdapterView.AdapterContextMenuInfo) {
+			AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
+			if (itemInfo.position < actions.size() + 1)
+				return;
+			TextView textView = (TextView) itemInfo.targetView.findViewById(android.R.id.text1);
+			if (textView != null) {
+				menu.setHeaderTitle(textView.getText());
+			}
+		}
+		menu.add(0, MENU_STATS, 0, R.string.menu_statistics);
+		menu.add(0, MENU_SHARE, 0, R.string.menu_shareTrack);
+		menu.add(0, MENU_RENAME, 0, R.string.menu_renameTrack);
+		menu.add(0, MENU_DETELE, 0, R.string.menu_deleteTrack);
+	}
+
+	@Override
+	public boolean onContextItemSelected(MenuItem item) {
+		boolean handled = false;
+		AdapterView.AdapterContextMenuInfo info;
+		try {
+			info = (AdapterView.AdapterContextMenuInfo) item.getMenuInfo();
+		}
+		catch (ClassCastException e) {
+			Log.e(TAG, "Bad menuInfo", e);
+			return handled;
+		}
+
+		// TODO: cursor is obtained incorrectly
+		long trackId = getTrackIdFromRowPosition(info.position);
+
+		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
+		Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
+		ContentResolver resolver = this.getApplicationContext().getContentResolver();
+		Cursor trackCursor = null;
+		try {
+			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME }, null, null, null);
+			if (trackCursor != null && trackCursor.moveToLast()) {
+				String trackName = trackCursor.getString(0);
+				this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
+			}
+
+			// Cursor cursor = (Cursor) getListAdapter().getItem( );
+			mDialogUri = trackUri;
+			mDialogCurrentName = trackCursor.getString(0);
+			switch (item.getItemId()) {
+			case MENU_DETELE: {
+				showDialog(DIALOG_DELETE);
+				handled = true;
+				break;
+			}
+			case MENU_SHARE: {
+				Intent actionIntent = new Intent(Intent.ACTION_RUN);
+				actionIntent.setDataAndType(mDialogUri, Tracks.CONTENT_ITEM_TYPE);
+				actionIntent.putExtra("name", mDialogCurrentName);
+				actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+				startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
+				handled = true;
+				break;
+			}
+			case MENU_RENAME: {
+				showDialog(DIALOG_RENAME);
+				handled = true;
+				break;
+			}
+			case MENU_STATS: {
+				Intent actionIntent = new Intent(this, Statistics.class);
+				actionIntent.setData(mDialogUri);
+				startActivity(actionIntent);
+				handled = true;
+				break;
+			}
+			default:
+				handled = super.onContextItemSelected(item);
+				break;
+			}
+		}
+		finally {
+			if (trackCursor != null) {
+				trackCursor.close();
+			}
+		}
+
+		return handled;
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onCreateDialog(int)
+	 */
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Dialog dialog = null;
+		Builder builder = null;
+		View view;
+		switch (id) {
+		case DIALOG_RENAME:
+			LayoutInflater factory = LayoutInflater.from(this);
+			view = factory.inflate(R.layout.namedialog, null);
+			mTrackNameView = (EditText) view.findViewById(R.id.nameField);
+
+			builder = new AlertDialog.Builder(this).setTitle(R.string.dialog_routename_title)
+					.setMessage(R.string.dialog_routename_message).setIcon(
+							android.R.drawable.ic_dialog_alert).setPositiveButton(
+							R.string.btn_okay, mRenameOnClickListener).setNegativeButton(
+							R.string.btn_cancel, null).setView(view);
+			dialog = builder.create();
+			return dialog;
+		case DIALOG_DELETE:
+			builder = new AlertDialog.Builder(TrackList.this).setTitle(R.string.dialog_deletetitle)
+					.setIcon(android.R.drawable.ic_dialog_alert).setNegativeButton(
+							android.R.string.cancel, null).setPositiveButton(android.R.string.ok,
+							mDeleteOnClickListener);
+			dialog = builder.create();
+			String messageFormat = this.getResources()
+					.getString(R.string.dialog_deleteconfirmation);
+			String message = String.format(messageFormat, "");
+			((AlertDialog) dialog).setMessage(message);
+			return dialog;
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
+
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onPrepareDialog(int, android.app.Dialog)
+	 */
+	@Override
+	protected void onPrepareDialog(int id, Dialog dialog) {
+		super.onPrepareDialog(id, dialog);
+		switch (id) {
+		case DIALOG_RENAME:
+			if (mDialogCurrentName == null) {
+				mTrackNameView.setText("");
+				mTrackNameView.setSelection(0, 0);
+			}
+			else {
+				mTrackNameView.setText(mDialogCurrentName);
+				mTrackNameView.setSelection(0, mDialogCurrentName.length());
+			}
+			break;
+		case DIALOG_DELETE:
+			AlertDialog alert = (AlertDialog) dialog;
+			String messageFormat = this.getResources()
+					.getString(R.string.dialog_deleteconfirmation);
+			String message = String.format(messageFormat, mDialogCurrentName);
+			alert.setMessage(message);
+			break;
+		}
+	}
+
+	private void displayIntent(Intent intent) {
+		Log.d(TAG, "displayIntent()");
+		final String queryAction = intent.getAction();
+		Cursor tracksCursor = null;
+		if (Intent.ACTION_SEARCH.equals(queryAction)) {
+			// Got to SEARCH a query for tracks, make a list
+			tracksCursor = doSearchWithIntent(intent);
+			displayCursor(tracksCursor, false);
+		}
+		else if (Intent.ACTION_VIEW.equals(queryAction)) {
+			// Got to VIEW a single track, instead had it of to the LoggerMap
+			Intent notificationIntent = new Intent(this, LoggerMap.class);
+			notificationIntent.setData(intent.getData());
+			startActivity(notificationIntent);
+		}
+		else {
+			// Got to nothing, make a list of everything
+			String whereClause = null;
+			whereClause = "user_id " + (mDownloadedTracks ? "!=" : "=")
+					+ Common.getRegisteredUser(this).id;
+			Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+			tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
+					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID },
+					whereClause, null, null);
+			Log
+					.d(TAG, "displayIntent(): displaying all tracks. count = "
+							+ tracksCursor.getCount());
+			displayCursor(tracksCursor, true);
+		}
+
+	}
+
+	private void displayCursor(Cursor tracksCursor, boolean showGlobal) {
+		Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
+		// Create an array to specify the fields we want to display in the list
+		// (only TITLE)
+		// and an array of the fields we want to bind those fields to (in this
+		// case just text1)
+		// String[] fromColumns = new String[] { Tracks.NAME,
+		// Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
+		// int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from,
+		// R.id.listitem_duration, R.id.listitem_distance };
+		// Now create a simple cursor adapter and set it to display
+		// trackAdapter = new SimpleCursorAdapter( this,
+		// R.layout.trackitem, tracksCursor, fromColumns, toItems );
+
+		trackAdapter = new TrackListAdapter(this, tracksCursor);
+
+		// showGlobal = false;
+		if (!showGlobal) {
+			setListAdapter(trackAdapter);
+		}
+		else {
+			mGroupedAdapter = new SeparatedListAdapter(this);
+			mGroupedAdapter.addSection("", new SimpleAdapter(this, actions,
+					R.layout.list_item_simple, new String[] { Common.ITEM_TITLE },
+					new int[] { R.id.list_simple_title }));
+
+			mGroupedAdapter.addSection("My Tracks", trackAdapter);
+
+			setListAdapter(mGroupedAdapter);
+		}
+	}
+
+	private long getTrackIdFromRowPosition(long pos) {
+
+		String whereClause = null;
+		whereClause = "user_id " + (mDownloadedTracks ? "!=" : "=")
+				+ Common.getRegisteredUser(this).id;
+		Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+		Cursor tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID,
+				Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE,
+				Tracks.TRACK_ID }, whereClause, null, null);
+		pos = pos - (actions.size() + 2);
+		Log.d(TAG, "pos = " + pos);
+		// Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[]
+		// { Tracks._ID }, null, null, null );
+		// pos = tracksCursor.getCount() - pos + 1;
+		tracksCursor.moveToPosition((int) pos);
+		long trackId = tracksCursor.getLong(0);
+		Log.d(TAG, "name = " + tracksCursor.getString(1));
+		return trackId;
+	}
+
+	private Cursor doSearchWithIntent(final Intent queryIntent) {
+		final String queryString = queryIntent.getStringExtra(SearchManager.QUERY);
+		Cursor cursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
+				Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID },
+				"name LIKE ?" + (new String[] { "%" + queryString + "%" }) + " and user_id "
+						+ (mDownloadedTracks ? "!=" : "=") + Common.getRegisteredUser(this).id,
+				null, null);
+		return cursor;
+	}
+
+	private void registerUser() {
+		if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
+			return;
+
+		mDialogFriendInit.dismiss();
+		mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
+		User user = Common.getRegisteredUser(this);
+		user.friend_fb_ids = mFriendFbIds;
+		try {
+			mGameCon.registerUser(USERREG_RID, user);
+		}
+		catch (RemoteException e) {
+		}
+	}
+
+	private class ScoreboardReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
 			try {
-				
+
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					
-					switch(appResponse.request_id) {
+
+					switch (appResponse.request_id) {
 					case GET_SBS_RID:
-						ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
 						if (scores == null) {
 							Log.d(TAG, "onReceive(): no scores available");
 							initializeSelfStatistics();
@@ -647,7 +641,7 @@ public class TrackList extends ListActivity
 							for (int i = 0; i < scoreIds.length; i++)
 								scoreIds[i] = scores[i].id;
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
-							
+
 							Editor editorGetSb = mSharedPreferences.edit();
 							editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
 							editorGetSb.commit();
@@ -655,25 +649,27 @@ public class TrackList extends ListActivity
 						}
 						break;
 					case CREATE_SB_RID:
-						Integer[] scoreIds = (Integer[])appResponse.object;
+						Integer[] scoreIds = (Integer[]) appResponse.object;
 						if (scoreIds != null)
 							mDbHelper.updateSoloScoreboardIds(scoreIds);
-						
+
 						Editor editorCreateSb = mSharedPreferences.edit();
 						editorCreateSb.putBoolean(Constants.USER_REGISTERED, true);
 						editorCreateSb.commit();
 						mDialogUserInit.dismiss();
 						break;
 					case USERREG_RID:
-						int userId = (Integer)appResponse.object;
+						int userId = (Integer) appResponse.object;
 						Editor editorUser = mSharedPreferences.edit();
 						editorUser.putInt(Constants.USERREG_ID_KEY, userId);
 						editorUser.commit();
 						try {
-							mGameCon.getScoreBoards(GET_SBS_RID, 
-									userId, -1, null, null);
-						} catch (RemoteException e) {}
-					default: break;
+							mGameCon.getScoreBoards(GET_SBS_RID, userId, -1, null, null);
+						}
+						catch (RemoteException e) {
+						}
+					default:
+						break;
 					}
 				}
 			}
@@ -682,97 +678,103 @@ public class TrackList extends ListActivity
 			}
 		}
 	}
-   
-   private final class LoginDialogListener implements DialogListener {
-       public void onComplete(Bundle values) {
-           //SessionEvents.onLoginSuccess();
-           Log.d(TAG, "Facebook login successfull!!!");
-           mDialogFriendInit = ProgressDialog.show(TrackList.this, "", "Retrieving your friends...", true);
-           mAsyncRunner.request("me", new UserInfoRequestListener());
-           mAsyncRunner.request("me/friends", new FriendsRequestListener());
-       }
 
-       public void onFacebookError(FacebookError error) {
-           //SessionEvents.onLoginError(error.getMessage());
-       }
-       
-       public void onError(DialogError error) {
-           //SessionEvents.onLoginError(error.getMessage());
-       }
+	private final class LoginDialogListener implements DialogListener {
+		public void onComplete(Bundle values) {
+			// SessionEvents.onLoginSuccess();
+			Log.d(TAG, "Facebook login successfull!!!");
+			mDialogFriendInit = ProgressDialog.show(TrackList.this, "",
+					"Retrieving your friends...", true);
+			mAsyncRunner.request("me", new UserInfoRequestListener());
+			mAsyncRunner.request("me/friends", new FriendsRequestListener());
+		}
 
-       public void onCancel() {
-    	   if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
-    		   Toast toast = Toast.makeText(TrackList.this.getApplicationContext(), 
-    				   "Facebook login is required", Toast.LENGTH_SHORT);
-    		   toast.show();
-    		   mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
-    				   new LoginDialogListener());
-    	   }
-       }
-   }
-   
-   private class UserInfoRequestListener extends BaseRequestListener {
+		public void onFacebookError(FacebookError error) {
+			// SessionEvents.onLoginError(error.getMessage());
+		}
 
-       public void onComplete(final String response) {
-           try {
-               // process the response here: executed in background thread
-               Log.d(TAG, "Response: " + response.toString());
-               JSONObject json = Util.parseJson(response);
-               
-               Editor editor = mSharedPreferences.edit();
-               editor.putLong(Constants.USERREG_FBID_KEY, json.getLong("id"));
-               editor.putString(Constants.USERREG_EMAIL_KEY, json.getString("email"));
-               editor.putString(Constants.USERREG_FIRSTNAME_KEY, json.getString("first_name"));
-               editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
-               editor.putString(Constants.USERREG_PICTURE_KEY, 
-            		   Constants.GRAPH_BASE_URL + json.getLong("id") + "/picture");
-               editor.commit();
-               
-               TrackList.this.runOnUiThread(new Runnable() {
-                   public void run() {
-                	   registerUser();
-                   }
-               });
-           } catch (JSONException e) {
-               Log.w("Facebook-Example", "JSON Error in response");
-           } catch (FacebookError e) {
-               Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
-           }
-       }
-   }
-   
-   private class FriendsRequestListener extends BaseRequestListener {
+		public void onError(DialogError error) {
+			// SessionEvents.onLoginError(error.getMessage());
+		}
 
-       public void onComplete(final String response) {
-           try {
-               // process the response here: executed in background thread
-               Log.d(TAG, "Response: " + response.toString());
-               JSONObject json = Util.parseJson(response);
-               
-               JSONArray friends = json.getJSONArray("data");
-               if (friends == null) return;
-               
-               long[] fbIds = new long[friends.length()];
-               //long[] fbIds = new long[10];
-               JSONObject friend;
-               for (int i = 0; i < friends.length(); i++) {
-            	   friend = friends.getJSONObject(i);
-            	   fbIds[i] = friend.getInt("id");
-            	   Log.d(TAG, "fb_id = " +fbIds[i]);
-               }
-               
-               mFriendFbIds = fbIds;
-               
-               TrackList.this.runOnUiThread(new Runnable() {
-                   public void run() {
-                	   registerUser();
-                   }
-               });
-           } catch (JSONException e) {
-               Log.w("Facebook-Example", "JSON Error in response");
-           } catch (FacebookError e) {
-               Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
-           }
-       }
-   }
+		public void onCancel() {
+			if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+				Toast toast = Toast.makeText(TrackList.this.getApplicationContext(),
+						"Facebook login is required", Toast.LENGTH_SHORT);
+				toast.show();
+				mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+						new LoginDialogListener());
+			}
+		}
+	}
+
+	private class UserInfoRequestListener extends BaseRequestListener {
+
+		public void onComplete(final String response) {
+			try {
+				// process the response here: executed in background thread
+				Log.d(TAG, "Response: " + response.toString());
+				JSONObject json = Util.parseJson(response);
+
+				Editor editor = mSharedPreferences.edit();
+				editor.putLong(Constants.USERREG_FBID_KEY, json.getLong("id"));
+				editor.putString(Constants.USERREG_EMAIL_KEY, json.getString("email"));
+				editor.putString(Constants.USERREG_FIRSTNAME_KEY, json.getString("first_name"));
+				editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
+				editor.putString(Constants.USERREG_PICTURE_KEY, Constants.GRAPH_BASE_URL
+						+ json.getLong("id") + "/picture");
+				editor.commit();
+
+				TrackList.this.runOnUiThread(new Runnable() {
+					public void run() {
+						registerUser();
+					}
+				});
+			}
+			catch (JSONException e) {
+				Log.w("Facebook-Example", "JSON Error in response");
+			}
+			catch (FacebookError e) {
+				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+			}
+		}
+	}
+
+	private class FriendsRequestListener extends BaseRequestListener {
+
+		public void onComplete(final String response) {
+			try {
+				// process the response here: executed in background thread
+				Log.d(TAG, "Response: " + response.toString());
+				JSONObject json = Util.parseJson(response);
+
+				JSONArray friends = json.getJSONArray("data");
+				if (friends == null)
+					return;
+
+				long[] fbIds = new long[friends.length()];
+				// long[] fbIds = new long[10];
+				JSONObject friend;
+				for (int i = 0; i < friends.length(); i++) {
+					friend = friends.getJSONObject(i);
+					fbIds[i] = friend.getInt("id");
+					Log.d(TAG, "fb_id = " + fbIds[i]);
+				}
+
+				mFriendFbIds = fbIds;
+
+				TrackList.this.runOnUiThread(new Runnable() {
+					public void run() {
+						registerUser();
+					}
+				});
+			}
+			catch (JSONException e) {
+				Log.w("Facebook-Example", "JSON Error in response");
+			}
+			catch (FacebookError e) {
+				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+			}
+		}
+	}
 }
