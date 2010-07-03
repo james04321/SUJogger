@@ -11,17 +11,22 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true" 
 		android:orientation="horizontal"
-		android:padding="6dip"
+		android:paddingTop="6dip"
+		android:paddingLeft="2dip"
+		android:paddingRight="2dip"
 		android:background="@drawable/toolbar_bg_grey">
 		
 		<Button 
 			android:id="@+id/startbutton"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content" 
-			android:text="@string/track_start" 
-			android:textStyle="bold"
-			android:textColor="#FFFFFF"
-			android:background="@drawable/custom_btn_green"
+			android:text="Accept and start" 
+			android:layout_weight="1"/>
+		<Button 
+			android:id="@+id/replybutton"
+			android:layout_width="fill_parent"
+			android:layout_height="wrap_content" 
+			android:text="Reply all" 
 			android:layout_weight="1"/>
 	</LinearLayout>
     

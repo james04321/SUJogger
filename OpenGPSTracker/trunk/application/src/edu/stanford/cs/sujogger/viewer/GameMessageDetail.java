@@ -1,9 +1,7 @@
 package edu.stanford.cs.sujogger.viewer;
 
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -12,8 +10,8 @@ import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
+import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
@@ -33,15 +31,17 @@ public class GameMessageDetail extends ListActivity {
 	private long[] mReplyRecipientIds;
 	private Cursor mPeople;
 	private SeparatedListAdapter mGroupAdapter;
-	private List<Map<String,?>> mActions;
 	private int mDidStart;
+	
+	private Button mStartButton;
+	private Button mReplyButton;
 
 	public GameMessageDetail() {}
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
-		this.setContentView(R.layout.list_simple);
+		this.setContentView(R.layout.gamemessagedetail);
 		
 		mMessageId = savedInstanceState != null ? savedInstanceState.getLong(GameMessages.TABLE) : 0;
 		if (mMessageId == 0) {
@@ -61,31 +61,41 @@ public class GameMessageDetail extends ListActivity {
 		mMessageType = mMessage.getInt(2);
 		mDidStart = mMessage.getInt(9);
 		
-		
-		mReplyRecipientIds = new long[mPeople.getCount()-1];
-		int i = 0;
 		mPeople.moveToPosition(-1);
-		while(i < mReplyRecipientIds.length && mPeople.moveToNext()) {
-			if (mPeople.getLong(1) != Common.getRegisteredUser(this).id) {
-				mReplyRecipientIds[i] = mPeople.getLong(1);
-				i++;
-			}
-		}
+		ArrayList<Long> recipients = new ArrayList<Long>(mPeople.getCount());
+		while(mPeople.moveToNext())
+			if (mPeople.getLong(1) != Common.getRegisteredUser(this).id)
+				recipients.add(mPeople.getLong(1));
 		
-		Log.d(TAG, Arrays.toString(mReplyRecipientIds));
+		mReplyRecipientIds = new long[recipients.size()];
+		for (int i = 0; i < mReplyRecipientIds.length; i++)
+			mReplyRecipientIds[i] = recipients.get(i);
+		
+		//Log.d(TAG, Arrays.toString(mReplyRecipientIds));
 		
 		mPeople.moveToFirst();
 		
-		mActions = new LinkedList<Map<String,?>>();
+		mStartButton = (Button)findViewById(R.id.startbutton);
+		mStartButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				startTrack();
+			}
+		});
+		mStartButton.setVisibility(View.GONE);
+		
+		mReplyButton = (Button)findViewById(R.id.replybutton);
+		mReplyButton.setOnClickListener(new View.OnClickListener() {
+			public void onClick(View v) {
+				startMessageSender();
+			}
+		});
 		
 		if (!(mPeople.getCount() == 1 && mPeople.getInt(1) == Common.getRegisteredUser(this).id)) {
 			if ((mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE) &&
 					mDidStart == 0)
-				mActions.add(Common.createItem("Accept and start"));
-			if (mPeople.getCount() > 1)
-				mActions.add(Common.createItem("Reply all"));
-			else
-				mActions.add(Common.createItem("Reply"));
+				mStartButton.setVisibility(View.VISIBLE);
+			if (!(mPeople.getCount() > 1))
+				mReplyButton.setText("Reply");
 		}
 		
 		fillData();
@@ -125,32 +135,12 @@ public class GameMessageDetail extends ListActivity {
 		
 		if (position < 3) return;
 		
-		if (mActions.size() > 0) {
-			if ((mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE) &&
-					mDidStart == 0) {
-				if (position == 3) {
-					startTrack();
-					return;
-				}
-				else if (position == 4) {
-					startMessageSender();
-					return;
-				}
-			}
-			else {
-				if (position == 3) {
-					startMessageSender();
-					return;
-				}
-			}
-		}
-		
 		Log.d(TAG, "onListItemClick(): user id = " + (Integer)mGroupAdapter.getItem(position));
 	}
 	
 	private void startTrack() {
 		Log.d(TAG, "startTrack()");
-		mDbHelper.setMessageToStarted(mMessage.getLong(0));
+		mDbHelper.setMessageToStarted(mMessageId);
 		
 		Intent intent = new Intent(this, LoggerMap.class);
 		intent.putExtra(LoggerMap.PARTNER_RUN_KEY, true);
@@ -171,8 +161,6 @@ public class GameMessageDetail extends ListActivity {
 		mGroupAdapter = new SeparatedListAdapter(this);
 		
 		mGroupAdapter.addSection("", new GameMessageAdapter(this, mMessage, true));
-		mGroupAdapter.addSection("Actions", new SimpleAdapter(this, mActions, R.layout.list_item_simple, 
-				new String[] {Common.ITEM_TITLE}, new int[] {R.id.list_simple_title}));
 		if (mPeople != null)
 			mGroupAdapter.addSection("People", new UserListAdapter(this, mPeople, false, null));
 		

@@ -514,10 +514,10 @@ public class LoggerMap extends MapActivity {
 				int state = GPSLoggerServiceManager.getLoggingState();
 				switch (state) {
 				case Constants.STOPPED:
-					mStartButton.setText("Stop");
-					mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
-					mResumeButton.setVisibility(View.VISIBLE);
-					mResumeButton.setText("Pause");
+					//mStartButton.setText(R.string.map_stop);
+					//mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
+					//mResumeButton.setVisibility(View.VISIBLE);
+					//mResumeButton.setText(R.string.map_pause);
 					
 					Log.d(TAG, "mLoggingControlListener: start GPS logging...");
 					long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
@@ -526,9 +526,9 @@ public class LoggerMap extends MapActivity {
 					break;
 				case Constants.LOGGING:
 				case Constants.PAUSED:
-					mStartButton.setText("Start");
-					mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
-					mResumeButton.setVisibility(View.GONE);
+					//mStartButton.setText(R.string.map_start);
+					//mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
+					//mResumeButton.setVisibility(View.GONE);
 					
 					GPSLoggerServiceManager.stopGPSLogging();
 					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
@@ -537,6 +537,7 @@ public class LoggerMap extends MapActivity {
 				default:
 					break;
 				}
+				updateTrackingButtons();
 			}
 		});
 		
@@ -548,15 +549,16 @@ public class LoggerMap extends MapActivity {
 				case Constants.STOPPED: break;
 				case Constants.LOGGING:
 					GPSLoggerServiceManager.pauseGPSLogging();
-					mResumeButton.setText("Resume");
+					//mResumeButton.setText(R.string.map_resume);
 					break;
 				case Constants.PAUSED:
 					GPSLoggerServiceManager.resumeGPSLogging();
-					mResumeButton.setText("Pause");
+					//mResumeButton.setText(R.string.map_pause);
 					break;
 				default:
 					break;
 				}
+				updateTrackingButtons();
 			}
 		});
 
@@ -601,9 +603,8 @@ public class LoggerMap extends MapActivity {
 		updateSpeedDisplayVisibility();
 		mMylocation.enableCompass();
 		mMylocation.enableMyLocation();
-		// TODO: remove unnecessary preferences
-		// updateCompassDisplayVisibility();
-		// updateLocationDisplayVisibility();
+		
+		updateTrackingButtons();
 
 		if (mTrackIds.size() >= 0) {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -771,24 +772,7 @@ public class LoggerMap extends MapActivity {
 		}
 		return propagate;
 	}
-
-	@Override
-	public void finish() {
-		Log.d(TAG, "finish()");
-		if (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING)
-			setResult(TrackList.TRACKSTATUS_TRACKING);
-		else
-			setResult(TrackList.TRACKSTATUS_IDLE);
-
-		super.finish();
-	}
-
-	/*
-	 * @Override public void onBackPressed() { Log.d(TAG, "onBackPressed"); //if
-	 * (GPSLoggerServiceManager.getLoggingState() == Constants.LOGGING) //
-	 * setResult(TrackList.TRACKSTATUS_TRACKING); //else //
-	 * setResult(TrackList.TRACKSTATUS_IDLE); finish(); return; }
-	 */
+	
 	private void setTrafficOverlay(boolean b) {
 		Editor editor = mSharedPreferences.edit();
 		editor.putBoolean(Constants.TRAFFIC, b);
@@ -1130,6 +1114,31 @@ public class LoggerMap extends MapActivity {
 	protected boolean isRouteDisplayed() {
 		return true;
 	}
+	
+	private void updateTrackingButtons() {
+		int state = GPSLoggerServiceManager.getLoggingState();
+		switch (state) {
+		case Constants.STOPPED:
+			mStartButton.setText(R.string.map_start);
+			mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
+			mResumeButton.setVisibility(View.GONE);
+			break;
+		case Constants.LOGGING:
+			mStartButton.setText(R.string.map_stop);
+			mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
+			mResumeButton.setVisibility(View.VISIBLE);
+			mResumeButton.setText(R.string.map_pause);
+			break;
+		case Constants.PAUSED:
+			mStartButton.setText(R.string.map_stop);
+			mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
+			mResumeButton.setVisibility(View.VISIBLE);
+			mResumeButton.setText(R.string.map_resume);
+			break;
+		default:
+			break;
+		}
+	}
 
 	private void updateTitleBar() {
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1150,43 +1159,11 @@ public class LoggerMap extends MapActivity {
 	}
 
 	private void updateSpeedbarVisibility() {
-		// int trackColoringMethod = new Integer( mSharedPreferences.getString(
-		// Constants.TRACKCOLORING, "3" ) ).intValue();
-		/*
-		ContentResolver resolver = this.getApplicationContext().getContentResolver();
-		Cursor waypointsCursor = null;
-		try {
-			waypointsCursor = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, this.mTrackId
-					+ "/waypoints"), new String[] { "avg(" + Waypoints.SPEED + ")" }, null, null,
-					null);
-			if (waypointsCursor != null && waypointsCursor.moveToLast()) {
-				mAverageSpeed = waypointsCursor.getDouble(0);
-			}
-			if (mAverageSpeed < 5) {
-				mAverageSpeed = 33.33d / 2d;
-			}
-		}
-		finally {
-			if (waypointsCursor != null) {
-				waypointsCursor.close();
-			}
-		}
-		*/
 		View speedbar = findViewById(R.id.speedbar);
-		// if( trackColoringMethod == SegmentOverlay.DRAW_MEASURED ||
-		// trackColoringMethod == SegmentOverlay.DRAW_CALCULATED )
-		// {
 		drawSpeedTexts(mAverageSpeed);
 		speedbar.setVisibility(View.VISIBLE);
-		for (int i = 0; i < mSpeedtexts.length; i++) {
+		for (int i = 0; i < mSpeedtexts.length; i++)
 			mSpeedtexts[i].setVisibility(View.VISIBLE);
-		}
-		// }
-		/*
-		 * else { speedbar.setVisibility( View.INVISIBLE ); for (int i = 0; i <
-		 * mSpeedtexts.length; i++) { mSpeedtexts[i].setVisibility(
-		 * View.INVISIBLE ); } }
-		 */
 	}
 
 	private void updateSpeedDisplayVisibility() {
