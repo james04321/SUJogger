@@ -83,7 +83,7 @@ public class ExportGPX extends Activity
                   break;
             }
          }
-      };  
+      };   
  
    @Override
    public void onCreate( Bundle savedInstanceState )
