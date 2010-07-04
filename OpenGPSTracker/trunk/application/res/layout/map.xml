@@ -18,7 +18,7 @@
 			android:id="@+id/startbutton"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content" 
-			android:text="Start tracking" 
+			android:text="@string/map_start" 
 			android:textColor="#FFFFFF"
 			android:textStyle="bold"
 			android:visibility="visible"

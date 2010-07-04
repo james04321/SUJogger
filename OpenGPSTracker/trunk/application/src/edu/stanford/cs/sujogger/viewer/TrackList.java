@@ -111,9 +111,7 @@ public class TrackList extends ListActivity {
 	public static final int DIALOG_FILENAME = 0;
 	private static final int DIALOG_RENAME = 23;
 	private static final int DIALOG_DELETE = 24;
-
-	public static final int TRACKSTATUS_IDLE = 10;
-	public static final int TRACKSTATUS_TRACKING = 11;
+	
 	public static final int PUBLISH_TRACK = 100;
 	public static final int DOWNLOAD_TRACK = 101;
 
@@ -280,6 +278,20 @@ public class TrackList extends ListActivity {
 		trackAdapter.notifyDataSetChanged();
 		getListView().invalidate();
 		getListView().invalidateViews();
+		
+		int state = GPSLoggerServiceManager.getLoggingState();
+		switch (state) {
+		case Constants.STOPPED:
+			mStartButton.setText(R.string.track_start);
+			break;
+		case Constants.LOGGING:
+		case Constants.PAUSED:
+			mStartButton.setText(R.string.track_return);
+			break;
+		default:
+			break;
+		}
+		
 		super.onResume();
 	}
 

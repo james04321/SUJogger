@@ -109,6 +109,11 @@
     <string name="showlocation_summary">Show my location on the map</string>
     <string name="units_title">Units</string>
     <string name="units_summary">Determine if metric or imperial units are used</string>
+    
+    <string name="map_start">Start tracking</string>
+    <string name="map_stop">Stop</string>
+    <string name="map_resume">Resume</string>
+    <string name="map_pause">Pause</string>
 
     <string name="stat_title">Statistics - %s</string>
     <string name="stat_maximumspeed">Maximum speed</string>
@@ -122,6 +127,8 @@
     <string name="stat_trackname">Track name</string>
     <string name="stat_waypoints">Waypoints</string>
     
+    <string name="track_start">Start a new run</string>
+    <string name="track_return">Return to map</string>
     <string name="track_list">Tracks</string>
     <string name="search_label">Tracks</string>
     <string name="search_description">SUJogger track names</string>
