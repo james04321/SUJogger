@@ -61,11 +61,11 @@ import android.widget.Toast;
  * @version $Id: GpxCreator.java 474 2010-04-14 20:33:50Z rcgroot $
  * @author rene (c) Mar 22, 2009, Sogeti B.V.
  */
-public class GpxCreator extends XmlCreator
-{
+public class GpxCreator extends XmlCreator 
+{ 
    public static final String NS_SCHEMA = "http://www.w3.org/2001/XMLSchema-instance";
    public static final String NS_GPX_11 = "http://www.topografix.com/GPX/1/1";
-   public static final String DATETIME = "yyyy-MM-dd'T'HH:mm:ss'Z'";
+   public static final String DATETIME = "yyyy-MM-dd'T'HH:mm:ss'Z'"; 
 
    private String mChosenBaseFileName;
    private Intent mIntent;

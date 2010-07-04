@@ -40,10 +40,11 @@
       android:enabled="true"
       android:clickable="true"
       android:layout_above="@id/map_bottom_control_bar"
-      android:apiKey="065bMo1pfY8EMOcUje6LBujwsXRIdDn4YuhroVQ" />
+      android:apiKey="037PA6ekPCjNDkZ7ifg3b6Q5KceF3y97cXj7P4w" />
       <!-- Anthony's API Key: 037PA6ekPCjNDkZ7ifg3b6Q5KceF3y97cXj7P4w -->
    <!--  Release: 065bMo1pfY8EpTskGACc-A_sOAfK5y_LZcgYU8Q -->
    <!--  Debug: 065bMo1pfY8EMOcUje6LBujwsXRIdDn4YuhroVQ -->
+   <!--  Anthony's Release: 037PA6ekPCjPHNQiupkHWbKt7O83NS6GvIcyQ3A -->
 
    <TextView
       android:id="@+id/currentSpeed"

@@ -82,14 +82,14 @@ public class PublishGPX extends Activity
    private Notification mNotification;
    private NotificationManager mNotificationManager;
    private EditText mFileNameView;
-   
+    
    private PublishGPXReceiver mReceiver;
    private GamingServiceConnection mGamingServiceConn;
    private DatabaseHelper mDbHelper;
-    
+     
 	class PublishGPXReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			try {
+			try { 
 				AppResponse appResponse = null;
 				while ((appResponse = mGamingServiceConn.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
@@ -197,7 +197,7 @@ private ProgressDialog mProgressDialog;
    {
       Builder builder;
       switch (id)
-      {
+      { 
          case DIALOG_FILENAME:
             LayoutInflater factory = LayoutInflater.from( this );
             View view = factory.inflate( R.layout.filenamedialog, null );

@@ -83,8 +83,8 @@ public class ExportGPX extends Activity
                   break;
             }
          }
-      };
-
+      };   
+ 
    @Override
    public void onCreate( Bundle savedInstanceState )
    {
@@ -102,7 +102,7 @@ public class ExportGPX extends Activity
    {
       Builder builder;
       switch (id)
-      {
+      { 
          case DIALOG_FILENAME:
             LayoutInflater factory = LayoutInflater.from( this );
             View view = factory.inflate( R.layout.filenamedialog, null );
@@ -115,18 +115,18 @@ public class ExportGPX extends Activity
                .setPositiveButton( R.string.btn_okay, mOnClickListener )
                .setNegativeButton( R.string.btn_cancel, mOnClickListener );
             Dialog dialog = builder.create();
-            dialog.setOwnerActivity( this );
-            return dialog;
+            dialog.setOwnerActivity( this ); 
+            return dialog; 
          default:
             return super.onCreateDialog( id );
-      }
+      } 
    }
 
    protected void exportGPX( String chosenBaseFileName )
    {
       GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, new ProgressListener(), null, false );
       mGpxCreator.start();
-      this.finish();
+      this.finish(); 
    }
    
    class ProgressListener implements XmlCreationProgressListener
