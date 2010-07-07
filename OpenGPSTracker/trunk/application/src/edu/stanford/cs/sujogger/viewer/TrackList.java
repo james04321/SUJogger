@@ -205,7 +205,8 @@ public class TrackList extends ListActivity {
 		});
 		
 		LinearLayout topControlBar = (LinearLayout)findViewById(R.id.top_control_bar);
-		topControlBar.addView(new SegmentedControl(this, new String[] {"My tracks", "Downloaded tracks"}, 0, new SegmentedControl.SegmentedControlListener() {
+		topControlBar.addView(new SegmentedControl(this, new String[] {"My tracks", "Downloaded tracks"}, 
+				mDownloadedTracks ? 1 : 0, new SegmentedControl.SegmentedControlListener() {
 			public void onValueChanged(int newValue) {
 				mDownloadedTracks = newValue == 1;
 				displayIntent(getIntent());
