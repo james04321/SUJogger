@@ -177,6 +177,22 @@ public class LoggerMap extends MapActivity {
 	private ScoreboardUpdateReceiver mReceiver;
 	private ProgressDialog mDialogUpdate;
 
+	//ASLAI: created new function to do animateTo
+	private void animateTo() {		
+		int state = GPSLoggerServiceManager.getLoggingState();
+		if (mTrackIds.size() > 0) {
+			if (state == Constants.LOGGING || state == Constants.PAUSED)   {
+				Log.d(TAG, "ASLAI: GOING TO LAST TRACK POINT");
+				mMapView.getController().animateTo(getLastTrackPoint());
+			} else { 
+				Log.d(TAG, "ASLAI: GOING TO FIRST TRACK POINT");
+
+				mMapView.getController().animateTo(getFirstTrackPoint());
+			}
+		}
+		
+	}	
+	
 	private ArrayList<Long> toTrackIdsLongArray(long[] longArray) {
 		if (longArray == null || longArray.length <=0) {
 			return new ArrayList<Long>();
@@ -201,10 +217,9 @@ public class LoggerMap extends MapActivity {
 	private void addTrackIds(long val, boolean startLogging) {
 
 		
-		int size = mTrackIds.size();
-		for (int i=0; i < size; i++) {
+		for (int i=0; i < mTrackIds.size(); i++) {
 			if (mTrackIds.get(i) == val) {
-				return;
+				mTrackIds.remove(i);
 			}
 		}
 		int state = GPSLoggerServiceManager.getLoggingState();
@@ -501,13 +516,21 @@ public class LoggerMap extends MapActivity {
 		mMapView = (MapView) findViewById(R.id.myMapView);
 		mMylocation = new FixedMyLocationOverlay(this, mMapView);
 		mMapController = this.mMapView.getController();
+		
+		//ASLAI: Added
+		mMylocation.enableMyLocation();
+		
 		mMapView.setBuiltInZoomControls(true);
 		mMapView.displayZoomControls(true);
+		
 		mMapView.setClickable(true);
 		mMapView.setStreetView(false);
 		mMapView.setSatellite(mSharedPreferences.getBoolean(Constants.SATELLITE, false));
 		mMapView.setTraffic(mSharedPreferences.getBoolean(Constants.TRAFFIC, false));
-		
+
+		//ASLAI: Added
+		mMapController.setZoom(20);
+	
 		mStartButton = (Button)findViewById(R.id.startbutton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -572,6 +595,17 @@ public class LoggerMap extends MapActivity {
 		mIsPartnerRun = extras != null ? extras.getBoolean(PARTNER_RUN_KEY) : false;
 		
 		onRestoreInstanceState(load);
+		
+		//ASLAI: Added
+		Log.d(TAG, "ASLAI: Enabling my location");
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		overlays.clear();
+		overlays.add(mMylocation);
+		
+		mMylocation.enableMyLocation();	
+		mMapView.invalidate();
+		Log.d(TAG, "ASLAI: Enabled my location");
+		
 	}
 
 	protected void onPause() {
@@ -688,7 +722,7 @@ public class LoggerMap extends MapActivity {
 		}
 		else {
 			Log.d(TAG, "Moving to last track ");
-			moveToLastTrack(); // 3rd just try the last track
+//			moveToLastTrack(); // 3rd just try the last track
 		}
 		
 		if (load != null && load.containsKey(PARTNER_RUN_KEY))
@@ -703,11 +737,13 @@ public class LoggerMap extends MapActivity {
 
 		if (load != null && load.containsKey("e6lat") && load.containsKey("e6long")) {
 			GeoPoint storedPoint = new GeoPoint(load.getInt("e6lat"), load.getInt("e6long"));
+			Log.d(TAG, "ASLAI: ANIMATING TO STORED POINT");
 			this.mMapView.getController().animateTo(storedPoint);
 		}
 		else {
 			GeoPoint lastPoint = getLastTrackPoint();
-			this.mMapView.getController().animateTo(lastPoint);
+			animateTo();
+//			this.mMapView.getController().animateTo(lastPoint);
 		}
 		redrawOverlays();
 		Log.d(TAG, "onRestoreInstanceState(): mIsPartnerRun = " + mIsPartnerRun);
@@ -1394,7 +1430,8 @@ public class LoggerMap extends MapActivity {
 			else if (out.x < width / 4 || out.y < height / 4 || out.x > (width / 4) * 3
 					|| out.y > (height / 4) * 3) {
 				this.mMapView.clearAnimation();
-				this.mMapView.getController().animateTo(lastPoint);
+				animateTo();
+//				this.mMapView.getController().animateTo(lastPoint);
 				// Log.d( TAG, "mMapView.animateTo()" );
 			}
 		}
@@ -1423,12 +1460,19 @@ public class LoggerMap extends MapActivity {
 		}*/
 	}
     private void redrawOverlays() {
+    	//ASLAI DIAGNOSTICS TILL HERE
+    	Log.d(TAG, "ASLAI: REDRAW OVERLAYS");
 		mMapView.getOverlays().clear();
-		GeoPoint lastPoint = getLastTrackPoint();
-	    mMapView.getController().animateTo(lastPoint);
+		//ASLAI REMOVED HERE
+		//ASLAI DIAGNOSTIC PROBLEM SHOULD BE HERE
+		
+//		GeoPoint lastPoint = getLastTrackPoint();
+//	    mMapView.getController().animateTo(lastPoint);
 		
 		if (mTrackIds.size() > 0) {
-            moveToTrack(getLastTrackId(), true, true);
+			//ASLAI DIAGNOSTICS CHANGED HERE, There's still another place doing animate
+			moveToTrack(getLastTrackId(), false, false);
+			//            moveToTrack(getLastTrackId(), true, true);
 
 		}    	
     }
@@ -1440,17 +1484,20 @@ public class LoggerMap extends MapActivity {
         if (state == Constants.LOGGING || state == Constants.PAUSED) {        	
             tmpTrackIds.add(getLastTrackId());
         }
-        mTrackIds = tmpTrackIds;    
-        redrawOverlays();
-//		createDataOverlays();
-//		updateDataOverlays();
-//		moveActiveViewWindow();
+        mTrackIds = tmpTrackIds;
+        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
-		editor.commit();
+		editor.commit();        
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.clear(); 
 		overlays.add(mMylocation);
+		redrawOverlays();
+//		createDataOverlays();
+//		updateDataOverlays();
+//		moveActiveViewWindow();
+
+
 	}
 	/**
 	 * Alter this to set a new track as current.
@@ -1460,6 +1507,7 @@ public class LoggerMap extends MapActivity {
 	 *            center on the end of the track
 	 */
 	private void moveToTrack(long trackId, boolean center, boolean startLogging) {
+		Log.d(TAG, "ASLAI: MOVE TO TRACK: " + trackId);
 		Cursor track = null;
 		try {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1498,13 +1546,26 @@ public class LoggerMap extends MapActivity {
 				track.close();
 			}
 		}
+		/*
 		if (center) {
-			GeoPoint lastPoint = getLastTrackPoint();
+			GeoPoint lastPoint = getLastTrackPoint(trackId);
+//ASLAI CHANGED			GeoPoint lastPoint = getLastTrackPoint();
 			this.mMapView.getController().animateTo(lastPoint);
 		}	
+		*/
 		updateTitleBar();
 		updateDataOverlays();
 		updateSpeedbarVisibility();					
+		if (center) {
+			Log.d(TAG, "ASLAI: Animating to track: " + trackId);
+			GeoPoint lastPoint = getLastTrackPoint(trackId);
+//ASLAI CHANGED			GeoPoint lastPoint = getLastTrackPoint();
+			animateTo();
+//			this.mMapView.getController().animateTo(lastPoint);
+			Log.d(TAG, "ASLAI: Animating to :" + lastPoint.getLatitudeE6() + " " + lastPoint.getLongitudeE6());
+			//ASLAI ADDED BELOW
+			this.mMapView.invalidate();
+		}	
 	}
 	/*
 	//ASLAI
@@ -1620,8 +1681,118 @@ public class LoggerMap extends MapActivity {
 		}
 		return lastPoint;
 	}
+	//ASLAI Added
+	private GeoPoint getFirstTrackPoint() {
+		long waypointId = 0;
+		Cursor minwaypoint = null;
+		Cursor waypoint = null;
+		GeoPoint lastPoint = null;
+		ContentResolver resolver = this.getContentResolver();
+		
+		try {
+			waypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId()
+					+ "/waypoints"), new String[] { "max(" + Waypoints.TABLE + "." + Waypoints._ID + ")" }, null, null, null);
+
+			if (waypoint != null && waypoint.moveToLast()) {
+				mLastWaypoint = waypoint.getLong(0);
+			}
+		}
+		finally {
+			if (waypoint != null) {
+				waypoint.close();
+			}
+		}
+
+		try {
+			minwaypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId()
+				+ "/waypoints"), new String[] { "min(" + Waypoints.TABLE + "." + Waypoints._ID + ")" }, null, null, null);			
+			if (minwaypoint != null && minwaypoint.moveToLast()) {
+				waypointId = minwaypoint.getLong(0);
+				waypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, getLastTrackId()
+					+ "/waypoints"), new String[] { Waypoints.LATITUDE, Waypoints.LONGITUDE }, 
+					Waypoints.TABLE + "." + Waypoints._ID + " = " + waypointId, null, null);
+
+				if (waypoint != null && waypoint.moveToLast()) {
+					int microLatitude = (int) (waypoint.getDouble(0) * 1E6d);
+					int microLongitude = (int) (waypoint.getDouble(1) * 1E6d);
+					Log.d(TAG, "FIRST TRACK POINT IS : " + waypoint.getDouble(0) + ", "
+							+ waypoint.getDouble(1));
+					lastPoint = new GeoPoint(microLatitude, microLongitude);
+				}
+				if (lastPoint == null || lastPoint.getLatitudeE6() == 0
+						|| lastPoint.getLongitudeE6() == 0) {
+					lastPoint = getLastKnowGeopointLocation();
+				}
+		/*
+				else {
+					mLastWaypoint = waypoint.getLong(2);
+				}
+				*/
+			}
+			}
+			finally {
+				if (minwaypoint != null) {
+					minwaypoint.close();
+				}
+				if (waypoint != null) {
+					waypoint.close();
+				}
+			}
+			
+			/*
+		if (waypoint != null) {
+			waypoint.moveToFirst();
+			Log.d(TAG, "WAYPOINTS ARE: \n");
+			while (!waypoint.isAfterLast()) {
+				Log.d(TAG, waypoint.getDouble(0) + ", "
+						+ waypoint.getDouble(1) + "\n");
+				waypoint.moveToNext();
+
+			}
+		}
+		*/
+
+
+		return lastPoint;
+	}	
+	
+	//ASLAI Added
+	private GeoPoint getLastTrackPoint(long trackId) {
+		Cursor waypoint = null;
+		GeoPoint lastPoint = null;
+		try {
+			ContentResolver resolver = this.getContentResolver();
+			waypoint = resolver.query(Uri.withAppendedPath(Tracks.CONTENT_URI, trackId
+					+ "/waypoints"), new String[] { Waypoints.LATITUDE, Waypoints.LONGITUDE,
+					"max(" + Waypoints.TABLE + "." + Waypoints._ID + ")" }, null, null, null);
+			if (waypoint != null && waypoint.moveToLast()) {
+				Log.d(TAG, "ASLAI HERE1");
+				int microLatitude = (int) (waypoint.getDouble(0) * 1E6d);
+				int microLongitude = (int) (waypoint.getDouble(1) * 1E6d);
+				lastPoint = new GeoPoint(microLatitude, microLongitude);
+			}
+			if (lastPoint == null || lastPoint.getLatitudeE6() == 0
+					|| lastPoint.getLongitudeE6() == 0) {
+				Log.d(TAG, "ASLAI HERE2");
+				
+				lastPoint = getLastKnowGeopointLocation();
+			}
+			else {
+				Log.d(TAG, "ASLAI HERE3");
+//ASLAI PROBLEM HERE
+				mLastWaypoint = waypoint.getLong(2);
+			}
+		}
+		finally {
+			if (waypoint != null) {
+				waypoint.close();
+			}
+		}
+		return lastPoint;
+	}
 
 	private void moveToLastTrack() {
+		Log.d(TAG, "ASLAI: MOVETOLASTTRACK");
 		int trackId = -1;
 		Cursor track = null;
 		try {
