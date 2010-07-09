@@ -5,19 +5,21 @@ import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
-import android.view.ContextMenu;
-import android.view.Menu;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
+import android.widget.LinearLayout;
 import android.widget.Spinner;
 import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -29,10 +31,10 @@ import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.LeaderBoardAdapter;
+import edu.stanford.cs.sujogger.util.SegmentedControl;
 
 public class LeaderBoard extends ListActivity {
 	private static final String TAG = "OGT.LeaderBoard";
-	private static final int MENU_SOLOGROUP = 0;
 	public static final String STAT_TYPE_KEY = "statistic_type";
 	public static final String STAT_TIME_KEY = "statistic_time";
 	public static final String IS_GROUP_KEY = "is_group";
@@ -51,6 +53,7 @@ public class LeaderBoard extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private LeaderBoardReceiver mReceiver;
 	private boolean mAlreadyUpdatedUsersGroups;
+	private SharedPreferences mSharedPreferences;
 	
 	ArrayAdapter<String> mSpinnerTypeAdapterSolo;
 	ArrayAdapter<String> mSpinnerTypeAdapterGroup;
@@ -74,6 +77,8 @@ public class LeaderBoard extends ListActivity {
 		mTimeScale = savedInstanceState != null ? savedInstanceState.getInt(STAT_TIME_KEY) : 0;
 		mIsGroup = savedInstanceState != null ? savedInstanceState.getBoolean(IS_GROUP_KEY) : false;
 		mAlreadyUpdatedUsersGroups = savedInstanceState != null ? savedInstanceState.getBoolean(ALREADY_UPDATED_KEY) : false;
+		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
@@ -136,6 +141,16 @@ public class LeaderBoard extends ListActivity {
 
 			public void onNothingSelected(AdapterView<?> parent) {}
 		});
+		
+		LinearLayout bottomControlBar = (LinearLayout)findViewById(R.id.bottom_control_bar);
+		bottomControlBar.addView(new SegmentedControl(this, new String[] {"Individuals", "Groups"}, 
+				mIsGroup ? 1 : 0, new SegmentedControl.SegmentedControlListener() {
+			public void onValueChanged(int newValue) {
+				mIsGroup = newValue == 1;
+				updateLBSelection(true);
+			}
+		}), 
+				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
 		setTitle("Leaderboards");
 		fillData();
@@ -161,7 +176,9 @@ public class LeaderBoard extends ListActivity {
 			mSpinnerTypeSolo.setVisibility(View.GONE);
 			mSpinnerTypeGroup.setVisibility(View.VISIBLE);
 			
-			if (retrieveScores) {
+			if (retrieveScores && (System.currentTimeMillis() - 
+					mSharedPreferences.getLong(Constants.LB_GROUPSCORES_UPDATE_KEY, 0) > 
+						Constants.UPDATE_INTERVAL)) {
 				mScoreWaitDialog = ProgressDialog.show(this, "", "Retrieving scores...", true);
 				try {
 					mGameCon.getGroupScoreBoards(GET_GROUP_SBS_RID);
@@ -177,7 +194,9 @@ public class LeaderBoard extends ListActivity {
 			mSpinnerTypeSolo.setVisibility(View.VISIBLE);
 			mSpinnerTypeGroup.setVisibility(View.GONE);
 			
-			if (retrieveScores) {
+			if (retrieveScores && (System.currentTimeMillis() - 
+					mSharedPreferences.getLong(Constants.LB_USERSCORES_UPDATE_KEY, 0) > 
+						Constants.UPDATE_INTERVAL)) {
 				mScoreWaitDialog = ProgressDialog.show(this, "", "Retrieving scores...", true);
 				try {
 					mGameCon.getUserScoreBoards(GET_USER_SBS_RID);
@@ -232,42 +251,6 @@ public class LeaderBoard extends ListActivity {
 		outState.putBoolean(ALREADY_UPDATED_KEY, mAlreadyUpdatedUsersGroups);
 	}
 
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		boolean result = super.onCreateOptionsMenu(menu);
-		Log.d(TAG, "onCreateOptionsMenu()");
-
-		menu.add(ContextMenu.NONE, MENU_SOLOGROUP, ContextMenu.NONE, R.string.lb_group);
-		return result;
-	}
-	
-	@Override
-	public boolean onPrepareOptionsMenu(Menu menu) {
-		MenuItem item = menu.getItem(0);
-		if (mIsGroup)
-			item.setTitle(R.string.lb_solo).setIcon(R.drawable.ic_menu_solo);
-		else
-			item.setTitle(R.string.lb_group).setIcon(R.drawable.ic_menu_group);
-		return super.onPrepareOptionsMenu(menu);
-	}
-
-	@Override
-	public boolean onOptionsItemSelected(MenuItem item) {
-		boolean handled = false;
-
-		switch (item.getItemId()) {
-		case MENU_SOLOGROUP:
-			mIsGroup = !mIsGroup;
-			updateLBSelection(true);
-			handled = true;
-			break;
-		default:
-			handled = super.onOptionsItemSelected(item);
-			break;
-		}
-		return handled;
-	}
-
 	private void fillData() {
 		if (mScores != null) mScores.close();
 		
@@ -310,16 +293,36 @@ public class LeaderBoard extends ListActivity {
 						continue;
 					}
 					
+					final ScoreBoard[] scores;
 					switch (appResponse.request_id) {
 					case GET_USER_SBS_RID:
-					case GET_GROUP_SBS_RID:
-						final ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						scores = (ScoreBoard[])appResponse.object;
 						LeaderBoard.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (scores != null) {
-									mDbHelper.fillScoreBoardTemp(scores);
+									mDbHelper.fillScoreBoardTemp(scores, false);
 									fillData();
 								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.LB_USERSCORES_UPDATE_KEY, 
+											System.currentTimeMillis());
+								editor.commit();
+								mScoreWaitDialog.dismiss();
+							}
+						});
+						break;
+					case GET_GROUP_SBS_RID:
+						scores = (ScoreBoard[])appResponse.object;
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores != null) {
+									mDbHelper.fillScoreBoardTemp(scores, true);
+									fillData();
+								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(	Constants.LB_GROUPSCORES_UPDATE_KEY, 
+											System.currentTimeMillis());
+								editor.commit();
 								mScoreWaitDialog.dismiss();
 							}
 						});

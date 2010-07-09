@@ -44,26 +44,3 @@
           android:layout_above="@id/bottom_control_bar"
           android:layout_below="@id/top_control_bar"/>
 </RelativeLayout>
-<!-- <LinearLayout 
-		android:id="@+id/top_control_bar"
-		android:layout_width="fill_parent" 
-		android:layout_height="46dip"
-		android:layout_alignParentTop="true" 
-		android:orientation="horizontal"
-		android:padding="6dip"
-		android:background="@drawable/toolbar_bg_grey">
-		
-		<Button 
-			android:id="@+id/leftbutton"
-			android:layout_width="fill_parent"
-			android:layout_height="34dip" 
-			android:text="My tracks" 
-			android:background="@drawable/sc_left"
-			android:layout_weight="1"/>
-		<Button 
-			android:id="@+id/rightbutton"
-			android:layout_width="fill_parent"
-			android:layout_height="34dip" 
-			android:text="Downloaded tracks" 
-			android:background="@drawable/sc_right_pressed"
-			android:layout_weight="1"/> -->

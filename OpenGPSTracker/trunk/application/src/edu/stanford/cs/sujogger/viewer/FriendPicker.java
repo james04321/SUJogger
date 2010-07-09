@@ -48,13 +48,13 @@ public class FriendPicker extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private FriendPickerReceiver mReceiver;
 	
-	private int mGetUsersFriendsProgress = 0;
+	//private int mGetUsersFriendsProgress = 0;
 	private ProgressDialog mUserWaitDialog;
 	
 	//Request IDs
 	private static final int GRP_ADDUSER_RID = 1;
 	private static final int GET_USERS_RID = 2;
-	private static final int GET_FRIENDS_RID = 3;
+	//private static final int GET_FRIENDS_RID = 3;
 	
 	public FriendPicker() {}
 	
@@ -129,7 +129,7 @@ public class FriendPicker extends ListActivity {
 		mUserWaitDialog = ProgressDialog.show(this, "", "Retrieving friends...", true);
 		try {
 			mGameCon.getAppsUser(GET_USERS_RID);
-			mGameCon.getInvitableFriends(GET_FRIENDS_RID);
+			//mGameCon.getInvitableFriends(GET_FRIENDS_RID);
 		} catch (RemoteException e) {}
 	}
 	
@@ -226,21 +226,20 @@ public class FriendPicker extends ListActivity {
 						}
 						break;
 					case GET_USERS_RID:
-						Log.d(TAG, "onRecieve(): request is get users");
 						users = (User[])appResponse.object;
 						if (users != null) {
 							mDbHelper.addUsers(users);
-							mGetUsersFriendsProgress++;
-							if (mGetUsersFriendsProgress >= 2) {
+							//mGetUsersFriendsProgress++;
+							//if (mGetUsersFriendsProgress >= 2) {
 								mUserWaitDialog.dismiss();
 								mUsers.requery();
 								mUserAdapter.notifyDataSetChanged();
 								FriendPicker.this.getListView().invalidateViews();
-							}
+							//}
 						}
 						break;
+					/*
 					case GET_FRIENDS_RID:
-						Log.d(TAG, "onRecieve(): request is get friends");
 						users = (User[])appResponse.object;
 						if (users != null) {
 							mDbHelper.addFriends(users);
@@ -253,6 +252,7 @@ public class FriendPicker extends ListActivity {
 							}
 						}
 						break;
+					*/
 					default: break;
 					}
 				}

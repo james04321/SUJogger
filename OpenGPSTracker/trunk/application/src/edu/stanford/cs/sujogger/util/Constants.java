@@ -62,6 +62,8 @@ public class Constants
    
    //Last-updated keys (for Activities that request network updates
    public static final String BADGES_UPDATE_KEY = "badges_update_time";
+   public static final String LB_USERSCORES_UPDATE_KEY = "userscores_update_time";
+   public static final String LB_GROUPSCORES_UPDATE_KEY = "groupscores_update_time";
    public static final String GROUPS_UPDATE_KEY = "groups_update_time";
    public static final String FEED_UPDATE_KEY = "feed_update_time";
    
