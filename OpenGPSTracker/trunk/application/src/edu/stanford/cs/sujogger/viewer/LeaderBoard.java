@@ -17,6 +17,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Spinner;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -293,50 +294,67 @@ public class LeaderBoard extends ListActivity {
 			Log.d(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
-				ScoreBoard[] scores;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mUserGroupWaitDialog != null) mUserGroupWaitDialog.dismiss();
+								if (mScoreWaitDialog != null) mScoreWaitDialog.dismiss();
+								fillData();
+								Toast toast = Toast.makeText(LeaderBoard.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
 					case GET_USER_SBS_RID:
-						scores = (ScoreBoard[])appResponse.object;
-						if (scores != null) {
-							mDbHelper.fillScoreBoardTemp(scores);
-							fillData();
-						}
-						mScoreWaitDialog.dismiss();
-						break;
 					case GET_GROUP_SBS_RID:
-						scores = (ScoreBoard[])appResponse.object;
-						if (scores != null) {
-							mDbHelper.fillScoreBoardTemp(scores);
-							fillData();
-						}
-						mScoreWaitDialog.dismiss();
+						final ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores != null) {
+									mDbHelper.fillScoreBoardTemp(scores);
+									fillData();
+								}
+								mScoreWaitDialog.dismiss();
+							}
+						});
 						break;
 					case GET_APP_USERS_RID:
-						User[] users = (User[])appResponse.object;
-						if (users != null) {
-							mDbHelper.addUsers(users);
-							mGetUsersGroupsProgress++;
-							if (mGetUsersGroupsProgress >= 2) {
-								mUserGroupWaitDialog.dismiss();
-								mAlreadyUpdatedUsersGroups = true;
-								updateLBSelection(true);
+						final User[] users = (User[])appResponse.object;
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (users != null) {
+									mDbHelper.addUsers(users);
+									mGetUsersGroupsProgress++;
+									if (mGetUsersGroupsProgress >= 2) {
+										mUserGroupWaitDialog.dismiss();
+										mAlreadyUpdatedUsersGroups = true;
+										updateLBSelection(true);
+									}
+								}
 							}
-						}
+						});
 						break;
 					case GET_GROUPS_RID:
-						Group[] groups = (Group[])appResponse.object;
-						if (groups != null) {
-							mDbHelper.addGroupsTemp(groups);
-							mGetUsersGroupsProgress++;
-							if (mGetUsersGroupsProgress >= 2) {
-								mUserGroupWaitDialog.dismiss();
-								mAlreadyUpdatedUsersGroups = true;
-								updateLBSelection(true);
+						final Group[] groups = (Group[])appResponse.object;
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (groups != null) {
+									mDbHelper.addGroupsTemp(groups);
+									mGetUsersGroupsProgress++;
+									if (mGetUsersGroupsProgress >= 2) {
+										mUserGroupWaitDialog.dismiss();
+										mAlreadyUpdatedUsersGroups = true;
+										updateLBSelection(true);
+									}
+								}
 							}
-						}
-						
+						});
 						break;
 					default:
 						break;
