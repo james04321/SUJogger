@@ -38,6 +38,8 @@ public class Constants
    
    public static final int SPEED_CONVERSION_RATIO = 3600000; //ms in 1hr
    
+   public static final long UPDATE_INTERVAL = 900000; //ms in 15 minutes
+   
    //Facebook integration
    public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
    public static final String FB_APP_ID = "127241693959042";
@@ -57,6 +59,11 @@ public class Constants
    public static final String USERREG_PICTURE_KEY = "userreg_picture";
    
    public static final String LAST_CONCIERGE_ID_KEY = "last_concierge_id";
+   
+   //Last-updated keys (for Activities that request network updates
+   public static final String BADGES_UPDATE_KEY = "badges_update_time";
+   public static final String GROUPS_UPDATE_KEY = "groups_update_time";
+   public static final String FEED_UPDATE_KEY = "feed_update_time";
    
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;

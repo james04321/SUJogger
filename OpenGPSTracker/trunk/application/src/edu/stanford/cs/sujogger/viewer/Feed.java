@@ -12,6 +12,7 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -23,6 +24,7 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioGroup;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Message;
 import edu.stanford.cs.gaming.sdk.model.User;
@@ -47,6 +49,7 @@ public class Feed extends ListActivity {
 	private int mFilterMode;
 	private GameMessageAdapter mAdapter;
 	private SharedPreferences mSharedPreferences;
+	private Handler mHandler = new Handler();
 	
 	private Button mComposeButton;
 	
@@ -84,7 +87,17 @@ public class Feed extends ListActivity {
 			}
 		};
 	
-	public Feed() {}
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			int lastConciergeId = mSharedPreferences.getInt(
+					Constants.LAST_CONCIERGE_ID_KEY, 1);
+			Log.d(TAG, "lastConciergeId = " + lastConciergeId);
+			int limit = lastConciergeId == 1 ? 10 : -1;
+			try {
+				mGameCon.getMessages(GET_MSG_RID, lastConciergeId, limit);
+			} catch (RemoteException e) {}
+		}
+	};
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -119,6 +132,13 @@ public class Feed extends ListActivity {
 		
 		updateFiltering();
 		fillData();
+		
+		if (System.currentTimeMillis() - 
+				mSharedPreferences.getLong(Constants.FEED_UPDATE_KEY, 0) > 
+					Constants.UPDATE_INTERVAL)
+			//Wait 100ms before sending request, because sometimes, the activity doesn't
+			//bind to the service quickly enough
+			mHandler.postDelayed(mRefreshTask, 100);
 	}
 	
 	@Override
@@ -197,7 +217,7 @@ public class Feed extends ListActivity {
 			break;
 		case MENU_REFRESH:
 			Log.d(TAG, "refreshing...");
-			refresh();
+			mHandler.post(mRefreshTask);
 			break;
 		default:
 			handled = super.onOptionsItemSelected(item);
@@ -276,6 +296,12 @@ public class Feed extends ListActivity {
 					Log.d(TAG, appResponse.toString());
 					switch(appResponse.request_id) {
 					case MessageSender.MSG_SEND_RID:
+						if (appResponse.result_code == GamingServiceConnection.RESULT_CODE_ERROR) {
+							Toast toast = Toast.makeText(Feed.this, 
+									R.string.connection_error_toast, Toast.LENGTH_SHORT);
+							toast.show();
+							return;
+						}
 						Message msg = (Message)appResponse.object;
 						
 						int lastConciergeId = appResponse.last_concierge_id;
@@ -297,6 +323,12 @@ public class Feed extends ListActivity {
 						mMessages.requery();
 						mAdapter.notifyDataSetChanged();
 						Feed.this.getListView().invalidateViews();
+						
+						editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
+						editor.commit();
+						Toast toast = Toast.makeText(Feed.this, 
+								"Feed up to date", Toast.LENGTH_SHORT);
+						toast.show();
 						break;
 					default: break;
 					}

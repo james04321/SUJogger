@@ -14,11 +14,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -29,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -53,6 +57,7 @@ public class GroupList extends ListActivity {
 	private SeparatedListAdapter mGroupAdapter;
 	private List<Map<String, ?>> actions;
 	private int mGroupIdTemp;
+	private SharedPreferences mSharedPreferences;
 	
 	private Button mNewGroupButton;
 	
@@ -71,7 +76,6 @@ public class GroupList extends ListActivity {
 	// Views
 	private EditText mGroupNameView;
 	private ProgressDialog mCreateDialog;
-	private ProgressDialog mRefreshDialog;
 
 	// Listeners
 	private final DialogInterface.OnClickListener mGroupNameDialogListener = new DialogInterface.OnClickListener() {
@@ -93,7 +97,6 @@ public class GroupList extends ListActivity {
 		public void run() {
 			try {
 				mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(GroupList.this).id, -1, -1);
-				mRefreshDialog = ProgressDialog.show(GroupList.this, "", "Refreshing groups...", true);
 			}
 			catch (RemoteException e) {}
 		}
@@ -103,7 +106,9 @@ public class GroupList extends ListActivity {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
 		this.setContentView(R.layout.grouplist);
-
+		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 
@@ -130,9 +135,12 @@ public class GroupList extends ListActivity {
 		fillData();
 		registerForContextMenu(getListView());
 		
-		//Wait 100ms before sending request, because sometimes, the activity doesn't
-		//bind to the service quickly enough
-		mHandler.postDelayed(mRefreshTask, 100);
+		if (System.currentTimeMillis() - 
+				mSharedPreferences.getLong(Constants.GROUPS_UPDATE_KEY, 0) > 
+					Constants.UPDATE_INTERVAL)
+			//Wait 100ms before sending request, because sometimes, the activity doesn't
+			//bind to the service quickly enough
+			mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	@Override
@@ -304,8 +312,15 @@ public class GroupList extends ListActivity {
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:
 						final Group[] groups = (Group[]) (appResponse.object);
+						final String resultCode = appResponse.result_code;
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
+								if (resultCode.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+									Toast toast = Toast.makeText(GroupList.this, 
+											R.string.connection_error_toast, Toast.LENGTH_SHORT);
+									toast.show();
+									return;
+								}
 								if (groups != null) {
 									ArrayList<Group> newGroups = mDbHelper.updateGroups(groups);
 									if (newGroups != null && newGroups.size() > 0) {
@@ -318,13 +333,15 @@ public class GroupList extends ListActivity {
 											for (int i = 0; i < newGroups.size(); i++)
 												mGameCon.getScoreBoards(SB_GET_RID, -1, newGroups.get(i).id, null, null);
 										} catch (RemoteException e) {}
+										return;
 									}
-									else
-										mRefreshDialog.dismiss();
 								}
-								else {
-									mRefreshDialog.dismiss();
-								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.GROUPS_UPDATE_KEY, System.currentTimeMillis());
+								editor.commit();
+								Toast toast = Toast.makeText(GroupList.this, 
+										"Groups up to date", Toast.LENGTH_SHORT);
+								toast.show();
 							}
 						});
 						break;
@@ -332,7 +349,12 @@ public class GroupList extends ListActivity {
 						scores = (ScoreBoard[])appResponse.object;
 						if (scores != null) {
 							mDbHelper.insertScoreboards(scores);
-							mRefreshDialog.dismiss();
+							Editor editor = mSharedPreferences.edit();
+							editor.putLong(Constants.GROUPS_UPDATE_KEY, System.currentTimeMillis());
+							editor.commit();
+							Toast toast = Toast.makeText(GroupList.this, 
+									"Groups up to date", Toast.LENGTH_SHORT);
+							toast.show();
 						}
 						break;
 					case GRP_CREATE_RID:
