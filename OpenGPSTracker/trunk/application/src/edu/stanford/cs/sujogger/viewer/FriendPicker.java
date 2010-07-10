@@ -7,10 +7,14 @@ import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -47,6 +51,8 @@ public class FriendPicker extends ListActivity {
 	
 	private GamingServiceConnection mGameCon;
 	private FriendPickerReceiver mReceiver;
+	private Handler mHandler = new Handler();
+	private SharedPreferences mSharedPreferences;
 	
 	//private int mGetUsersFriendsProgress = 0;
 	private ProgressDialog mUserWaitDialog;
@@ -56,13 +62,22 @@ public class FriendPicker extends ListActivity {
 	private static final int GET_USERS_RID = 2;
 	//private static final int GET_FRIENDS_RID = 3;
 	
-	public FriendPicker() {}
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			mUserWaitDialog = ProgressDialog.show(FriendPicker.this, "", "Retrieving friends...", true);
+			try {
+				mGameCon.getAppsUser(GET_USERS_RID);
+				//mGameCon.getInvitableFriends(GET_FRIENDS_RID);
+			} catch (RemoteException e) {}
+		}
+	};
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		setContentView(R.layout.friendpicker);
 		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		Bundle extras = getIntent().getExtras();
 		mGroupId = extras != null ? extras.getLong(Groups.TABLE) : 0;
@@ -126,11 +141,12 @@ public class FriendPicker extends ListActivity {
 		fillData();
 		updateButtons(mUserAdapter.getNumChecked());
 		
-		mUserWaitDialog = ProgressDialog.show(this, "", "Retrieving friends...", true);
-		try {
-			mGameCon.getAppsUser(GET_USERS_RID);
-			//mGameCon.getInvitableFriends(GET_FRIENDS_RID);
-		} catch (RemoteException e) {}
+		if (System.currentTimeMillis() - 
+				mSharedPreferences.getLong(Constants.ALL_USERS_UPDATE_KEY, 0) > 
+					Constants.UPDATE_INTERVAL)
+			//Wait 100ms before sending request, because sometimes, the activity doesn't
+			//bind to the service quickly enough
+			mHandler.postDelayed(mRefreshTask, 100);
 	}
 	
 	@Override
@@ -199,44 +215,59 @@ public class FriendPicker extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			try {
 				AppResponse appResponse = null;
-				User[] users;
+				//User[] users;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
+					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						FriendPicker.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mUserWaitDialog != null) mUserWaitDialog.dismiss();
+								Toast toast = Toast.makeText(FriendPicker.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch(appResponse.request_id) {
 					case GRP_ADDUSER_RID:
-						if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_SUCCESS)) {
-							Log.d(TAG, "onReceive(): users successfully added to group");
-							
-							long[] checkedUserIds = mUserAdapter.getCheckedUserIds();
-							Log.d(TAG, "adding users to db: " + Arrays.toString(checkedUserIds));
-							mDbHelper.addUsersToGroup(mGroupId, checkedUserIds);
-							
-							String toastString = "User successfully added";
-							if (checkedUserIds.length > 1)
-								toastString = "Users successfully added";
-							Toast toast = Toast.makeText(FriendPicker.this, toastString, 
-									Toast.LENGTH_SHORT);
-							toast.show();
-							FriendPicker.this.finish();
-						}
-						else {
-							Toast toast = Toast.makeText(FriendPicker.this, 
-									"Error adding users", Toast.LENGTH_SHORT);
-							toast.show();
-						}
+						FriendPicker.this.runOnUiThread(new Runnable() {
+							public void run() {
+								long[] checkedUserIds = mUserAdapter.getCheckedUserIds();
+								Log.d(TAG, "adding users to db: " + Arrays.toString(checkedUserIds));
+								mDbHelper.addUsersToGroup(mGroupId, checkedUserIds);
+								
+								String toastString = "User successfully added";
+								if (checkedUserIds.length > 1)
+									toastString = "Users successfully added";
+								Toast toast = Toast.makeText(FriendPicker.this, toastString, 
+										Toast.LENGTH_SHORT);
+								toast.show();
+								FriendPicker.this.finish();
+							}
+						});
 						break;
 					case GET_USERS_RID:
-						users = (User[])appResponse.object;
-						if (users != null) {
-							mDbHelper.addUsers(users);
-							//mGetUsersFriendsProgress++;
-							//if (mGetUsersFriendsProgress >= 2) {
-								mUserWaitDialog.dismiss();
-								mUsers.requery();
-								mUserAdapter.notifyDataSetChanged();
-								FriendPicker.this.getListView().invalidateViews();
-							//}
-						}
+						final User[] users = (User[])appResponse.object;
+						FriendPicker.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (users != null) {
+									mDbHelper.addUsers(users);
+									//mGetUsersFriendsProgress++;
+									//if (mGetUsersFriendsProgress >= 2) {
+										Editor editor = mSharedPreferences.edit();
+										editor.putLong(Constants.ALL_USERS_UPDATE_KEY, System.currentTimeMillis());
+										editor.commit();
+										mUserWaitDialog.dismiss();
+										mUsers.requery();
+										mUserAdapter.notifyDataSetChanged();
+										FriendPicker.this.getListView().invalidateViews();
+									//}
+								}
+							}
+						});
 						break;
 					/*
 					case GET_FRIENDS_RID:
