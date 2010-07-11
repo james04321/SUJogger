@@ -1321,8 +1321,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 * ScoreBoard Methods
 	 */
 	
-	public void fillScoreBoardTemp(ScoreBoard[] scores) {
-		mDb.delete(ScoreboardTemp.TABLE, null, null);
+	public void fillScoreBoardTemp(ScoreBoard[] scores, boolean groupFlag) {
+		String whereClause;
+		if (groupFlag)
+			whereClause = ScoreboardTemp.USER_ID + "=0";
+		else
+			whereClause = ScoreboardTemp.GROUP_ID + "=0";
+		mDb.delete(ScoreboardTemp.TABLE, whereClause, null);
 		
 		mDb.beginTransaction();
 		try {

@@ -14,11 +14,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
@@ -29,6 +32,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -53,6 +57,7 @@ public class GroupList extends ListActivity {
 	private SeparatedListAdapter mGroupAdapter;
 	private List<Map<String, ?>> actions;
 	private int mGroupIdTemp;
+	private SharedPreferences mSharedPreferences;
 	
 	private Button mNewGroupButton;
 	
@@ -61,7 +66,7 @@ public class GroupList extends ListActivity {
 	private Handler mHandler = new Handler();
 
 	private static final int MENU_REFRESH = 0;
-
+	
 	// Request IDs
 	private static final int GRP_CREATE_RID = 1;
 	private static final int GRP_GET_RID = 2;
@@ -71,7 +76,6 @@ public class GroupList extends ListActivity {
 	// Views
 	private EditText mGroupNameView;
 	private ProgressDialog mCreateDialog;
-	private ProgressDialog mRefreshDialog;
 
 	// Listeners
 	private final DialogInterface.OnClickListener mGroupNameDialogListener = new DialogInterface.OnClickListener() {
@@ -93,7 +97,6 @@ public class GroupList extends ListActivity {
 		public void run() {
 			try {
 				mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(GroupList.this).id, -1, -1);
-				mRefreshDialog = ProgressDialog.show(GroupList.this, "", "Refreshing groups...", true);
 			}
 			catch (RemoteException e) {}
 		}
@@ -103,7 +106,9 @@ public class GroupList extends ListActivity {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
 		this.setContentView(R.layout.grouplist);
-
+		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 
@@ -130,9 +135,12 @@ public class GroupList extends ListActivity {
 		fillData();
 		registerForContextMenu(getListView());
 		
-		//Wait 100ms before sending request, because sometimes, the activity doesn't
-		//bind to the service quickly enough
-		mHandler.postDelayed(mRefreshTask, 100);
+		if (System.currentTimeMillis() - 
+				mSharedPreferences.getLong(Constants.GROUPS_UPDATE_KEY, 0) > 
+					Constants.UPDATE_INTERVAL)
+			//Wait 100ms before sending request, because sometimes, the activity doesn't
+			//bind to the service quickly enough
+			mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	@Override
@@ -300,7 +308,18 @@ public class GroupList extends ListActivity {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					ScoreBoard[] scores;
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mCreateDialog != null) mCreateDialog.dismiss();
+								Toast toast = Toast.makeText(GroupList.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:
 						final Group[] groups = (Group[]) (appResponse.object);
@@ -318,62 +337,81 @@ public class GroupList extends ListActivity {
 											for (int i = 0; i < newGroups.size(); i++)
 												mGameCon.getScoreBoards(SB_GET_RID, -1, newGroups.get(i).id, null, null);
 										} catch (RemoteException e) {}
+										return;
 									}
-									else
-										mRefreshDialog.dismiss();
 								}
-								else {
-									mRefreshDialog.dismiss();
-								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.GROUPS_UPDATE_KEY, System.currentTimeMillis());
+								editor.commit();
+								Toast toast = Toast.makeText(GroupList.this, 
+										"Groups up to date", Toast.LENGTH_SHORT);
+								toast.show();
 							}
 						});
 						break;
 					case SB_GET_RID:
-						scores = (ScoreBoard[])appResponse.object;
-						if (scores != null) {
-							mDbHelper.insertScoreboards(scores);
-							mRefreshDialog.dismiss();
-						}
+						final ScoreBoard[] scores = (ScoreBoard[])appResponse.object;
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores != null) {
+									mDbHelper.insertScoreboards(scores);
+									Editor editor = mSharedPreferences.edit();
+									editor.putLong(Constants.GROUPS_UPDATE_KEY, System.currentTimeMillis());
+									editor.commit();
+									Toast toast = Toast.makeText(GroupList.this, 
+											"Groups up to date", Toast.LENGTH_SHORT);
+									toast.show();
+								}
+							}
+						});
 						break;
 					case GRP_CREATE_RID:
-						Integer groupId = (Integer) (appResponse.object);
-						Group newGroup = (Group) (appResponse.appRequest.object);
-						Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = "
-								+ newGroup.name);
-						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
-						GroupList.this.mDbHelper.addUsersToGroup(groupId, new long[] { Common
-								.getRegisteredUser(GroupList.this).id });
-						GroupList.this.mGroupsCursor.requery();
-						GroupList.this.mGroupAdapter.notifyDataSetChanged();
-						GroupList.this.getListView().invalidateViews();
-
-						// After creating a group, create the scoreboards for
-						// that group and add self to the group
-						mGroupIdTemp = groupId;
-						initializeStatsForGroup(groupId.intValue());
-						try {
-							mGameCon.addGroupUsers(-1, groupId, 
-									new User[] {Common.getRegisteredUser(GroupList.this)});
-						} catch (RemoteException e) {}
+						final Integer groupId = (Integer) (appResponse.object);
+						final Group newGroup = (Group) (appResponse.appRequest.object);
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = "
+										+ newGroup.name);
+								GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
+								GroupList.this.mDbHelper.addUsersToGroup(groupId, new long[] { Common
+										.getRegisteredUser(GroupList.this).id });
+								GroupList.this.mGroupsCursor.requery();
+								GroupList.this.mGroupAdapter.notifyDataSetChanged();
+								GroupList.this.getListView().invalidateViews();
+		
+								// After creating a group, create the scoreboards for
+								// that group and add self to the group
+								mGroupIdTemp = groupId;
+								initializeStatsForGroup(groupId.intValue());
+								try {
+									mGameCon.addGroupUsers(-1, groupId, 
+											new User[] {Common.getRegisteredUser(GroupList.this)});
+								} catch (RemoteException e) {}
+							}
+						});
 						break;
 					case SB_CREATE_RID:
-						Integer[] scoreIds = (Integer[]) appResponse.object;
-						if (scoreIds != null) {
-							ScoreBoard score;
-							int[] stats = Stats.GROUP_STAT_IDS;
-							scores = new ScoreBoard[stats.length];
-							for (int i = 0; i < stats.length; i++) {
-								score = new ScoreBoard();
-								score.id = scoreIds[i];
-								score.group_id = mGroupIdTemp;
-								score.value = 0;
-								score.sb_type = String.valueOf(stats[i]);
-								scores[i] = score;
+						final Integer[] scoreIds = (Integer[]) appResponse.object;
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scoreIds != null) {
+									ScoreBoard score;
+									int[] stats = Stats.GROUP_STAT_IDS;
+									ScoreBoard[] newScores = new ScoreBoard[stats.length];
+									for (int i = 0; i < stats.length; i++) {
+										score = new ScoreBoard();
+										score.id = scoreIds[i];
+										score.group_id = mGroupIdTemp;
+										score.value = 0;
+										score.sb_type = String.valueOf(stats[i]);
+										newScores[i] = score;
+									}
+									mDbHelper.insertScoreboards(newScores);
+								}
+								mGroupIdTemp = 0;
+								mCreateDialog.dismiss();
 							}
-							mDbHelper.insertScoreboards(scores);
-						}
-						mGroupIdTemp = 0;
-						mCreateDialog.dismiss();
+						});
 						break;
 					default:
 						break;

@@ -67,10 +67,12 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
 
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
@@ -92,6 +94,7 @@ import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
 import edu.stanford.cs.sujogger.util.BaseRequestListener;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.util.SegmentedControl;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 import edu.stanford.cs.sujogger.util.TrackListAdapter;
 
@@ -139,8 +142,7 @@ public class TrackList extends ListActivity {
 	private EditText mTrackNameView;
 	private Uri mDialogUri;
 	private String mDialogCurrentName = "";
-
-	private List<Map<String, ?>> actions;
+	
 	private TrackListAdapter trackAdapter;
 	private boolean mDownloadedTracks = false;
 	private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
@@ -189,10 +191,8 @@ public class TrackList extends ListActivity {
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, TrackList.class.toString());
 		mGameCon.bind();
-
-		actions = new LinkedList<Map<String, ?>>();
+		
 		Log.d(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
-		actions.add(Common.createItem("Downloaded Tracks"));
 
 		mStartButton = (Button) findViewById(R.id.startbutton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
@@ -203,8 +203,18 @@ public class TrackList extends ListActivity {
 				startActivity(intent);
 			}
 		});
+		
+		LinearLayout topControlBar = (LinearLayout)findViewById(R.id.top_control_bar);
+		topControlBar.addView(new SegmentedControl(this, new String[] {"My tracks", "Downloaded tracks"}, 
+				mDownloadedTracks ? 1 : 0, new SegmentedControl.SegmentedControlListener() {
+			public void onValueChanged(int newValue) {
+				mDownloadedTracks = newValue == 1;
+				displayIntent(getIntent());
+			}
+		}), 
+				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
-		setTrackList();
+		displayIntent(getIntent());
 
 		// Add the context menu (the long press thing)
 		registerForContextMenu(getListView());
@@ -216,25 +226,6 @@ public class TrackList extends ListActivity {
 			mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
 					new LoginDialogListener());
 		}
-	}
-
-	private void setTrackList() {
-		if (mDownloadedTracks) {
-			actions.remove(0);
-			actions.add(Common.createItem("My Tracks"));
-			displayIntent(getIntent());
-			mGroupedAdapter.setSectionTitle("Downloaded Tracks", 1);
-
-		}
-		else {
-			actions.remove(0);
-			actions.add(Common.createItem("Downloaded Tracks"));
-			displayIntent(getIntent());
-			mGroupedAdapter.setSectionTitle("My Tracks", 1);
-
-		}
-		getListView().invalidateViews();
-
 	}
 
 	private void initializeSelfStatistics() {
@@ -341,38 +332,17 @@ public class TrackList extends ListActivity {
 		super.onListItemClick(l, v, position, id);
 
 		Log.v("TrackList", "position = " + position + "; id = " + id);
-		if (position < actions.size() + 1) {
-			if (position == 1) {
-				Log.v("TrackList", "Going to Downloaded tracks");
-				mDownloadedTracks = !mDownloadedTracks;
-				setTrackList();
-			}
-		}
-		else if (position > actions.size() + 1) {
-			Intent intent = new Intent();
-			intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI,
-					getTrackIdFromRowPosition(id)));
-
-			// TODO: eliminate the if statement (no one starts a TrackList
-			// activity anymore)
-			ComponentName caller = this.getCallingActivity();
-			if (caller != null) {
-				setResult(RESULT_OK, intent);
-				finish();
-			}
-			else {
-				intent.setClass(this, LoggerMap.class);
-				startActivity(intent);
-			}
-		}
+		Intent intent = new Intent();
+		intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI,
+				getTrackIdFromRowPosition(position)));
+		intent.setClass(this, LoggerMap.class);
+		startActivity(intent);
 	}
 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
 		if (menuInfo instanceof AdapterView.AdapterContextMenuInfo) {
 			AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
-			if (itemInfo.position < actions.size() + 1)
-				return;
 			TextView textView = (TextView) itemInfo.targetView.findViewById(android.R.id.text1);
 			if (textView != null) {
 				menu.setHeaderTitle(textView.getText());
@@ -529,7 +499,7 @@ public class TrackList extends ListActivity {
 		if (Intent.ACTION_SEARCH.equals(queryAction)) {
 			// Got to SEARCH a query for tracks, make a list
 			tracksCursor = doSearchWithIntent(intent);
-			displayCursor(tracksCursor, false);
+			displayCursor(tracksCursor);
 		}
 		else if (Intent.ACTION_VIEW.equals(queryAction)) {
 			// Got to VIEW a single track, instead had it of to the LoggerMap
@@ -546,44 +516,17 @@ public class TrackList extends ListActivity {
 			tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
 					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID },
 					whereClause, null, null);
-			Log
-					.d(TAG, "displayIntent(): displaying all tracks. count = "
+			Log.d(TAG, "displayIntent(): displaying all tracks. count = "
 							+ tracksCursor.getCount());
-			displayCursor(tracksCursor, true);
+			displayCursor(tracksCursor);
 		}
 
 	}
 
-	private void displayCursor(Cursor tracksCursor, boolean showGlobal) {
+	private void displayCursor(Cursor tracksCursor) {
 		Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
-		// Create an array to specify the fields we want to display in the list
-		// (only TITLE)
-		// and an array of the fields we want to bind those fields to (in this
-		// case just text1)
-		// String[] fromColumns = new String[] { Tracks.NAME,
-		// Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE };
-		// int[] toItems = new int[] { R.id.listitem_name, R.id.listitem_from,
-		// R.id.listitem_duration, R.id.listitem_distance };
-		// Now create a simple cursor adapter and set it to display
-		// trackAdapter = new SimpleCursorAdapter( this,
-		// R.layout.trackitem, tracksCursor, fromColumns, toItems );
-
 		trackAdapter = new TrackListAdapter(this, tracksCursor);
-
-		// showGlobal = false;
-		if (!showGlobal) {
-			setListAdapter(trackAdapter);
-		}
-		else {
-			mGroupedAdapter = new SeparatedListAdapter(this);
-			mGroupedAdapter.addSection("", new SimpleAdapter(this, actions,
-					R.layout.list_item_simple, new String[] { Common.ITEM_TITLE },
-					new int[] { R.id.list_simple_title }));
-
-			mGroupedAdapter.addSection("My Tracks", trackAdapter);
-
-			setListAdapter(mGroupedAdapter);
-		}
+		setListAdapter(trackAdapter);
 	}
 
 	private long getTrackIdFromRowPosition(long pos) {
@@ -595,7 +538,6 @@ public class TrackList extends ListActivity {
 		Cursor tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID,
 				Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE,
 				Tracks.TRACK_ID }, whereClause, null, null);
-		pos = pos - (actions.size() + 2);
 		Log.d(TAG, "pos = " + pos);
 		// Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[]
 		// { Tracks._ID }, null, null, null );

@@ -7,6 +7,8 @@
     <string name="service_gpsdisabled">GPS is disabled, logging is without effect.</string>
     <string name="service_gpsenabled">GPS is enabled, commencing logging.</string>
     
+    <string name="connection_error_toast">Connection error</string>
+    
     <string name="dialog_tracking_title">Tracking control</string>
 	<string name="dialog_routename_title">Track Name</string>
     <string name="dialog_routename_message">Please enter the name of the track</string>
@@ -162,12 +164,12 @@
    <string name="about_activity_name_extended">About %s</string>
    <string name="no_information_available">No information available.</string>
    
-<string name="receive_gpxpublish">Publish and share with others</string>
-<string name="ticker_publishing">Publishing track</string>
-<string name="menu_downloadTrack">Download Track</string>
-<string name="dialog_download_track_list">Retrieving track list</string>
-<string name="dialog_download_track">Downloading track</string>
-<string name="menu_clear_track">Clear Tracks</string>
-<string name="dialog_filename_publish">Please enter the track name to be shared to your friends</string>
-<string name="dialog_track_title">Track name</string>
+	<string name="receive_gpxpublish">Publish and share with others</string>
+	<string name="ticker_publishing">Publishing track</string>
+	<string name="menu_downloadTrack">Download Track</string>
+	<string name="dialog_download_track_list">Retrieving track list</string>
+	<string name="dialog_download_track">Downloading track</string>
+	<string name="menu_clear_track">Clear Tracks</string>
+	<string name="dialog_filename_publish">Please enter the track name to be shared to your friends</string>
+	<string name="dialog_track_title">Track name</string>
 </resources>

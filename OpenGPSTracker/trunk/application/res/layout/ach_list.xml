@@ -11,7 +11,7 @@
 		android:layout_height="wrap_content"
 		android:layout_alignParentBottom="true" 
 		android:orientation="horizontal"
-		android:paddingTop="6dip"
+		android:paddingTop="4dip"
 		android:paddingLeft="2dip"
 		android:paddingRight="2dip"
 		android:background="@drawable/toolbar_bg_grey">

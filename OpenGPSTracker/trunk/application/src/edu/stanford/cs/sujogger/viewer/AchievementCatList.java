@@ -1,15 +1,17 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import android.app.ListActivity;
-import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.Menu;
@@ -18,6 +20,7 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.ListView;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
@@ -41,8 +44,9 @@ public class AchievementCatList extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private AchievementCatListReceiver mReceiver;
 	private Handler mHandler = new Handler();
+	private SharedPreferences mSharedPreferences;
 
-	private ProgressDialog mGetScoresDialog;
+	//private ProgressDialog mGetScoresDialog;
 	private Button mStatisticsButton;
 	private Button mLeaderboardsButton;
 
@@ -54,8 +58,6 @@ public class AchievementCatList extends ListActivity {
 		public void run() {
 			int[] statIds = mDbHelper.getGroupStatisticIds();
 			if (statIds != null && statIds.length > 0) {
-				mGetScoresDialog = ProgressDialog.show(AchievementCatList.this, "", 
-						"Retrieving group statistics...", true);
 				try {
 					mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
 				} catch (RemoteException e) {}
@@ -67,7 +69,9 @@ public class AchievementCatList extends ListActivity {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
 		this.setContentView(R.layout.ach_list);
-
+		
+		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
+		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
 
@@ -103,9 +107,12 @@ public class AchievementCatList extends ListActivity {
 		fillData();
 		registerForContextMenu(getListView());
 		
-		//Wait 100ms before sending request, because sometimes, the activity doesn't
-		//bind to the service quickly enough
-		mHandler.postDelayed(mRefreshTask, 100);
+		if (System.currentTimeMillis() - 
+				mSharedPreferences.getLong(Constants.BADGES_UPDATE_KEY, 0) > 
+					Constants.UPDATE_INTERVAL)
+			//Wait 100ms before sending request, because sometimes, the activity doesn't
+			//bind to the service quickly enough
+			mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	private void refreshAchievements() {
@@ -208,8 +215,18 @@ public class AchievementCatList extends ListActivity {
 					switch (appResponse.request_id) {
 					case GET_GRP_SBS_RID:
 						final ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
+						final String resultCode = appResponse.result_code;
 						AchievementCatList.this.runOnUiThread(new Runnable() {
 							public void run() {
+								if (resultCode.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+									Toast toast = Toast.makeText(AchievementCatList.this, 
+											R.string.connection_error_toast, Toast.LENGTH_SHORT);
+									toast.show();
+									return;
+								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.BADGES_UPDATE_KEY, System.currentTimeMillis());
+								editor.commit();
 								if (scores != null) {
 									mDbHelper.updateScoreboards(scores);
 									Cursor newAchCursor = mDbHelper.updateAchievements();
@@ -225,10 +242,15 @@ public class AchievementCatList extends ListActivity {
 										Common.displayAchievementToast(newAchCursor.getString(8), 
 												newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
 												getApplicationContext(), toastLayout);
+										newAchCursor.close();
+										return;
 									}
-									mGetScoresDialog.dismiss();
 									newAchCursor.close();
 								}
+								
+								Toast toast = Toast.makeText(AchievementCatList.this, 
+										"Badges up to date", Toast.LENGTH_SHORT);
+								toast.show();
 							}
 						});
 						break;

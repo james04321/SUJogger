@@ -1,4 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+	<item android:state_focused="true" 
+		android:state_pressed="false"
+		android:drawable="@drawable/btn_default_selected" />
+	<item android:state_focused="true" 
+		android:state_pressed="true"
+		android:drawable="@drawable/btn_default_pressed" />
+	<item android:state_focused="false" 
+		android:state_pressed="true"
+		android:drawable="@drawable/btn_default_pressed" />
+	<item android:drawable="@drawable/btn_green" />
+</selector>
+
+<!-- 
 <selector
     xmlns:android="http://schemas.android.com/apk/res/android">
 
@@ -36,10 +50,6 @@
 
     <item>        
         <shape>
-            <!-- <gradient
-            	android:startColor="@color/btn_green_start"
-                android:endColor="@color/btn_green_end"
-                android:angle="270" />-->
             <gradient android:startColor="@color/btn_green_end"
                 android:centerColor="@color/btn_green_start"
                 android:endColor="@color/btn_green_end"
@@ -51,7 +61,7 @@
                 android:top="10dp"
                 android:right="10dp"
                 android:bottom="10dp" />
-            <!-- <stroke android:width="1dip" android:color="#000000" />-->
         </shape>
     </item>
 </selector>
+-->

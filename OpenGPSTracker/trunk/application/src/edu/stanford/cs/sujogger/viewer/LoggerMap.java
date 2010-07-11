@@ -35,8 +35,6 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 
-import org.json.JSONObject;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ProgressDialog;
@@ -52,6 +50,7 @@ import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
+import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -117,7 +116,7 @@ public class LoggerMap extends MapActivity {
 	private static final int ZOOM_LEVEL = 16;
 	
 	// Menus
-	private static final int MENU_SETTINGS = 1;
+	//private static final int MENU_SETTINGS = 1;
 	private static final int MENU_TRACKLIST = 3;
 	private static final int MENU_STATS = 4;
 	private static final int MENU_ABOUT = 5;
@@ -867,8 +866,8 @@ public class LoggerMap extends MapActivity {
 		// menu.add( ContextMenu.NONE, MENU_TRACKLIST, ContextMenu.NONE,
 		// R.string.menu_tracklist ).setIcon( R.drawable.ic_menu_show_list
 		// ).setAlphabeticShortcut( 'P' );
-		menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, R.string.menu_settings)
-				.setIcon(R.drawable.ic_menu_preferences).setAlphabeticShortcut('C');
+		//menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, R.string.menu_settings)
+		//		.setIcon(R.drawable.ic_menu_preferences).setAlphabeticShortcut('C');
 		// menu.add( ContextMenu.NONE, MENU_ABOUT, ContextMenu.NONE,
 		// R.string.menu_about ).setIcon( R.drawable.ic_menu_info_details
 		// ).setAlphabeticShortcut( 'A' );
@@ -913,11 +912,11 @@ public class LoggerMap extends MapActivity {
 			showDialog(DIALOG_LAYERS);
 			handled = true;
 			break;
-		case MENU_SETTINGS:
-			Intent i = new Intent(this, SettingsDialog.class);
-			startActivity(i);
-			handled = true;
-			break;
+		//case MENU_SETTINGS:
+		//	Intent i = new Intent(this, SettingsDialog.class);
+		//	startActivity(i);
+		//	handled = true;
+		//	break;
 		case MENU_CLEARTRACK: 
 			clearOverlays();
 			handled = true;

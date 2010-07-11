@@ -32,10 +32,22 @@
 		/>
 	</LinearLayout>
 	
+	<LinearLayout 
+		android:id="@+id/bottom_control_bar"
+		android:layout_width="fill_parent" 
+		android:layout_height="46dip"
+		android:layout_alignParentBottom="true" 
+		android:orientation="horizontal"
+		android:padding="6dip"
+		android:background="@drawable/toolbar_bg_grey">
+		
+	</LinearLayout>
+	
 	<ListView 
 		android:id="@+id/android:list"
 		android:layout_width="fill_parent"
 		android:layout_height="fill_parent" 
-		android:layout_below="@id/lb_top_control_bar" 
+		android:layout_below="@id/lb_top_control_bar"
+		android:layout_above="@id/bottom_control_bar"
 	/>
 </RelativeLayout>
