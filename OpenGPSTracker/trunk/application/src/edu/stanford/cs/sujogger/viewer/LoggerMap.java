@@ -263,7 +263,7 @@ public class LoggerMap extends MapActivity {
 		int size = mTrackIds.size();
 		String str = "" + mTrackIds.get(0).id + "qwertyuioplkjh" + mTrackIds.get(0).visible;
 		for (int i = 1; i < size; i++) {
-			str += "zxcvbnmlkjh"+ mTrackIds.get(i)+ "qwertyuioplkjh" + mTrackIds.get(i).visible;
+			str += "zxcvbnmlkjh"+ mTrackIds.get(i).id+ "qwertyuioplkjh" + mTrackIds.get(i).visible;
 		}
 		return str;
 	}
@@ -272,6 +272,7 @@ public class LoggerMap extends MapActivity {
 //		return new ArrayList<Long>();
 		try {
 		String value = sharedPreferences.getString("mTrackIds", "");
+		Log.d(TAG, "VALUE IS: " + value);
 		if ("".equals(value)) {
 			return new ArrayList<Track>();
 		}
@@ -279,10 +280,12 @@ public class LoggerMap extends MapActivity {
 		String[] strArray = value.split("zxcvbnmlkjh");
 		for (int i=0; i < strArray.length; i++) {
 			String[] trackArray = strArray[i].split("qwertyuioplkjh");
+			Log.d(TAG, "TRACKARRAY[0]: " + trackArray[0] + " TRACKARRAY[1]: " + trackArray[1]);
 			arrList.add(new Track(new Long(trackArray[0]), new Boolean(trackArray[1])));
 		}
 		return arrList;
 		} catch (Exception e)	{
+			e.printStackTrace();
 			Log.d(TAG, "ASLAI: EXCEPTION CONVERTING TO TRACKS");
 			return new ArrayList<Track>();
 		}
@@ -486,7 +489,7 @@ public class LoggerMap extends MapActivity {
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		mTrackIds = preferenceToTrackIds(mSharedPreferences);
-		Log.d(TAG, getTrackIdsString());
+		Log.d(TAG, "ASLAI: GETTRACKIDSSTRING" + getTrackIdsString());
 		/*
 		Object previousInstanceData = getLastNonConfigurationInstance();
 		if (previousInstanceData != null && previousInstanceData instanceof GPSLoggerServiceManager) {
@@ -605,9 +608,15 @@ public class LoggerMap extends MapActivity {
 		Log.d(TAG, "ASLAI: Enabling my location");
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.clear();
-		overlays.add(mMylocation);
+
 		
+
+		updateTitleBar();
+		updateDataOverlays();
+		updateSpeedbarVisibility();	
 		mMylocation.enableMyLocation();	
+		mMylocation.enableCompass();
+		overlays.add(mMylocation);
 		mMapView.invalidate();
 		Log.d(TAG, "ASLAI: Enabled my location");
 		
@@ -629,8 +638,8 @@ public class LoggerMap extends MapActivity {
 			resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
 			resolver.unregisterContentObserver(this.mTrackMediasObserver);
 		}
-		mMylocation.disableMyLocation();
-		mMylocation.disableCompass();
+//		mMylocation.disableMyLocation();
+//		mMylocation.disableCompass();
 	}
 
 	protected void onResume() {
@@ -685,7 +694,7 @@ public class LoggerMap extends MapActivity {
 			stopService(new Intent(Constants.SERVICENAME));
 		}
 		
-		mGameCon.unbind();
+		mGameCon.unbind(); 
 		super.onDestroy();
 	}
 
@@ -696,13 +705,13 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	public void onNewIntent(Intent newIntent) {
-		Log.d(TAG, "onNewIntent");
+		Log.d(TAG, "ASLAI: ONNEWINTENT");
 		Uri data = newIntent.getData();
 		if (data != null) {
 			moveToTrack(Long.parseLong(data.getLastPathSegment()), true, false);
 		}
 	}
-
+ 
 	@Override
 	protected void onRestoreInstanceState(Bundle load) {
 		if (load != null) {
@@ -715,17 +724,23 @@ public class LoggerMap extends MapActivity {
 														// previous instance of
 														// this activity
 		{
+			Log.d(TAG, "FIRST TRACK RESTORE");
 			long loadTrackId = load.getLong("track");
 			Log.d(TAG, "Moving to restored track " + loadTrackId);
 			moveToTrack(loadTrackId, false, false);
 		}
 		else if (data != null) // 2nd track ordered to make
 		{
+			Log.d(TAG, "SECOND TRACK RESTORE");
+
 			long loadTrackId = Long.parseLong(data.getLastPathSegment());
 			Log.d(TAG, "Moving to intented track " + loadTrackId);
 			moveToTrack(loadTrackId, true, false);
+            setIntent(new Intent());
+
 		}
 		else {
+			
 			Log.d(TAG, "Moving to last track ");
 //			moveToLastTrack(); // 3rd just try the last track
 		}
@@ -1470,6 +1485,8 @@ public class LoggerMap extends MapActivity {
     	//ASLAI DIAGNOSTICS TILL HERE
     	Log.d(TAG, "ASLAI: REDRAW OVERLAYS");
 		mMapView.getOverlays().clear();
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		overlays.add(mMylocation);
 		//ASLAI REMOVED HERE
 		//ASLAI DIAGNOSTIC PROBLEM SHOULD BE HERE
 		
