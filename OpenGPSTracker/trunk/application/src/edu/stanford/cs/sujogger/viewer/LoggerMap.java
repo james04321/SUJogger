@@ -104,6 +104,7 @@ import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
 import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.util.Track;
 import edu.stanford.cs.sujogger.util.UnitsI18n;
 
 /**
@@ -157,7 +158,7 @@ public class LoggerMap extends MapActivity {
 
 	private double mAverageSpeed = 4.4704;
 	//ASLAI
-	private ArrayList<Long> mTrackIds = new ArrayList<Long>();
+	private ArrayList<Track> mTrackIds = new ArrayList<Track>();
 //	private long mTrackId = -1;
 	private boolean statisticsPresent = false;
 	private long mLastSegment = -1;
@@ -210,7 +211,7 @@ public class LoggerMap extends MapActivity {
 		}
 		long[] longArray = new long[arraySize];
 		for (int i = 0; i < arraySize; i++) {
-			longArray[i] = mTrackIds.get(i);
+			longArray[i] = mTrackIds.get(i).id;
 		}
 		return longArray;
 	}
@@ -218,7 +219,7 @@ public class LoggerMap extends MapActivity {
 
 		
 		for (int i=0; i < mTrackIds.size(); i++) {
-			if (mTrackIds.get(i) == val) {
+			if (mTrackIds.get(i).id == val) {
 				mTrackIds.remove(i);
 			}
 		}
@@ -227,18 +228,18 @@ public class LoggerMap extends MapActivity {
 
         if ((state == Constants.LOGGING || state == Constants.PAUSED) && !startLogging
         		&& mTrackIds.size() > 0) {        	
-            mTrackIds.add(mTrackIds.size()-1, val);
+            mTrackIds.add(mTrackIds.size()-1, new Track(val));
         } else {
 
-		  mTrackIds.add(val);
+		  mTrackIds.add(new Track(val));
 		  
          }
 	}
 	private String getTrackIdsString() {
 		String str = "Track ids are: ";
 
-		for (Long trackId : mTrackIds) {
-			str += "" + trackId + ", ";
+		for (Track track : mTrackIds) {
+			str += "" + track.id + ", ";
 		}
 		return str;
 	}
@@ -251,7 +252,7 @@ public class LoggerMap extends MapActivity {
 		if (mTrackIds.size() == 0) {
 			return trackId;
 		}
-		trackId = mTrackIds.get(mTrackIds.size()-1);
+		trackId = mTrackIds.get(mTrackIds.size()-1).id;
 		Log.d(TAG, "LastTrackId: " + trackId);
 			
 		return trackId;
@@ -261,27 +262,31 @@ public class LoggerMap extends MapActivity {
 		if (mTrackIds == null || mTrackIds.size() == 0)
 			return "";
 		int size = mTrackIds.size();
-		String str = "" + mTrackIds.get(0);
+		String str = "" + mTrackIds.get(0).id + "qwertyuioplkjh" + mTrackIds.get(0).visible;
 		for (int i = 1; i < size; i++) {
-			str += ","+ mTrackIds.get(i);
+			str += "zxcvbnmlkjh"+ mTrackIds.get(i)+ "qwertyuioplkjh" + mTrackIds.get(i).visible;
 		}
 		return str;
 	}
 	
-	private ArrayList<Long> preferenceToTrackIds(SharedPreferences sharedPreferences) {
+	private ArrayList<Track> preferenceToTrackIds(SharedPreferences sharedPreferences) {
 //		return new ArrayList<Long>();
-		
+		try {
 		String value = sharedPreferences.getString("mTrackIds", "");
 		if ("".equals(value)) {
-			return new ArrayList<Long>();
+			return new ArrayList<Track>();
 		}
-		ArrayList<Long> arrList = new ArrayList<Long>();
-		String[] strArray = value.split(",");
+		ArrayList<Track> arrList = new ArrayList<Track>();
+		String[] strArray = value.split("zxcvbnmlkjh");
 		for (int i=0; i < strArray.length; i++) {
-			arrList.add(new Long(strArray[i]));
+			String[] trackArray = strArray[i].split("qwertyuioplkjh");
+			arrList.add(new Track(new Long(trackArray[0]), new Boolean(trackArray[1])));
 		}
 		return arrList;
-		
+		} catch (Exception e)	{
+			Log.d(TAG, "ASLAI: EXCEPTION CONVERTING TO TRACKS");
+			return new ArrayList<Track>();
+		}
 	}
 	private final ContentObserver mTrackSegmentsObserver = new ContentObserver(new Handler()) {
 		@Override
@@ -1269,7 +1274,8 @@ public class LoggerMap extends MapActivity {
 																// Constants.TRACKCOLORING,
 																// "2" )
 																// ).intValue();
-		for (long trackId: mTrackIds) {
+		for (Track track: mTrackIds) {
+			long trackId = track.id;
 			Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 		try {
 
@@ -1379,7 +1385,8 @@ public class LoggerMap extends MapActivity {
 	private void updateDataOverlays() {
 	    boolean createOverlayExecuted = false;
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
-		for (long trackId: mTrackIds) {
+		for (Track track: mTrackIds) {
+			long trackId = track.id;
 			Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
  
 		Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
@@ -1480,9 +1487,9 @@ public class LoggerMap extends MapActivity {
 	private void clearOverlays() {	
 		int state = GPSLoggerServiceManager.getLoggingState();
 		Log.d("TAG", "ASLAI STATE IS: " + state);
-		ArrayList<Long> tmpTrackIds = new ArrayList<Long>();
+		ArrayList<Track> tmpTrackIds = new ArrayList<Track>();
         if (state == Constants.LOGGING || state == Constants.PAUSED) {        	
-            tmpTrackIds.add(getLastTrackId());
+            tmpTrackIds.add(mTrackIds.get(mTrackIds.size()-1));
         }
         mTrackIds = tmpTrackIds;
         Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
@@ -1491,9 +1498,9 @@ public class LoggerMap extends MapActivity {
 		editor.commit();        
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.clear(); 
-		overlays.add(mMylocation);
 		redrawOverlays();
-//		createDataOverlays();
+		overlays.add(mMylocation);
+		//		createDataOverlays();
 //		updateDataOverlays();
 //		moveActiveViewWindow();
 
