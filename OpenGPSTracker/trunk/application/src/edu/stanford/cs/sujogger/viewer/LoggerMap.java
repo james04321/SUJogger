@@ -523,6 +523,7 @@ public class LoggerMap extends MapActivity {
 		
 		//ASLAI: Added
 		mMylocation.enableMyLocation();
+		mMylocation.enableCompass();
 		
 		mMapView.setBuiltInZoomControls(true);
 		mMapView.displayZoomControls(true);
@@ -1499,6 +1500,7 @@ public class LoggerMap extends MapActivity {
 		overlays.clear(); 
 		redrawOverlays();
 		overlays.add(mMylocation);
+//		mMapView.invalidate();
 		//		createDataOverlays();
 //		updateDataOverlays();
 //		moveActiveViewWindow();
