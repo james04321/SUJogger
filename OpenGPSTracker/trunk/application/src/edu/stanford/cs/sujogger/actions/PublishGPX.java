@@ -28,7 +28,6 @@
  */
 package edu.stanford.cs.sujogger.actions;
 
-
 import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -38,264 +37,245 @@ import android.app.PendingIntent;
 import android.app.ProgressDialog;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
-import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.DialogInterface.OnClickListener;
-import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.RemoteViews;
+import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.utils.GpxCreator;
-import edu.stanford.cs.sujogger.actions.utils.TrackCreator;
 import edu.stanford.cs.sujogger.actions.utils.XmlCreationProgressListener;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.viewer.FriendPicker;
 import edu.stanford.cs.sujogger.viewer.LoggerMap;
- 
+import edu.stanford.cs.sujogger.viewer.TrackList;
+
 /**
  * Store a GPX file to SDCard
  * 
  * @version $Id: PublishGPX.java 472 2010-04-08 09:50:01Z rcgroot $
  * @author rene (c) Mar 22, 2009, Sogeti B.V.
  */
-public class PublishGPX extends Activity 
-{
-   public static final String TAG = "OGT.PublishGPX";
-   
-   private static final int DIALOG_FILENAME = 11;
-   private static final int PROGRESS_STEPS = 10;
+public class PublishGPX extends Activity {
+	public static final String TAG = "OGT.PublishGPX";
 
-   private RemoteViews mContentView;
-   private int barProgress = 0;
-   private Notification mNotification;
-   private NotificationManager mNotificationManager;
-   private EditText mFileNameView;
-    
-   private PublishGPXReceiver mReceiver;
-   private GamingServiceConnection mGamingServiceConn;
-   private DatabaseHelper mDbHelper;
-     
+	private static final int DIALOG_FILENAME = 11;
+	private static final int PROGRESS_STEPS = 10;
+
+	private RemoteViews mContentView;
+	private int barProgress = 0;
+	private Notification mNotification;
+	private NotificationManager mNotificationManager;
+	private EditText mFileNameView;
+
+	private PublishGPXReceiver mReceiver;
+	private GamingServiceConnection mGamingServiceConn;
+	private DatabaseHelper mDbHelper;
+	
+	private ProgressDialog mProgressDialog;
+
 	class PublishGPXReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			try { 
+			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGamingServiceConn.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-					Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id:" + appResponse.request_id);
+					Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id:"
+							+ appResponse.request_id);
 					
-					switch(appResponse.request_id) {
-					case 100:
-						int trackId = ((Obj) appResponse.object).id;
-						Log.d(TAG, "TRACKID IS " + trackId);
-
-						Log.d(TAG, "APPRESPONSE OBJECT IS: " + appResponse.object.getClass().getName());
-	//					int trackId;
-						//trackId = (int) appResponse.object;
-						Obj obj = (Obj) appResponse.appRequest.object;
-						int _id = obj.object_properties[0].int_val;
-					//	Uri uri = new Uri(obj.object_properties[3].string_val);
-//						ContentResolver resolver = context.getApplicationContext().getContentResolver();
-						ContentValues values = new ContentValues();
-						Log.d(TAG, "TRACKID IS " + trackId);
-						values.put(Tracks.TRACK_ID, trackId);
-						Log.d(TAG, "URI IS " + PublishGPX.this.getIntent().getData());
-						DatabaseHelper mDbHelper = new DatabaseHelper(PublishGPX.this);
-						mDbHelper.openAndGetDb();	
-						mDbHelper.updateTrack(_id, values);
-						mDbHelper.close();						
-//						resolver.update(PublishGPX.this.getIntent().getData() , values, null, null);
-						 
-						//						mGamingServiceConn.getObjs(101, "track", Common.getRegisteredUser().id, -1, false);
-//						TrackCreator trackCreator = new TrackCreator(PublishGPX.this);
-//						trackCreator.downloadTrack(21);
-						mProgressDialog.cancel();
-						PublishGPX.this.finalize(); 
-						/*
-						GroupList.this.toggleNewGroupItemState();
-						Integer groupId = (Integer)(appResponse.object); 
-						Group newGroup = (Group)(appResponse.appRequest.object);
-						Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = " + newGroup.name);
-						GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
-						GroupList.this.mGroupsCursor.requery();
-						GroupList.this.mGroupAdapter.notifyDataSetChanged();
-						GroupList.this.getListView().invalidateViews();
-						*/
-						break;
-						/*
-					case 101:
-						Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id: " + appResponse.request_id);
-						Log.d(TAG, "Response is: " + appResponse);
-						Obj[] objArray = (Obj[]) appResponse.object;
-						for (int i =0; i < objArray.length; i++) {
-							for (int j=0; j < objArray[i].object_properties.length; j++) {
-							Log.d(TAG, "STRING_VAL IS: " + objArray[i].object_properties[j].string_val);
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						PublishGPX.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mProgressDialog != null) mProgressDialog.dismiss();
+								Toast toast = Toast.makeText(PublishGPX.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
 							}
-						} 
-						*/
-					default: break;
+						});
+						continue;
+					}
+					
+					switch (appResponse.request_id) {
+					case TrackList.PUBLISH_TRACK:
+						final int trackId = ((Obj) appResponse.object).id;
+						final Obj obj = (Obj) appResponse.appRequest.object;
+						final int _id = obj.object_properties[0].int_val;
+						Log.d(TAG, "TRACKID IS " + trackId);
+						Log.d(TAG, "APPRESPONSE OBJECT IS: "
+								+ appResponse.object.getClass().getName());
+						
+						PublishGPX.this.runOnUiThread(new Runnable() {
+							public void run() {
+								ContentValues values = new ContentValues();
+								Log.d(TAG, "TRACKID IS " + trackId);
+								values.put(Tracks.TRACK_ID, trackId);
+								Log.d(TAG, "URI IS " + PublishGPX.this.getIntent().getData());
+								DatabaseHelper mDbHelper = new DatabaseHelper(PublishGPX.this);
+								mDbHelper.openAndGetDb();
+								mDbHelper.updateTrack(_id, values);
+								mDbHelper.close();
+								
+								mProgressDialog.cancel();
+								PublishGPX.this.finalize();
+							}
+						});
+						break;
+					default:
+						break;
 					}
 				}
 			}
 			catch (Exception e) {
 				e.printStackTrace();
 			}
-		} 
+		}
 	}
-   
-   private OnClickListener mOnClickListener = new OnClickListener()
-      {
-         public void onClick( DialogInterface dialog, int which )
-         {
-            switch( which )
-            {
-               case Dialog.BUTTON_POSITIVE:
-                  PublishGPX.this.exportGPX( mFileNameView.getText().toString() );
-                  break;
-               case Dialog.BUTTON_NEGATIVE:
-                  PublishGPX.this.finish();
-                  break;
-            }
-         }
-      };
 
-private ProgressDialog mProgressDialog;
+	private OnClickListener mOnClickListener = new OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			switch (which) {
+			case Dialog.BUTTON_POSITIVE:
+				PublishGPX.this.exportGPX(mFileNameView.getText().toString());
+				break;
+			case Dialog.BUTTON_NEGATIVE:
+				PublishGPX.this.finish();
+				break;
+			}
+		}
+	};
 
-   @Override
-   public void onCreate( Bundle savedInstanceState )
-   {
-      setVisible( false );
-      super.onCreate( savedInstanceState );
-      showDialog( DIALOG_FILENAME );
+	
+
+	@Override
+	public void onCreate(Bundle savedInstanceState) {
+		setVisible(false);
+		super.onCreate(savedInstanceState);
+		
 		mDbHelper = new DatabaseHelper(this);
-		mDbHelper.openAndGetDb();      
-	  mReceiver = new PublishGPXReceiver(); 
-	  mGamingServiceConn = new GamingServiceConnection(this, mReceiver, 
-				Constants.APP_ID, Constants.APP_API_KEY, this.getClass().getName());
-	  mGamingServiceConn.bind();
-	  mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
-	     
-   }
+		mDbHelper.openAndGetDb();
+		mReceiver = new PublishGPXReceiver();
+		
+		mGamingServiceConn = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
+				Constants.APP_API_KEY, this.getClass().getName());
+		mGamingServiceConn.bind();
+		mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
+		
+		showDialog(DIALOG_FILENAME);
+	}
 
-   /*
-    * (non-Javadoc)
-    * @see android.app.Activity#onCreateDialog(int)
-    */
-   @Override
-   protected Dialog onCreateDialog( int id )
-   {
-      Builder builder;
-      switch (id)
-      { 
-         case DIALOG_FILENAME:
-            LayoutInflater factory = LayoutInflater.from( this );
-            View view = factory.inflate( R.layout.filenamedialog, null );
-            EditText editText = (EditText) view.findViewById(R.id.fileNameField);
-            if (this.getIntent() != null && this.getIntent().getExtras() != null) {
-            Log.d(TAG, "FILENAME IS " + this.getIntent().getExtras().getString("name"));
-            editText.setText(this.getIntent().getExtras().getString("name"));
-            } else 
-            	Log.d(TAG, "NO INTENT IN ONCREATEDIALOG");
-            mFileNameView = (EditText) view.findViewById( R.id.fileNameField );
-            builder = new AlertDialog.Builder( this )
-               .setTitle( R.string.dialog_track_title )
-               .setMessage( R.string.dialog_filename_publish )
-               .setIcon( android.R.drawable.ic_dialog_alert )
-               .setView(view )
-               .setPositiveButton( R.string.btn_okay, mOnClickListener )
-               .setNegativeButton( R.string.btn_cancel, mOnClickListener );
-            Dialog dialog = builder.create();
-            dialog.setOwnerActivity( this );
-            return dialog;
-         default:
-            return super.onCreateDialog( id );
-      }
-   } 
+	/*
+	 * (non-Javadoc)
+	 * 
+	 * @see android.app.Activity#onCreateDialog(int)
+	 */
+	@Override
+	protected Dialog onCreateDialog(int id) {
+		Builder builder;
+		switch (id) {
+		case DIALOG_FILENAME:
+			LayoutInflater factory = LayoutInflater.from(this);
+			View view = factory.inflate(R.layout.filenamedialog, null);
+			EditText editText = (EditText) view.findViewById(R.id.fileNameField);
+			if (this.getIntent() != null && this.getIntent().getExtras() != null) {
+				Log.d(TAG, "FILENAME IS " + this.getIntent().getExtras().getString("name"));
+				editText.setText(this.getIntent().getExtras().getString("name"));
+			}
+			else
+				Log.d(TAG, "NO INTENT IN ONCREATEDIALOG");
+			mFileNameView = (EditText) view.findViewById(R.id.fileNameField);
+			builder = new AlertDialog.Builder(this).setTitle(R.string.dialog_track_title)
+					.setMessage(R.string.dialog_filename_publish).setIcon(
+							android.R.drawable.ic_dialog_alert).setView(view).setPositiveButton(
+							R.string.btn_okay, mOnClickListener).setNegativeButton(
+							R.string.btn_cancel, mOnClickListener);
+			Dialog dialog = builder.create();
+			dialog.setOwnerActivity(this);
+			return dialog;
+		default:
+			return super.onCreateDialog(id);
+		}
+	}
 
-   protected void exportGPX( String chosenBaseFileName )
-   {
-      GpxCreator mGpxCreator = new GpxCreator( this, getIntent(), chosenBaseFileName, null, mGamingServiceConn, true );
-      mGpxCreator.start();
-	  mProgressDialog = ProgressDialog.show(this, "", getString( R.string.ticker_publishing )+ " " + chosenBaseFileName + " to server", true);
+	protected void exportGPX(String chosenBaseFileName) {
+		GpxCreator mGpxCreator = new GpxCreator(this, getIntent(), chosenBaseFileName, null,
+				mGamingServiceConn, true);
+		mGpxCreator.start();
+		mProgressDialog = ProgressDialog.show(this, "", getString(R.string.ticker_publishing) + " "
+				+ chosenBaseFileName + " to server", true);
 
-      
-//      this.finish();
-   }
-   
-   public void finalize() {
-	   mGamingServiceConn.unbind();	   	   
-	   finish();
-	   onDestroy();
-   }
-   
-   public void onDestroy() {
-	   mGamingServiceConn.unbind();	   
-	   super.onDestroy();
+		// this.finish();
+	}
 
-	   
-   }
-   class ProgressListener implements XmlCreationProgressListener
-   {
-      public void startNotification( String fileName )
-      {
-         String ns = Context.NOTIFICATION_SERVICE;
-         mNotificationManager = (NotificationManager) PublishGPX.this.getSystemService( ns );
-         int icon = android.R.drawable.ic_menu_save;
-         CharSequence tickerText = getString( R.string.ticker_publishing )+ " " + fileName + " to server";
-       
-         mNotification = new Notification();
-         PendingIntent contentIntent = PendingIntent.getActivity( PublishGPX.this, 0, new Intent( PublishGPX.this, LoggerMap.class ).setFlags( Intent.FLAG_ACTIVITY_NEW_TASK ),
-               PendingIntent.FLAG_UPDATE_CURRENT );
-       
-         mNotification.contentIntent = contentIntent;
-         mNotification.tickerText = tickerText;
-         mNotification.icon = icon;
-         mNotification.flags |= Notification.FLAG_ONGOING_EVENT;
-         mContentView = new RemoteViews( getPackageName(), R.layout.savenotificationprogress );
-         mContentView.setImageViewResource( R.id.icon, icon );
-         mContentView.setTextViewText( R.id.progresstext, tickerText );
-       
-         mNotification.contentView = mContentView;
-      }
-      
-      public void updateNotification(int progress, int goal)
-      {
-//         Log.d( TAG, "Progress " + progress + " of " + goal );
-         if( progress > 0 && progress < goal )
-         {
-            if( ( progress * PROGRESS_STEPS ) / goal != barProgress )
-            {
-               barProgress = ( progress * PROGRESS_STEPS ) / goal;
-               mContentView.setProgressBar( R.id.progress, goal, progress, false );
-               mNotificationManager.notify( R.layout.savenotificationprogress, mNotification );
-            }
-         }
-         else if( progress == 0 )
-         {
-            mContentView.setProgressBar( R.id.progress, goal, progress, true );
-            mNotificationManager.notify( R.layout.savenotificationprogress, mNotification );
-         }
-         else if( progress >= goal )
-         {
-            mContentView.setProgressBar( R.id.progress, goal, progress, false );
-            mNotificationManager.notify( R.layout.savenotificationprogress, mNotification );
-         }
-      }
-      
-      public void endNotification(String filename)
-      {
-         mNotificationManager.cancel( R.layout.savenotificationprogress );
-      }
-   }
+	public void finalize() {
+		mGamingServiceConn.unbind();
+		finish();
+		onDestroy();
+	}
+
+	public void onDestroy() {
+		mGamingServiceConn.unbind();
+		super.onDestroy();
+
+	}
+
+	class ProgressListener implements XmlCreationProgressListener {
+		public void startNotification(String fileName) {
+			String ns = Context.NOTIFICATION_SERVICE;
+			mNotificationManager = (NotificationManager) PublishGPX.this.getSystemService(ns);
+			int icon = android.R.drawable.ic_menu_save;
+			CharSequence tickerText = getString(R.string.ticker_publishing) + " " + fileName
+					+ " to server";
+
+			mNotification = new Notification();
+			PendingIntent contentIntent = PendingIntent.getActivity(PublishGPX.this, 0, new Intent(
+					PublishGPX.this, LoggerMap.class).setFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+					PendingIntent.FLAG_UPDATE_CURRENT);
+
+			mNotification.contentIntent = contentIntent;
+			mNotification.tickerText = tickerText;
+			mNotification.icon = icon;
+			mNotification.flags |= Notification.FLAG_ONGOING_EVENT;
+			mContentView = new RemoteViews(getPackageName(), R.layout.savenotificationprogress);
+			mContentView.setImageViewResource(R.id.icon, icon);
+			mContentView.setTextViewText(R.id.progresstext, tickerText);
+
+			mNotification.contentView = mContentView;
+		}
+
+		public void updateNotification(int progress, int goal) {
+			// Log.d( TAG, "Progress " + progress + " of " + goal );
+			if (progress > 0 && progress < goal) {
+				if ((progress * PROGRESS_STEPS) / goal != barProgress) {
+					barProgress = (progress * PROGRESS_STEPS) / goal;
+					mContentView.setProgressBar(R.id.progress, goal, progress, false);
+					mNotificationManager.notify(R.layout.savenotificationprogress, mNotification);
+				}
+			}
+			else if (progress == 0) {
+				mContentView.setProgressBar(R.id.progress, goal, progress, true);
+				mNotificationManager.notify(R.layout.savenotificationprogress, mNotification);
+			}
+			else if (progress >= goal) {
+				mContentView.setProgressBar(R.id.progress, goal, progress, false);
+				mNotificationManager.notify(R.layout.savenotificationprogress, mNotification);
+			}
+		}
+
+		public void endNotification(String filename) {
+			mNotificationManager.cancel(R.layout.savenotificationprogress);
+		}
+	}
 }
