@@ -48,6 +48,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
+import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
 import android.content.res.Configuration;
@@ -73,10 +74,12 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -129,7 +132,8 @@ public class LoggerMap extends MapActivity {
 	private static final int MENU_VOICE = 11;
 	private static final int MENU_VIDEO = 12;
 	private static final int MENU_SHARE = 13;
-	
+	private static final int MENU_CURRENT_LOCATION = 14;
+
 	// Dialogs
 	private static final int DIALOG_TRACKNAME = 23;
 	private static final int DIALOG_NOTRACK = 24;
@@ -158,6 +162,7 @@ public class LoggerMap extends MapActivity {
 	private double mAverageSpeed = 4.4704;
 	//ASLAI
 	private ArrayList<Track> mTrackIds = new ArrayList<Track>();
+	private ArrayList<Track> mTrackIdsForDialog;
 //	private long mTrackId = -1;
 	private boolean statisticsPresent = false;
 	private long mLastSegment = -1;
@@ -180,7 +185,7 @@ public class LoggerMap extends MapActivity {
 	//ASLAI: created new function to do animateTo
 	private void animateTo() {		
 		int state = GPSLoggerServiceManager.getLoggingState();
-		if (mTrackIds.size() > 0) {
+		if (mTrackIds.size() > 0 && Track.visibleExists(mTrackIds)) {
 			if (state == Constants.LOGGING || state == Constants.PAUSED)   {
 				Log.d(TAG, "ASLAI: GOING TO LAST TRACK POINT");
 				mMapView.getController().animateTo(getLastTrackPoint());
@@ -251,7 +256,13 @@ public class LoggerMap extends MapActivity {
 		if (mTrackIds.size() == 0) {
 			return trackId;
 		}
-		trackId = mTrackIds.get(mTrackIds.size()-1).id;
+		int i = 1;
+		while (mTrackIds.size() - i >=0 && !mTrackIds.get(mTrackIds.size()-i).visible)
+			i++;
+		if (mTrackIds.size() -i >=0)
+		   trackId = mTrackIds.get(mTrackIds.size()-i).id;
+		else
+			trackId = -1;
 		Log.d(TAG, "LastTrackId: " + trackId);
 			
 		return trackId;
@@ -871,12 +882,14 @@ public class LoggerMap extends MapActivity {
 		// SubMenu notemenu = menu.addSubMenu( ContextMenu.NONE, MENU_NOTE,
 		// ContextMenu.NONE, R.string.menu_insertnote ).setIcon(
 		// R.drawable.ic_menu_myplaces );
-		menu.add(ContextMenu.NONE, MENU_CLEARTRACK, ContextMenu.NONE, R.string.menu_clear_track)
-		.setIcon(R.drawable.ic_menu_close_clear_cancel).setAlphabeticShortcut('C');
+//		menu.add(ContextMenu.NONE, MENU_CLEARTRACK, ContextMenu.NONE, R.string.menu_clear_track)
+//		.setIcon(R.drawable.ic_menu_close_clear_cancel).setAlphabeticShortcut('C');
 		menu.add(ContextMenu.NONE, MENU_STATS, ContextMenu.NONE, R.string.menu_statistics).setIcon(
 				R.drawable.ic_menu_picture).setAlphabeticShortcut('S');
 		menu.add(ContextMenu.NONE, MENU_SHARE, ContextMenu.NONE, R.string.menu_shareTrack).setIcon(
 				R.drawable.ic_menu_share).setAlphabeticShortcut('I');
+		menu.add(ContextMenu.NONE, MENU_CURRENT_LOCATION, ContextMenu.NONE, R.string.menu_current_location).setIcon(
+				R.drawable.ic_menu_myplaces).setAlphabeticShortcut('C');
 		// More
 
 		// menu.add( ContextMenu.NONE, MENU_TRACKLIST, ContextMenu.NONE,
@@ -912,6 +925,10 @@ public class LoggerMap extends MapActivity {
 		// notemenu.setEnabled( GPSLoggerServiceManager.isMediaPrepared() );
 		MenuItem sharemenu = menu.findItem(MENU_SHARE);
 		sharemenu.setEnabled(mTrackIds.size() > 0);
+		MenuItem layermenu = menu.findItem(MENU_LAYERS);
+		layermenu.setEnabled(mTrackIds.size() > 0);	
+		MenuItem statsmenu = menu.findItem(MENU_STATS);
+		statsmenu.setEnabled(mTrackIds.size() > 0);				
 		return super.onPrepareOptionsMenu(menu);
 	}
 
@@ -925,7 +942,58 @@ public class LoggerMap extends MapActivity {
 		Uri trackUri;
 		switch (item.getItemId()) {
 		case MENU_LAYERS:
-			showDialog(DIALOG_LAYERS);
+//			showDialog(DIALOG_LAYERS);
+			Dialog dialog = null;
+			LayoutInflater factory = null;
+			View view = null;
+			Builder builder = null;			
+			builder = new AlertDialog.Builder(this);
+			factory = LayoutInflater.from(this);
+			view = factory.inflate(R.layout.layerdialog, null);
+
+			builder.setTitle(R.string.dialog_layer_title).setIcon(android.R.drawable.ic_dialog_map)
+					.setPositiveButton(R.string.btn_okay, null).setView(view);
+			Log.d(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
+			int state = GPSLoggerServiceManager.getLoggingState();
+	        if (state == Constants.LOGGING || state == Constants.PAUSED) {     
+				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, true);
+	        } else
+				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, false);
+
+			if (mTrackIdsForDialog.size() > 0) {
+			builder.setMultiChoiceItems(Track.tracksToCharSequence(mTrackIdsForDialog, this), Track.tracksToVisibleBoolArray(mTrackIdsForDialog), new OnMultiChoiceClickListener() {
+				
+				public void onClick(DialogInterface dialog, int whichButton,
+                        boolean isChecked) {
+					Track track = mTrackIdsForDialog.get(whichButton);
+					if (isChecked) {
+						Log.d(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
+						track.visible = true;
+						LoggerMap.this.moveToTrack(track.id, true, false);
+					} else {
+						Log.d(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
+						LoggerMap.this.setTrackInvisible(Track.findTrackPosById(mTrackIds, track.id));
+					}
+						
+					
+				}
+			}).setNegativeButton(R.string.btn_remove_all, new OnClickListener() {
+
+				public void onClick(DialogInterface dialog, int which) {
+					LoggerMap.this.clearOverlays();
+					dialog.cancel();
+				}
+			}).setNeutralButton(R.string.btn_clear_all, new OnClickListener() {
+
+				public void onClick(DialogInterface dialog, int which) {
+					LoggerMap.this.setAllTracksInvisible(mTrackIdsForDialog);
+				}
+			});
+			}
+
+			dialog = builder.create();
+			dialog.show();
+			
 			handled = true;
 			break;
 		//case MENU_SETTINGS:
@@ -964,6 +1032,10 @@ public class LoggerMap extends MapActivity {
 			actionIntent.putExtra("name", this.getTitle());
 			Log.d(TAG, "MENU_TRACKLIST " + this.getTitle());
 			startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
+			handled = true;
+			break;
+		case MENU_CURRENT_LOCATION:
+			mMapView.getController().animateTo(mMylocation.getMyLocation());
 			handled = true;
 			break;
 		case MENU_PICTURE:
@@ -1016,16 +1088,20 @@ public class LoggerMap extends MapActivity {
 							R.string.btn_okay, mTrackNameDialogListener).setView(view);
 			dialog = builder.create();
 			return dialog;
+			/*
 		case DIALOG_LAYERS:
+			
 			builder = new AlertDialog.Builder(this);
 			factory = LayoutInflater.from(this);
 			view = factory.inflate(R.layout.layerdialog, null);
+
 			mSatellite = (CheckBox) view.findViewById(R.id.layer_satellite);
 			mSatellite.setOnCheckedChangeListener(mCheckedChangeListener);
 			mTraffic = (CheckBox) view.findViewById(R.id.layer_traffic);
 			mTraffic.setOnCheckedChangeListener(mCheckedChangeListener);
 			mSpeed = (CheckBox) view.findViewById(R.id.layer_speed);
 			mSpeed.setOnCheckedChangeListener(mCheckedChangeListener);
+
 			// TODO: remove unnecessary preferences
 			// mCompass = (CheckBox) view.findViewById( R.id.layer_compass );
 			// mCompass.setOnCheckedChangeListener( mCheckedChangeListener );
@@ -1033,8 +1109,44 @@ public class LoggerMap extends MapActivity {
 			// mLocation.setOnCheckedChangeListener( mCheckedChangeListener );
 			builder.setTitle(R.string.dialog_layer_title).setIcon(android.R.drawable.ic_dialog_map)
 					.setPositiveButton(R.string.btn_okay, null).setView(view);
+			Log.d(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
+			if (mTrackIds.size() > 0) {
+			builder.setMultiChoiceItems(Track.tracksToCharSequence(mTrackIds, this), Track.tracksToVisibleBoolArray(mTrackIds), new OnMultiChoiceClickListener() {
+				
+				public void onClick(DialogInterface dialog, int whichButton,
+                        boolean isChecked) {
+					Track track = mTrackIds.get(whichButton);
+					if (isChecked) {
+						Log.d(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
+						track.visible = true;
+						LoggerMap.this.moveToTrack(track.id, true, false);
+					} else {
+						Log.d(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
+						LoggerMap.this.setTrackInvisible(whichButton);
+					}
+						
+					
+				}
+			});
+			}
+
 			dialog = builder.create();
+			*/
+			/*
+			LinearLayout linearLayout = (LinearLayout) view.findViewById(R.id.layer);
+			View checkboxView = factory.inflate(R.layout.checkbox_item, null);
+			linearLayout.addView(checkboxView);
+			checkboxView = factory.inflate(R.layout.checkbox_item, null);
+			linearLayout.addView(checkboxView);
+			*/
+			/*
+
+			//			CheckBox checkBox = (CheckBox) findViewById(R.layout.checkbox_item);
+//			dialog.addContentView(checkboxView, mSatellite.getLayoutParams());
+//			dialog.addContentView(checkBox, checkBox.getLayoutParams());
+	
 			return dialog;
+			*/
 		case DIALOG_NOTRACK:
 			builder = new AlertDialog.Builder(this);
 			builder.setTitle(R.string.dialog_notrack_title).setMessage(
@@ -1077,6 +1189,8 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected void onPrepareDialog(int id, Dialog dialog) {
+		
+		/*
 		switch (id) {
 		case DIALOG_LAYERS:
 			mSatellite.setChecked(mSharedPreferences.getBoolean(Constants.SATELLITE, false));
@@ -1086,6 +1200,7 @@ public class LoggerMap extends MapActivity {
 		default:
 			break;
 		}
+		*/
 		super.onPrepareDialog(id, dialog);
 	}
 
@@ -1197,6 +1312,10 @@ public class LoggerMap extends MapActivity {
 	}
 
 	private void updateTitleBar() {
+		if (mTrackIds.size() == 0 || !Track.visibleExists(mTrackIds)) {
+			this.setTitle(R.string.map_title);
+			return;
+		}
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor trackCursor = null;
 		try {
@@ -1278,52 +1397,54 @@ public class LoggerMap extends MapActivity {
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		//ASLAI HERE
 		Long lastTrackId = getLastTrackId();
-		
+
 		overlays.clear(); 
 		overlays.add(mMylocation);
 
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor segments = null;
 		int trackColoringMethod = SegmentOverlay.DRAW_MEASURED;// new Integer(
-																// mSharedPreferences.getString(
-																// Constants.TRACKCOLORING,
-																// "2" )
-																// ).intValue();
+		// mSharedPreferences.getString(
+		// Constants.TRACKCOLORING,
+		// "2" )
+		// ).intValue();
 		for (Track track: mTrackIds) {
-			long trackId = track.id;
-			Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
-		try {
+			if (track.visible) {
+				long trackId = track.id;
+				Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+				try {
 
-			Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
-			segments = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null, null);
-			if (segments != null && segments.moveToFirst()) {
-				do {
-					long segmentsId = segments.getLong(0);
-					Uri segmentUri = ContentUris.withAppendedId(segmentsUri, segmentsId);
-					SegmentOverlay segmentOverlay = new SegmentOverlay((Context) this, segmentUri,
-							trackColoringMethod, mAverageSpeed, this.mMapView);
-					overlays.add(segmentOverlay);
-					mLastSegmentOverlay = segmentOverlay;
-					if (segments.isFirst()) {
-						segmentOverlay.addPlacement(SegmentOverlay.FIRST_SEGMENT);
+					Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
+					segments = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null, null);
+					if (segments != null && segments.moveToFirst()) {
+						do {
+							long segmentsId = segments.getLong(0);
+							Uri segmentUri = ContentUris.withAppendedId(segmentsUri, segmentsId);
+							SegmentOverlay segmentOverlay = new SegmentOverlay((Context) this, segmentUri,
+									trackColoringMethod, mAverageSpeed, this.mMapView);
+							overlays.add(segmentOverlay);
+							mLastSegmentOverlay = segmentOverlay;
+							if (segments.isFirst()) {
+								segmentOverlay.addPlacement(SegmentOverlay.FIRST_SEGMENT);
+							}
+							if (segments.isLast()) {
+								segmentOverlay.addPlacement(SegmentOverlay.LAST_SEGMENT);
+								getLastTrackPoint();
+							}
+							if (trackId == lastTrackId) 
+								mLastSegment = segmentsId;
+						} while (segments.moveToNext());
 					}
-					if (segments.isLast()) {
-						segmentOverlay.addPlacement(SegmentOverlay.LAST_SEGMENT);
-						getLastTrackPoint();
-					}
-					if (trackId == lastTrackId) 
-					    mLastSegment = segmentsId;
-				} while (segments.moveToNext());
-			}
-			
-		}
-		finally {
-			if (segments != null) {
-				segments.close();
-			}
-		}
 
-		moveActiveViewWindow();
+				}
+				finally {
+					if (segments != null) {
+						segments.close();
+					}
+				}
+
+				moveActiveViewWindow();
+			}
 
 		}
 
@@ -1398,41 +1519,43 @@ public class LoggerMap extends MapActivity {
 	
 	*/
 	private void updateDataOverlays() {
-	    boolean createOverlayExecuted = false;
+		boolean createOverlayExecuted = false;
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		for (Track track: mTrackIds) {
-			long trackId = track.id;
-			Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
- 
-		Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
-		Cursor segmentsCursor = null;
-		List<Overlay> overlays = this.mMapView.getOverlays();
-		int segmentOverlaysCount = 0;
+			if (track.visible) {
+				long trackId = track.id;
+				Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 
-		for (Overlay overlay : overlays) {
-			if (overlay instanceof SegmentOverlay) {
-				segmentOverlaysCount++;
+				Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
+				Cursor segmentsCursor = null;
+				List<Overlay> overlays = this.mMapView.getOverlays();
+				int segmentOverlaysCount = 0;
+
+				for (Overlay overlay : overlays) {
+					if (overlay instanceof SegmentOverlay) {
+						segmentOverlaysCount++;
+					}
+				}
+				try {
+					segmentsCursor = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null,
+							null);
+					if (segmentsCursor != null && segmentsCursor.getCount() == segmentOverlaysCount) {
+						Log.d(TAG, "UPDATEDATAOVERLAYS SAME SEGMENT COUNT");
+						// Log.d( TAG, "Alignment of segments" );
+					}
+					else {
+						Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
+						createDataOverlays();
+						break;
+					}
+				}
+				finally {
+					if (segmentsCursor != null) {
+						segmentsCursor.close();
+					}
+				}
+				moveActiveViewWindow();
 			}
-		}
-		try {
-			segmentsCursor = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null,
-					null);
-			if (segmentsCursor != null && segmentsCursor.getCount() == segmentOverlaysCount) {
-				Log.d(TAG, "UPDATEDATAOVERLAYS SAME SEGMENT COUNT");
-				// Log.d( TAG, "Alignment of segments" );
-			}
-			else {
-				Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
-				createDataOverlays();
-				break;
-			}
-		}
-		finally {
-			if (segmentsCursor != null) {
-				segmentsCursor.close();
-			}
-		}
-		moveActiveViewWindow();
 		}
 	}
 
@@ -1495,8 +1618,13 @@ public class LoggerMap extends MapActivity {
 		
 		if (mTrackIds.size() > 0) {
 			//ASLAI DIAGNOSTICS CHANGED HERE, There's still another place doing animate
-			moveToTrack(getLastTrackId(), false, false);
+			ArrayList<Track> tracksTmp = Track.shadowCopy(mTrackIds, false);
+			for (Track track: tracksTmp) {
+//				if (mTrackIds.get(mTrackIds.size() -1).visible)
+				if (track.visible)
+					moveToTrack(getLastTrackId(), false, false);
 			//            moveToTrack(getLastTrackId(), true, true);
+			}
 
 		}    	
     }
@@ -1517,12 +1645,50 @@ public class LoggerMap extends MapActivity {
 		overlays.clear(); 
 		redrawOverlays();
 		overlays.add(mMylocation);
-//		mMapView.invalidate();
+		updateTitleBar();
+		mMapView.invalidate();
 		//		createDataOverlays();
 //		updateDataOverlays();
 //		moveActiveViewWindow();
 
 
+	}
+	
+	private void setTrackInvisible(int trackPosition) {	
+		int state = GPSLoggerServiceManager.getLoggingState();
+		Log.d("TAG", "ASLAI STATE IS: " + state);
+        if (trackPosition == mTrackIds.size()-1 && (state == Constants.LOGGING || state == Constants.PAUSED)) {        	
+        	return;
+        }
+        mTrackIds.get(trackPosition).visible = false;
+        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
+		Editor editor = mSharedPreferences.edit();
+		editor.putString("mTrackIds", trackIdsToPreference());
+		editor.commit();        
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		overlays.clear(); 
+		redrawOverlays();
+		overlays.add(mMylocation);
+		updateTitleBar();		
+		mMapView.invalidate();
+		//		createDataOverlays();
+//		updateDataOverlays();
+//		moveActiveViewWindow();
+
+
+	}	
+	private void setAllTracksInvisible(ArrayList<Track> tracks) {
+		Track.setAllInvisible(tracks);
+        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
+		Editor editor = mSharedPreferences.edit();
+		editor.putString("mTrackIds", trackIdsToPreference());
+		editor.commit();        
+		List<Overlay> overlays = this.mMapView.getOverlays();
+		overlays.clear(); 
+		redrawOverlays();
+		overlays.add(mMylocation);
+		updateTitleBar();
+		mMapView.invalidate();		
 	}
 	/**
 	 * Alter this to set a new track as current.

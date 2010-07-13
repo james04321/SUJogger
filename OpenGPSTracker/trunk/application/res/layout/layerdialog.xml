@@ -8,7 +8,9 @@
       android:layout_width="wrap_content"
       android:layout_height="wrap_content"
       android:orientation="vertical"
+         android:id="@+id/layer"      
    >
+   <!-- 
       <CheckBox
          android:text="@string/layer_satellite"
          android:id="@+id/layer_satellite"
@@ -24,7 +26,6 @@
          android:id="@+id/layer_speed"
          android:layout_width="wrap_content"
          android:layout_height="wrap_content" />
-      <!-- 
       <CheckBox
          android:text="@string/layer_compass"
          android:id="@+id/layer_compass"

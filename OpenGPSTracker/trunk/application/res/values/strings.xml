@@ -20,7 +20,7 @@
     <string name="dialog_deleteconfirmation">Please confirm the deletion of the track %s</string>
     <string name="dialog_nooiabout">OI About missing</string>
     <string name="dialog_nooiabout_message">The application \"OI About\" from the OpenIntents project is required to display the about information.</string>
-    <string name="dialog_layer_title">Activate overlays</string>
+    <string name="dialog_layer_title">Show Tracks</string>
     <string name="dialog_graphtype_title">Graph type</string>
     <string name="dialog_notetexttitle">Text note</string>
     <string name="dialog_notetext_message">Enter a text note for the current location</string>
@@ -172,4 +172,8 @@
 	<string name="menu_clear_track">Clear Tracks</string>
 	<string name="dialog_filename_publish">Please enter the track name to be shared to your friends</string>
 	<string name="dialog_track_title">Track name</string>
+<string name="menu_current_location">Current Location</string>
+<string name="btn_remove_all">Remove All</string>
+<string name="btn_clear_all">Clear All</string>
+<string name="map_title">Stanford Jogger</string>
 </resources>
