@@ -976,14 +976,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public Cursor getUsersForGroup(long groupId) {
 		/**
 		 * SELECT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
-		 * AND groups_users.group_id=groupId
+		 * AND groups_users.group_id=groupId ORDER BY users.last_name, users.first_name
 		 */
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
 		String whereClause = Users.TABLE + "." + Users.USER_ID + "=" +
 			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
 			" AND " + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId;
 		Cursor cursor = mDb.rawQuery("SELECT " + Users.TABLE + ".* FROM " + tables + 
-				" WHERE " + whereClause, null);
+				" WHERE " + whereClause + " ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
+				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
 	
@@ -1298,7 +1299,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public Cursor getAllUsers(Context context) {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
-				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id, null);
+				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id +
+				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
+				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
 	
