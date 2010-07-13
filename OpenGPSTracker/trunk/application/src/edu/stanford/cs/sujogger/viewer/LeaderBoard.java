@@ -10,6 +10,7 @@ import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -52,8 +53,8 @@ public class LeaderBoard extends ListActivity {
 
 	private GamingServiceConnection mGameCon;
 	private LeaderBoardReceiver mReceiver;
-	private boolean mAlreadyUpdatedUsersGroups;
 	private SharedPreferences mSharedPreferences;
+	private Handler mHandler = new Handler();
 	
 	ArrayAdapter<String> mSpinnerTypeAdapterSolo;
 	ArrayAdapter<String> mSpinnerTypeAdapterGroup;
@@ -62,12 +63,37 @@ public class LeaderBoard extends ListActivity {
 	private int mTimeScale;
 	private boolean mIsGroup;
 	private int mGetUsersGroupsProgress;
+	private int mGetUsersGroupsGoal = 0;
 	private Spinner mSpinnerTypeSolo;
 	private Spinner mSpinnerTypeGroup;
 	private Spinner mSpinnerTime;
 	private ProgressDialog mUserGroupWaitDialog;
 	private ProgressDialog mScoreWaitDialog;
-
+	
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			long timeNow = System.currentTimeMillis();
+			boolean updateUsers = timeNow - mSharedPreferences.getLong(Constants.ALL_USERS_UPDATE_KEY, 0) > 
+				Constants.UPDATE_INTERVAL;
+			boolean updateGroups = timeNow - mSharedPreferences.getLong(Constants.ALL_GROUPS_UPDATE_KEY, 0) > 
+				Constants.UPDATE_INTERVAL;
+			if (updateUsers || updateGroups) {
+				mUserGroupWaitDialog = ProgressDialog.show(LeaderBoard.this, "", "Updating users and groups...", true);
+				try {
+					if (updateUsers) {
+						mGetUsersGroupsGoal++;
+						mGameCon.getAppsUser(GET_APP_USERS_RID);
+					}
+					if (updateGroups) {
+						mGetUsersGroupsGoal++;
+						mGameCon.getGroups(GET_GROUPS_RID, null, -1, -1, -1);
+					}
+				}
+				catch (RemoteException e) {}
+			}
+		}
+	};
+	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
@@ -76,7 +102,6 @@ public class LeaderBoard extends ListActivity {
 		mStatisticType = savedInstanceState != null ? savedInstanceState.getInt(STAT_TYPE_KEY) : 1;
 		mTimeScale = savedInstanceState != null ? savedInstanceState.getInt(STAT_TIME_KEY) : 0;
 		mIsGroup = savedInstanceState != null ? savedInstanceState.getBoolean(IS_GROUP_KEY) : false;
-		mAlreadyUpdatedUsersGroups = savedInstanceState != null ? savedInstanceState.getBoolean(ALREADY_UPDATED_KEY) : false;
 		
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -155,14 +180,7 @@ public class LeaderBoard extends ListActivity {
 		setTitle("Leaderboards");
 		fillData();
 		
-		if (!mAlreadyUpdatedUsersGroups) {
-			mUserGroupWaitDialog = ProgressDialog.show(this, "", "Updating users and groups...", true);
-			try {
-				mGameCon.getAppsUser(GET_APP_USERS_RID);
-				mGameCon.getGroups(GET_GROUPS_RID, null, -1, -1, -1);
-			}
-			catch (RemoteException e) {}
-		}
+		mHandler.postDelayed(mRefreshTask, 100);
 	}
 	
 	private void updateLBSelection(boolean retrieveScores) {
@@ -248,7 +266,6 @@ public class LeaderBoard extends ListActivity {
 		outState.putInt(STAT_TYPE_KEY, mStatisticType);
 		outState.putInt(STAT_TIME_KEY, mTimeScale);
 		outState.putBoolean(IS_GROUP_KEY, mIsGroup);
-		outState.putBoolean(ALREADY_UPDATED_KEY, mAlreadyUpdatedUsersGroups);
 	}
 
 	private void fillData() {
@@ -333,10 +350,13 @@ public class LeaderBoard extends ListActivity {
 							public void run() {
 								if (users != null) {
 									mDbHelper.addUsers(users);
+									Editor editor = mSharedPreferences.edit();
+									editor.putLong(Constants.ALL_USERS_UPDATE_KEY, 
+												System.currentTimeMillis());
+									editor.commit();
 									mGetUsersGroupsProgress++;
-									if (mGetUsersGroupsProgress >= 2) {
+									if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
 										mUserGroupWaitDialog.dismiss();
-										mAlreadyUpdatedUsersGroups = true;
 										updateLBSelection(true);
 									}
 								}
@@ -349,10 +369,13 @@ public class LeaderBoard extends ListActivity {
 							public void run() {
 								if (groups != null) {
 									mDbHelper.addGroupsTemp(groups);
+									Editor editor = mSharedPreferences.edit();
+									editor.putLong(Constants.ALL_GROUPS_UPDATE_KEY, 
+												System.currentTimeMillis());
+									editor.commit();
 									mGetUsersGroupsProgress++;
-									if (mGetUsersGroupsProgress >= 2) {
+									if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
 										mUserGroupWaitDialog.dismiss();
-										mAlreadyUpdatedUsersGroups = true;
 										updateLBSelection(true);
 									}
 								}

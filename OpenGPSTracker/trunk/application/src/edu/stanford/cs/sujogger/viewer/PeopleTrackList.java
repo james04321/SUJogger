@@ -37,18 +37,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.RemoteException;
 import android.util.Log;
-import android.view.ContextMenu;
 import android.view.LayoutInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 public class PeopleTrackList extends ListActivity {
 	class Track {
@@ -62,11 +61,34 @@ public class PeopleTrackList extends ListActivity {
 	public static final String TAG = "PeopleTrackList";
 	private PeopleTrackListReceiver mReceiver;
 	private GamingServiceConnection mGamingServiceConn;
+	private Handler mHandler = new Handler();
 	private ArrayList<Track> trackList;
 	private Hashtable<Integer, Track> trackHash;
 
 	private ProgressDialog mProgressDialog;
-
+	
+	//Request IDs
+	private static final int OBJ_PROPS_RID = 120;
+	
+	private Runnable mRefreshTask = new Runnable() {
+		public void run() {
+			mProgressDialog = ProgressDialog.show(PeopleTrackList.this, "",
+					getString(R.string.dialog_download_track_list), true);
+			int user_id = PeopleTrackList.this.getIntent().getExtras().getInt("userId");
+			
+			try {
+				String[] names = new String[3];
+				names[0] = "name";
+				names[1] = "duration";
+				names[2] = "distance";
+				mGamingServiceConn.getObjProperties(OBJ_PROPS_RID, user_id, -1, "track", names);
+			}
+			catch (RemoteException e) {
+				e.printStackTrace();
+			}
+		}
+	};
+	
 	class PeopleTrackListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
 			try {
@@ -75,15 +97,29 @@ public class PeopleTrackList extends ListActivity {
 					Log.d(TAG, appResponse.toString());
 					Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id:"
 							+ appResponse.request_id);
-
+					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						PeopleTrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mProgressDialog != null) mProgressDialog.dismiss();
+								Toast toast = Toast.makeText(PeopleTrackList.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
-					case 120:
-						// ListAdapter adapter = createAdapter((ObjProperty[])
-						// appResponse.object);
-						PeopleTrackListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
-						setListAdapter(adapter);
-						Log.d(TAG, "HERE 3");
-						mProgressDialog.cancel();
+					case OBJ_PROPS_RID:
+						final PeopleTrackListAdapter adapter = createAdapter((ObjProperty[]) appResponse.object);
+						PeopleTrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								setListAdapter(adapter);
+								Log.d(TAG, "HERE 3");
+								mProgressDialog.dismiss();
+							}
+						});
 						break;
 					case 101:
 						Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id: "
@@ -112,29 +148,17 @@ public class PeopleTrackList extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "HERE1");
 		super.onCreate(savedInstanceState);
+		
 		mReceiver = new PeopleTrackListReceiver();
 		mGamingServiceConn = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, this.getClass().getName());
 		mGamingServiceConn.bind();
 		mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
-		registerForContextMenu(getListView());
-		mProgressDialog = ProgressDialog.show(this, "",
-				getString(R.string.dialog_download_track_list), true);
+		
 		trackList = new ArrayList<Track>();
 		trackHash = new Hashtable<Integer, Track>();
-		int user_id = this.getIntent().getExtras().getInt("userId");
-		try {
-			String[] names = new String[3];
-			names[0] = "name";
-			names[1] = "duration";
-			names[2] = "distance";
-			mGamingServiceConn.getObjProperties(120, user_id, -1, "track", names);
-		}
-		catch (RemoteException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
+		
+		mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	public void finalize() {
