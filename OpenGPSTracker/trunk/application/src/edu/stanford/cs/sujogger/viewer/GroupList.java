@@ -162,7 +162,10 @@ public class GroupList extends ListActivity {
 		Log.d(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
-		mGroupAdapter.notifyDataSetChanged();
+		if (mGroupAdapter != null)
+			mGroupAdapter.notifyDataSetChanged();
+		if (mUserAdapter != null)
+			mUserAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
 	}
 
