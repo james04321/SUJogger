@@ -28,14 +28,6 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
-import org.json.JSONArray;
-import org.json.JSONException;
-import org.json.JSONObject;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -43,7 +35,6 @@ import android.app.ProgressDialog;
 import android.app.SearchManager;
 import android.app.AlertDialog.Builder;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
@@ -53,6 +44,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences.Editor;
+import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
@@ -69,18 +61,12 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
-
-import com.facebook.android.AsyncFacebookRunner;
-import com.facebook.android.DialogError;
-import com.facebook.android.Facebook;
-import com.facebook.android.FacebookError;
-import com.facebook.android.Util;
-import com.facebook.android.Facebook.DialogListener;
-
+import edu.stanford.android.DialogError;
+import edu.stanford.android.WADialog;
+import edu.stanford.android.WebAuth;
+import edu.stanford.android.WebAuth.DialogListener;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
@@ -91,7 +77,6 @@ import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
-import edu.stanford.cs.sujogger.util.BaseRequestListener;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SegmentedControl;
@@ -125,19 +110,21 @@ public class TrackList extends ListActivity {
 	public static final int GET_CG_RID = 4;
 
 	private SharedPreferences mSharedPreferences;
-	private ProgressDialog mDialogFriendInit;
+	//private ProgressDialog mDialogFriendInit;
 	private ProgressDialog mDialogUserInit;
 	private Button mStartButton;
 
 	private DatabaseHelper mDbHelper;
 	private GamingServiceConnection mGameCon;
 	private ScoreboardReceiver mReceiver;
-
-	private Facebook mFacebook;
-	private AsyncFacebookRunner mAsyncRunner;
+	
+	//TODO: Facebook
+	//private Facebook mFacebook;
+	//private AsyncFacebookRunner mAsyncRunner;
+	private WebAuth mWa;
 
 	// Temp attribute to store FB friends until we get everything we need
-	private long[] mFriendFbIds;
+	//private long[] mFriendFbIds;
 
 	private EditText mTrackNameView;
 	private Uri mDialogUri;
@@ -218,13 +205,21 @@ public class TrackList extends ListActivity {
 
 		// Add the context menu (the long press thing)
 		registerForContextMenu(getListView());
-
+		
+		//TODO: Facebook
+		/*
 		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 			mFacebook = new Facebook();
 			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
 
 			mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
 					new LoginDialogListener());
+		}
+		*/
+		
+		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+			mWa = new WebAuth();
+			mWa.authorize(this, new LoginDialogListener());
 		}
 	}
 
@@ -326,6 +321,12 @@ public class TrackList extends ListActivity {
 		mGameCon.unbind();
 		super.onDestroy();
 	}
+	
+	@Override
+    public void onConfigurationChanged (Configuration newConfig) {
+		Log.d(TAG, "onConfigurationChanged()");
+    	super.onConfigurationChanged(newConfig);
+    }
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -559,18 +560,23 @@ public class TrackList extends ListActivity {
 	}
 
 	private void registerUser() {
-		if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
+		//TODO: Facebook
+		//if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
+		//	return;
+		
+		if (Common.getRegisteredUser(this) == null)
 			return;
-
-		mDialogFriendInit.dismiss();
+		
+		//TODO: Facebook
+		//mDialogFriendInit.dismiss();
 		mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
 		User user = Common.getRegisteredUser(this);
-		user.friend_fb_ids = mFriendFbIds;
+		//user.friend_fb_ids = mFriendFbIds;
+		user.friend_fb_ids = null;
 		try {
 			mGameCon.registerUser(USERREG_RID, user);
 		}
-		catch (RemoteException e) {
-		}
+		catch (RemoteException e) {}
 	}
 
 	private class ScoreboardReceiver extends BroadcastReceiver {
@@ -591,10 +597,7 @@ public class TrackList extends ListActivity {
 						}
 						else {
 							Log.d(TAG, "onReceive(): scores found");
-							Integer[] scoreIds = new Integer[scores.length];
-							for (int i = 0; i < scoreIds.length; i++)
-								scoreIds[i] = scores[i].id;
-							mDbHelper.updateSoloScoreboardIds(scoreIds);
+							mDbHelper.updateSoloScoreboards(scores);
 
 							Editor editorGetSb = mSharedPreferences.edit();
 							editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
@@ -632,7 +635,9 @@ public class TrackList extends ListActivity {
 			}
 		}
 	}
-
+	
+	//TODO: Facebook
+	/*
 	private final class LoginDialogListener implements DialogListener {
 		public void onComplete(Bundle values) {
 			// SessionEvents.onLoginSuccess();
@@ -730,5 +735,34 @@ public class TrackList extends ListActivity {
 				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
 			}
 		}
-	}
+	}*/
+	
+	private final class LoginDialogListener implements DialogListener {
+    	public void onComplete(Bundle values) {
+    		Log.d(TAG, values.toString());
+    		
+    		Editor editor = mSharedPreferences.edit();
+			editor.putLong(Constants.USERREG_FBID_KEY, 0);
+			editor.putString(Constants.USERREG_EMAIL_KEY, 
+					values.getString(WebAuth.SUID_KEY) + WebAuth.EMAIL_SUFFIX);
+			editor.putString(Constants.USERREG_FIRSTNAME_KEY, values.getString(WebAuth.FIRSTNAME_KEY));
+			editor.putString(Constants.USERREG_LASTNAME_KEY, values.getString(WebAuth.LASTNAME_KEY));
+			editor.putString(Constants.USERREG_PICTURE_KEY, null);
+			editor.commit();
+    		
+    		registerUser();
+    	}
+    	
+        public void onError(DialogError e) {
+        	if (e.getErrorCode() != WADialog.USERINFO_ERROR)
+				new AlertDialog.Builder(TrackList.this).setMessage(e.getMessage())
+					.setCancelable(false)
+					.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+					
+					public void onClick(DialogInterface dialog, int which) {
+						mWa.authorize(TrackList.this, new LoginDialogListener());
+					}
+				}).show();
+        }
+    }
 }

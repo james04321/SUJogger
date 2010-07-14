@@ -40,13 +40,15 @@ public class LeaderBoardAdapter extends CursorAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		if (position >= mCursor.getCount()) return null;
 		View ret = super.getView(position, convertView, parent);
+		//TODO: Facebook
+		/*
 		if (ret != null && !mIsGroup) {
 			RemoteImageView image = (RemoteImageView) ret.findViewById(R.id.user_image);
 			if (image != null && !mFlinging) {
 				Log.d(TAG, "getView(): trying to fetch image");
 				image.loadImage();
 			}
-		}
+		}*/
 		return ret;
 	}
 
@@ -67,13 +69,15 @@ public class LeaderBoardAdapter extends CursorAdapter {
 			String firstName = cursor.getString(8);
 			String lastName = cursor.getString(9);
 			String imgUrl = cursor.getString(10);
-			image.setVisibility(View.VISIBLE);
+			//TODO: Facebook
+			//image.setVisibility(View.VISIBLE);
+			image.setVisibility(View.GONE);
 			
 			name.setText(place + ". " + firstName + " " + lastName);
-			if (imgUrl != null) {
-				image.setLocalURI(Common.getCacheFileName(imgUrl));
-				image.setRemoteURI(imgUrl);
-			}
+			//if (imgUrl != null) {
+			//	image.setLocalURI(Common.getCacheFileName(imgUrl));
+			//	image.setRemoteURI(imgUrl);
+			//}
 		}
 		
 		switch(mStatisticId) {

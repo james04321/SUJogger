@@ -687,6 +687,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		cursor.close();
 	}
 	*/
+	// Updates solo statistics with ScoreBoards from the server
+	public void updateSoloScoreboards(ScoreBoard[] scores) {
+		boolean shouldUpdateAchievements = false;
+		ContentValues values = new ContentValues();
+		int[] allStats = Stats.ALL_STAT_IDS;
+		for (int i = 0; i < scores.length; i++) {
+			values.clear();
+			values.put(Stats.SCOREBOARD_ID, scores[i].id);
+			if (allStats[i] < 10) {//only retain previous "all time" statistics
+				values.put(Stats.VALUE, scores[i].value);
+				if (scores[i].value > 0)
+					shouldUpdateAchievements = true;
+			}
+			mDb.update(Stats.TABLE, values, 
+					Stats.GROUP_ID + "=" + 0 + " AND " +
+					Stats.STATISTIC_ID + "=" + allStats[i], null);
+		}
+		
+		if (shouldUpdateAchievements)
+			updateAchievements().close();
+	}
+	
 	// Updates solo statistics with scoreboard IDs from the server
 	public void updateSoloScoreboardIds(Integer[] scoreIds) {
 		ContentValues values = new ContentValues();
@@ -698,10 +720,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					Stats.GROUP_ID + "=" + 0 + " AND " +
 					Stats.STATISTIC_ID + "=" + allStats[i], null);
 		}
-		
-		//Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
-		//DatabaseUtils.dumpCursor(cursor);
-		//cursor.close();
 	}
 	
 	public void insertScoreboards(ScoreBoard[] scores) {
@@ -976,14 +994,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public Cursor getUsersForGroup(long groupId) {
 		/**
 		 * SELECT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
-		 * AND groups_users.group_id=groupId
+		 * AND groups_users.group_id=groupId ORDER BY users.last_name, users.first_name
 		 */
 		String tables = Users.TABLE + ", " + GroupsUsers.TABLE;
 		String whereClause = Users.TABLE + "." + Users.USER_ID + "=" +
 			GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + 
 			" AND " + GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId;
 		Cursor cursor = mDb.rawQuery("SELECT " + Users.TABLE + ".* FROM " + tables + 
-				" WHERE " + whereClause, null);
+				" WHERE " + whereClause + " ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
+				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
 	
@@ -1298,7 +1317,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public Cursor getAllUsers(Context context) {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
-				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id, null);
+				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id +
+				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
+				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
 	}
 	

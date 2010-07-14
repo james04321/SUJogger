@@ -1,9 +1,6 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -30,9 +27,10 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.Toast;
+import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -45,21 +43,25 @@ import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GroupListAdapter;
-import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
+import edu.stanford.cs.sujogger.util.SegmentedControl;
+import edu.stanford.cs.sujogger.util.UserListAdapter;
 
 public class GroupList extends ListActivity {
 	private static final String TAG = "OGT.GroupList";
 
 	private static final int DIALOG_GRPNAME = 1;
+	public static final String IS_FRIEND_KEY = "is_friend";
 
 	private DatabaseHelper mDbHelper;
-	private Cursor mGroupsCursor;
-	private SeparatedListAdapter mGroupAdapter;
-	private List<Map<String, ?>> actions;
+	private Cursor mCursor;
+	private GroupListAdapter mGroupAdapter;
+	private UserListAdapter mUserAdapter;
 	private int mGroupIdTemp;
 	private SharedPreferences mSharedPreferences;
+	private boolean mDisplayFriends;
 	
 	private Button mNewGroupButton;
+	private LinearLayout mBottomControlBar;
 	
 	private GamingServiceConnection mGameCon;
 	private GroupListReceiver mReceiver;
@@ -72,6 +74,7 @@ public class GroupList extends ListActivity {
 	private static final int GRP_GET_RID = 2;
 	private static final int SB_CREATE_RID = 3;
 	private static final int SB_GET_RID = 4;
+	private static final int GET_USERS_RID = 5;
 
 	// Views
 	private EditText mGroupNameView;
@@ -87,16 +90,23 @@ public class GroupList extends ListActivity {
 			try {
 				mGameCon.createGroup(GRP_CREATE_RID, new Group(groupName));
 			}
-			catch (RemoteException e) {
-
-			}
+			catch (RemoteException e) {}
 		}
 	};
 	
-	private Runnable mRefreshTask = new Runnable() {
+	private Runnable mGroupRefreshTask = new Runnable() {
 		public void run() {
 			try {
 				mGameCon.getGroups(GRP_GET_RID, null, Common.getRegisteredUser(GroupList.this).id, -1, -1);
+			}
+			catch (RemoteException e) {}
+		}
+	};
+	
+	private Runnable mFriendRefreshTask = new Runnable() {
+		public void run() {
+			try {
+				mGameCon.getAppsUser(GET_USERS_RID);
 			}
 			catch (RemoteException e) {}
 		}
@@ -106,6 +116,8 @@ public class GroupList extends ListActivity {
 		super.onCreate(savedInstanceState);
 		Log.d(TAG, "onCreate()");
 		this.setContentView(R.layout.grouplist);
+		
+		mDisplayFriends = savedInstanceState != null ? savedInstanceState.getBoolean(IS_FRIEND_KEY) : false;
 		
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
@@ -117,13 +129,6 @@ public class GroupList extends ListActivity {
 				Constants.APP_API_KEY, GroupList.class.toString());
 		mGameCon.bind();
 		mGroupIdTemp = 0;
-
-		// Create cursors
-		mGroupsCursor = mDbHelper.getGroups();
-		startManagingCursor(mGroupsCursor);
-
-		actions = new LinkedList<Map<String, ?>>();
-		actions.add(Common.createItem("Friends"));
 		
 		mNewGroupButton = (Button)findViewById(R.id.newgroupbutton);
 		mNewGroupButton.setOnClickListener(new View.OnClickListener() {
@@ -132,15 +137,24 @@ public class GroupList extends ListActivity {
 			}
 		});
 		
-		fillData();
-		registerForContextMenu(getListView());
+		mBottomControlBar = (LinearLayout)findViewById(R.id.bottom_control_bar);
 		
-		if (System.currentTimeMillis() - 
-				mSharedPreferences.getLong(Constants.GROUPS_UPDATE_KEY, 0) > 
-					Constants.UPDATE_INTERVAL)
-			//Wait 100ms before sending request, because sometimes, the activity doesn't
-			//bind to the service quickly enough
-			mHandler.postDelayed(mRefreshTask, 100);
+		LinearLayout topControlBar = (LinearLayout)findViewById(R.id.top_control_bar);
+		topControlBar.addView(new SegmentedControl(this, new String[] {"Groups", "Friends"}, 
+				mDisplayFriends ? 1 : 0, new SegmentedControl.SegmentedControlListener() {
+			public void onValueChanged(int newValue) {
+				mDisplayFriends = newValue == 1;
+				fillData();
+				refreshData(false);
+			}
+		}), 
+				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		
+		fillData();
+		
+		//Wait 100ms before sending request, because sometimes, the activity doesn't
+		//bind to the service quickly enough
+		refreshData(true);
 	}
 
 	@Override
@@ -153,30 +167,16 @@ public class GroupList extends ListActivity {
 	}
 
 	@Override
-	protected void onPause() {
-		Log.d(TAG, "onPause()");
-		super.onPause();
-	}
-
-	@Override
-	protected void onResume() {
-		Log.d(TAG, "onResume()");
-		super.onResume();
-		Log.d(TAG, "onResume(): dumping groups cursor");
-		DatabaseUtils.dumpCursor(mGroupsCursor);
-	}
-
-	@Override
-	protected void onStop() {
-
-		super.onStop();
-	}
-
-	@Override
 	protected void onDestroy() {
 		mDbHelper.close();
 		mGameCon.unbind();
 		super.onDestroy();
+	}
+	
+	@Override
+	protected void onSaveInstanceState(Bundle outState) {
+		super.onSaveInstanceState(outState);
+		outState.putBoolean(IS_FRIEND_KEY, mDisplayFriends);
 	}
 
 	@Override
@@ -195,7 +195,7 @@ public class GroupList extends ListActivity {
 
 		switch (item.getItemId()) {
 		case MENU_REFRESH:
-			refreshGroups();
+			mHandler.post(mGroupRefreshTask);
 			handled = true;
 			break;
 		default:
@@ -210,17 +210,18 @@ public class GroupList extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
-
-		if (position == 1) {
-			
+		if (mDisplayFriends) {
+			int userId = (Integer) mUserAdapter.getItem(position);
+			Log.d(TAG, "userID = " + userId);
+			Intent i = new Intent(this, PeopleTrackList.class);
+			i.putExtra("userId", userId);
+			startActivity(i);
 		}
 		else {
 			Object item = mGroupAdapter.getItem(position);
-			if (item.getClass() == Integer.class) {
-				Log.d(TAG, "starting GroupDetail for group_id = " + (Integer) item);
-				long groupId = ((Integer) item).longValue();
-				startGroupDetail(groupId);
-			}
+			Log.d(TAG, "starting GroupDetail for group_id = " + (Integer) item);
+			long groupId = ((Integer) item).longValue();
+			startGroupDetail(groupId);
 		}
 	}
 
@@ -265,20 +266,50 @@ public class GroupList extends ListActivity {
 		i.putExtra(Groups.TABLE, groupId);
 		startActivity(i);
 	}
-
-	private void fillData() {
-		mGroupAdapter = new SeparatedListAdapter(this);
-
-		mGroupAdapter.addSection("", new SimpleAdapter(this, actions, R.layout.list_item_simple,
-				new String[] { Common.ITEM_TITLE }, new int[] { R.id.list_simple_title }));
-
-		mGroupAdapter.addSection("My Groups", new GroupListAdapter(this, mGroupsCursor, true));
-
-		setListAdapter(mGroupAdapter);
+	
+	private void refreshData(boolean delay) {
+		if (mDisplayFriends) {
+			if (System.currentTimeMillis() - 
+					mSharedPreferences.getLong(Constants.ALL_USERS_UPDATE_KEY, 0) > 
+						Constants.UPDATE_INTERVAL)
+				if (delay)
+					mHandler.postDelayed(mFriendRefreshTask, 100);
+				else
+					mHandler.post(mFriendRefreshTask);
+		}
+		else {
+			if (System.currentTimeMillis() - 
+					mSharedPreferences.getLong(Constants.GROUPS_UPDATE_KEY, 0) > 
+						Constants.UPDATE_INTERVAL)
+				if (delay)
+					mHandler.postDelayed(mGroupRefreshTask, 100);
+				else
+					mHandler.post(mGroupRefreshTask);
+		}
 	}
 
-	private void refreshGroups() {
-		mHandler.post(mRefreshTask);
+	private void fillData() {	
+		if (mDisplayFriends) {
+			mBottomControlBar.setVisibility(View.GONE);
+			if (mUserAdapter == null) {
+				mCursor = mDbHelper.getAllUsers(this);
+				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
+			}
+			setListAdapter(mUserAdapter);
+		}
+		else {
+			mBottomControlBar.setVisibility(View.VISIBLE);
+			if (mGroupAdapter == null) {
+				mCursor = mDbHelper.getGroups();
+				mGroupAdapter = new GroupListAdapter(this, mCursor, true);
+			}
+			setListAdapter(mGroupAdapter);
+		}
+		
+		startManagingCursor(mCursor);
+		
+		Log.d(TAG, "fillData()");
+		DatabaseUtils.dumpCursor(mCursor);
 	}
 
 	private void initializeStatsForGroup(int groupId) {
@@ -320,6 +351,22 @@ public class GroupList extends ListActivity {
 						continue;
 					}
 					
+					if (appResponse.result_code.equals("failure")) {
+						final String errorMsg;
+							if (appResponse.error != null && appResponse.error.length > 0)
+								errorMsg = appResponse.error[0];
+							else errorMsg = "Unknown error";
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mCreateDialog != null) mCreateDialog.dismiss();
+								Toast toast = Toast.makeText(GroupList.this, 
+										errorMsg, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:
 						final Group[] groups = (Group[]) (appResponse.object);
@@ -328,7 +375,7 @@ public class GroupList extends ListActivity {
 								if (groups != null) {
 									ArrayList<Group> newGroups = mDbHelper.updateGroups(groups);
 									if (newGroups != null && newGroups.size() > 0) {
-										GroupList.this.mGroupsCursor.requery();
+										GroupList.this.mCursor.requery();
 										GroupList.this.mGroupAdapter.notifyDataSetChanged();
 										GroupList.this.getListView().invalidateViews();
 										Log.d(TAG, "onReceive(): getting scoreboards for new groups");
@@ -375,7 +422,7 @@ public class GroupList extends ListActivity {
 								GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
 								GroupList.this.mDbHelper.addUsersToGroup(groupId, new long[] { Common
 										.getRegisteredUser(GroupList.this).id });
-								GroupList.this.mGroupsCursor.requery();
+								GroupList.this.mCursor.requery();
 								GroupList.this.mGroupAdapter.notifyDataSetChanged();
 								GroupList.this.getListView().invalidateViews();
 		
@@ -410,6 +457,25 @@ public class GroupList extends ListActivity {
 								}
 								mGroupIdTemp = 0;
 								mCreateDialog.dismiss();
+							}
+						});
+						break;
+					case GET_USERS_RID:
+						final User[] users = (User[])appResponse.object;
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (users != null) {
+									mDbHelper.addUsers(users);
+									Editor editor = mSharedPreferences.edit();
+									editor.putLong(Constants.ALL_USERS_UPDATE_KEY, System.currentTimeMillis());
+									editor.commit();
+									mCursor.requery();
+									mUserAdapter.notifyDataSetChanged();
+									GroupList.this.getListView().invalidateViews();
+									Toast toast = Toast.makeText(GroupList.this, 
+											"Friends up to date", Toast.LENGTH_SHORT);
+									toast.show();
+								}
 							}
 						});
 						break;

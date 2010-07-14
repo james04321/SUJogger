@@ -27,7 +27,7 @@ public class JoggerApp extends TabActivity {
 				setContent(new Intent(this, TrackList.class)));
 		host.addTab(host.newTabSpec("achievements").setIndicator("Badges").
 				setContent(new Intent(this, AchievementCatList.class)));
-		host.addTab(host.newTabSpec("groups").setIndicator("Groups").
+		host.addTab(host.newTabSpec("groups").setIndicator("People").
 				setContent(new Intent(this, GroupList.class)));
 		host.addTab(host.newTabSpec("feed").setIndicator("Feed").
 				setContent(new Intent(this, Feed.class)));

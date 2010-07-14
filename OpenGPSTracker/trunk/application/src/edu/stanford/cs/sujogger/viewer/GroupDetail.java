@@ -1,9 +1,5 @@
 package edu.stanford.cs.sujogger.viewer;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-
 import android.app.ListActivity;
 import android.content.Intent;
 import android.database.Cursor;
@@ -13,11 +9,9 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
-import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 import edu.stanford.cs.sujogger.util.UserListAdapter;
 
@@ -33,9 +27,6 @@ public class GroupDetail extends ListActivity {
 	private Button mAddButton;
 	private Button mSendButton;
 	private Button mStatsButton;
-
-	public GroupDetail() {
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

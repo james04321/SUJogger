@@ -294,14 +294,16 @@ public class Feed extends ListActivity {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
+					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						Toast toast = Toast.makeText(Feed.this, 
+								R.string.connection_error_toast, Toast.LENGTH_SHORT);
+						toast.show();
+						return;
+					}
+					
 					switch(appResponse.request_id) {
 					case MessageSender.MSG_SEND_RID:
-						if (appResponse.result_code == GamingServiceConnection.RESULT_CODE_ERROR) {
-							Toast toast = Toast.makeText(Feed.this, 
-									R.string.connection_error_toast, Toast.LENGTH_SHORT);
-							toast.show();
-							return;
-						}
 						Message msg = (Message)appResponse.object;
 						
 						int lastConciergeId = appResponse.last_concierge_id;
