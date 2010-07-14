@@ -37,9 +37,9 @@
 			<locationURI>_android_FacebookSDK/src</locationURI>
 		</link>
 		<link>
-			<name>com_facebook_android</name>
+			<name>SUWebAuth</name>
 			<type>2</type>
-			<locationURI>_android_com_facebook_android/src</locationURI>
+			<locationURI>_android_SUWebAuth/src</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>
