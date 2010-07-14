@@ -125,11 +125,12 @@ public class UserListAdapter extends CursorAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View ret = super.getView(position, convertView, parent);
 		if (ret != null) {
-			RemoteImageView image = (RemoteImageView) ret.findViewById(R.id.user_image);
-			if (image != null && !mFlinging) {
-				Log.d(TAG, "getView(): trying to fetch image");
-				image.loadImage();
-			}
+			//TODO: Facebook
+			//RemoteImageView image = (RemoteImageView) ret.findViewById(R.id.user_image);
+			//if (image != null && !mFlinging) {
+			//	Log.d(TAG, "getView(): trying to fetch image");
+			//	image.loadImage();
+			//}
 			
 			if (checkmarks != null && position >= 0 && position < checkmarks.length) {
 				View check = ret.findViewById(R.id.user_check);
@@ -151,11 +152,13 @@ public class UserListAdapter extends CursorAdapter {
 		TextView name = (TextView)view.findViewById(R.id.user_name);
 		name.setText(firstName + " " + lastName);
 		
+		//TODO: Facebook
 		RemoteImageView image = (RemoteImageView)view.findViewById(R.id.user_image);
-		if (imgUrl != null) {
-			image.setLocalURI(Common.getCacheFileName(imgUrl));
-			image.setRemoteURI(imgUrl);
-		}
+		//if (imgUrl != null) {
+		//	image.setLocalURI(Common.getCacheFileName(imgUrl));
+		//	image.setRemoteURI(imgUrl);
+		//}
+		image.setVisibility(View.GONE);
 	}
 
 	@Override

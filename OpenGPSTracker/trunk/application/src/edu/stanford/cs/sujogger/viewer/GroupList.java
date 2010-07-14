@@ -453,7 +453,7 @@ public class GroupList extends ListActivity {
 									Editor editor = mSharedPreferences.edit();
 									editor.putLong(Constants.ALL_USERS_UPDATE_KEY, System.currentTimeMillis());
 									editor.commit();
-									//mUsers.requery();
+									mCursor.requery();
 									mUserAdapter.notifyDataSetChanged();
 									GroupList.this.getListView().invalidateViews();
 									Toast toast = Toast.makeText(GroupList.this, 

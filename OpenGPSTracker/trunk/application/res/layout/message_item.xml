@@ -20,9 +20,7 @@
     	android:textAppearance="?android:attr/textAppearanceSmall"
     	android:layout_toRightOf="@id/msg_item_image"
         android:layout_alignParentBottom="true"
-        android:layout_alignParentRight="true"
     />
-    
     <TextView 
     	android:id="@+id/msg_item_name"
     	android:layout_width="fill_parent"
