@@ -597,10 +597,7 @@ public class TrackList extends ListActivity {
 						}
 						else {
 							Log.d(TAG, "onReceive(): scores found");
-							Integer[] scoreIds = new Integer[scores.length];
-							for (int i = 0; i < scoreIds.length; i++)
-								scoreIds[i] = scores[i].id;
-							mDbHelper.updateSoloScoreboardIds(scoreIds);
+							mDbHelper.updateSoloScoreboards(scores);
 
 							Editor editorGetSb = mSharedPreferences.edit();
 							editorGetSb.putBoolean(Constants.USER_REGISTERED, true);

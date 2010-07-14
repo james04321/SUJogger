@@ -687,6 +687,28 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		cursor.close();
 	}
 	*/
+	// Updates solo statistics with ScoreBoards from the server
+	public void updateSoloScoreboards(ScoreBoard[] scores) {
+		boolean shouldUpdateAchievements = false;
+		ContentValues values = new ContentValues();
+		int[] allStats = Stats.ALL_STAT_IDS;
+		for (int i = 0; i < scores.length; i++) {
+			values.clear();
+			values.put(Stats.SCOREBOARD_ID, scores[i].id);
+			if (allStats[i] < 10) {//only retain previous "all time" statistics
+				values.put(Stats.VALUE, scores[i].value);
+				if (scores[i].value > 0)
+					shouldUpdateAchievements = true;
+			}
+			mDb.update(Stats.TABLE, values, 
+					Stats.GROUP_ID + "=" + 0 + " AND " +
+					Stats.STATISTIC_ID + "=" + allStats[i], null);
+		}
+		
+		if (shouldUpdateAchievements)
+			updateAchievements().close();
+	}
+	
 	// Updates solo statistics with scoreboard IDs from the server
 	public void updateSoloScoreboardIds(Integer[] scoreIds) {
 		ContentValues values = new ContentValues();
@@ -698,10 +720,6 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 					Stats.GROUP_ID + "=" + 0 + " AND " +
 					Stats.STATISTIC_ID + "=" + allStats[i], null);
 		}
-		
-		//Cursor cursor = mDb.rawQuery("SELECT * FROM statistics", null);
-		//DatabaseUtils.dumpCursor(cursor);
-		//cursor.close();
 	}
 	
 	public void insertScoreboards(ScoreBoard[] scores) {

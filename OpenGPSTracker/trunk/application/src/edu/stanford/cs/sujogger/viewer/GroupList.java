@@ -351,6 +351,22 @@ public class GroupList extends ListActivity {
 						continue;
 					}
 					
+					if (appResponse.result_code.equals("failure")) {
+						final String errorMsg;
+							if (appResponse.error != null && appResponse.error.length > 0)
+								errorMsg = appResponse.error[0];
+							else errorMsg = "Unknown error";
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mCreateDialog != null) mCreateDialog.dismiss();
+								Toast toast = Toast.makeText(GroupList.this, 
+										errorMsg, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:
 						final Group[] groups = (Group[]) (appResponse.object);

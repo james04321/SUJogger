@@ -1084,8 +1084,10 @@ public class LoggerMap extends MapActivity {
 			mTrackNameView = (EditText) view.findViewById(R.id.nameField);
 			builder.setTitle(R.string.dialog_routename_title)
 			// .setMessage( R.string.dialog_routename_message )
-					.setIcon(android.R.drawable.ic_dialog_alert).setPositiveButton(
-							R.string.btn_okay, mTrackNameDialogListener).setView(view);
+					.setIcon(android.R.drawable.ic_dialog_alert)
+					.setPositiveButton(
+							R.string.btn_okay, mTrackNameDialogListener).setView(view)
+					.setCancelable(false);
 			dialog = builder.create();
 			return dialog;
 			/*
@@ -2127,6 +2129,7 @@ public class LoggerMap extends MapActivity {
 			Common.displayAchievementToast(newAchCursor.getString(8), newAchCursor.getInt(7),
 					newAchCursor.getInt(4) == 0, getApplicationContext(), toastLayout);
 		}
+		newAchCursor.close();
 	}
 
 	/***
