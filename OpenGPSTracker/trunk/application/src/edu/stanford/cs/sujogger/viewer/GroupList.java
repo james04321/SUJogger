@@ -29,6 +29,7 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
+import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
@@ -128,6 +129,8 @@ public class GroupList extends ListActivity {
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, GroupList.class.toString());
 		mGameCon.bind();
+		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		
 		mGroupIdTemp = 0;
 		
 		mNewGroupButton = (Button)findViewById(R.id.newgroupbutton);
@@ -292,6 +295,9 @@ public class GroupList extends ListActivity {
 	}
 
 	private void fillData() {	
+		TextView emptyView = (TextView)getListView().getEmptyView();
+		emptyView.setText(mDisplayFriends ? 
+				R.string.no_friends : R.string.no_groups);
 		if (mDisplayFriends) {
 			mBottomControlBar.setVisibility(View.GONE);
 			if (mUserAdapter == null) {

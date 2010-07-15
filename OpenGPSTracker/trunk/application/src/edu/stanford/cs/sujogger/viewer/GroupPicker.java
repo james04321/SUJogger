@@ -8,6 +8,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.ListView;
+import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
@@ -31,6 +32,10 @@ public class GroupPicker extends ListActivity {
 		
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
+		
+		setTitle("Groups");
+		TextView emptyView = (TextView)getListView().getEmptyView();
+		emptyView.setText(R.string.no_groups);
 		
 		// Create cursors
 		mGroupsCursor = mDbHelper.getGroups();

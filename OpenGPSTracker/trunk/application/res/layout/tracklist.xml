@@ -43,4 +43,12 @@
           android:layout_height="fill_parent"
           android:layout_above="@id/bottom_control_bar"
           android:layout_below="@id/top_control_bar"/>
+          
+    <TextView android:id="@+id/android:empty"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:text="@string/no_tracks"
+          android:gravity="center"
+          android:layout_above="@id/bottom_control_bar"
+          android:layout_below="@id/top_control_bar"/>
 </RelativeLayout>

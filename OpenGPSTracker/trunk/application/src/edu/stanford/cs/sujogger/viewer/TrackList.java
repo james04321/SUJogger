@@ -200,7 +200,7 @@ public class TrackList extends ListActivity {
 			}
 		}), 
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
-
+		
 		displayIntent(getIntent());
 
 		// Add the context menu (the long press thing)
@@ -321,12 +321,6 @@ public class TrackList extends ListActivity {
 		mGameCon.unbind();
 		super.onDestroy();
 	}
-	
-	@Override
-    public void onConfigurationChanged (Configuration newConfig) {
-		Log.d(TAG, "onConfigurationChanged()");
-    	super.onConfigurationChanged(newConfig);
-    }
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -495,6 +489,11 @@ public class TrackList extends ListActivity {
 
 	private void displayIntent(Intent intent) {
 		Log.d(TAG, "displayIntent()");
+		
+		TextView emptyView = (TextView)getListView().getEmptyView();
+		emptyView.setText(mDownloadedTracks ? 
+				R.string.no_downloaded_tracks : R.string.no_tracks);
+		
 		final String queryAction = intent.getAction();
 		Cursor tracksCursor = null;
 		if (Intent.ACTION_SEARCH.equals(queryAction)) {

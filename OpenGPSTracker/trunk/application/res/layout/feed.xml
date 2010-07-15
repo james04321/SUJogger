@@ -28,4 +28,11 @@
           android:layout_width="fill_parent"
           android:layout_height="fill_parent"
           android:layout_above="@id/bottom_control_bar"/>
+    
+    <TextView android:id="@+id/android:empty"
+          android:layout_width="fill_parent"
+          android:layout_height="fill_parent"
+          android:text="@string/no_messages"
+          android:gravity="center"
+          android:layout_above="@id/bottom_control_bar"/>
 </RelativeLayout>
