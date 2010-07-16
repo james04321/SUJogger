@@ -148,6 +148,10 @@ public class PeopleTrackList extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		Log.d(TAG, "HERE1");
 		super.onCreate(savedInstanceState);
+		this.setContentView(R.layout.list_simple);
+		
+		TextView emptyView = (TextView)getListView().getEmptyView();
+		emptyView.setText(R.string.no_tracks);
 		
 		mReceiver = new PeopleTrackListReceiver();
 		mGamingServiceConn = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,

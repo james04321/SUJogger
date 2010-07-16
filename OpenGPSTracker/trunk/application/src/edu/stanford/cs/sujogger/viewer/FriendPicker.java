@@ -105,6 +105,8 @@ public class FriendPicker extends ListActivity {
 		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId, Common.getRegisteredUser(this).id);
 		startManagingCursor(mUsers);
 		
+		setTitle("Friends");
+		
 		clearButton = (Button)findViewById(R.id.fp_clearbutton);
 		clearButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {

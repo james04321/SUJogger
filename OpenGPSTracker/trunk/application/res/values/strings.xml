@@ -36,7 +36,8 @@
     <string name="layer_location">My Location</string>
     
     <string name="from">Tracked on: </string>
-    <string name="no_tracks">No tracks stored</string>
+    <string name="no_tracks">No tracks available</string>
+    <string name="no_downloaded_tracks">No downloaded tracks available</string>
     <string name="ticker_saving">Saving: </string>
     <string name="ticker_stored">Stored: </string>
     <string name="ticker_failed">Unable to save the route: </string>
@@ -136,6 +137,13 @@
     <string name="search_description">SUJogger track names</string>
     <string name="search_hint">Search tracks</string>
     
+    <!-- Badges tab -->
+    <string name="no_scores">No scores available</string>
+    
+    <!-- People tab -->
+    <string name="no_groups">No groups</string>
+    <string name="no_friends">No friends</string>
+    
     <!-- FriendPicker  -->
     <string name="fp_search_hint">Search for a friend</string>
     <string name="fp_clearbutton">Clear</string>
@@ -147,6 +155,7 @@
     <string name="lb_group">Group scores</string>
     
     <!-- Feed Tab -->
+    <string name="no_messages">No messages</string>
     <string name="feed_filter_all">All</string>
     <string name="feed_filter_msg">Messages</string>
     <string name="feed_filter_bcast">Broadcasts</string>
