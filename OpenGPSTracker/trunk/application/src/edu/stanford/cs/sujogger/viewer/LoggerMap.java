@@ -2218,6 +2218,8 @@ public class LoggerMap extends MapActivity {
 							public void run() {
 								if (scores != null) {
 									mDbHelper.updateScoreboards(scores);
+									if (mSharedPreferences.getBoolean(Constants.STATS_DIRTY_KEY, false))
+										mDbHelper.applyStatDiffs(LoggerMap.this);
 								}
 								calculateTrackStatistics();
 							}
