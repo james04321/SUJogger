@@ -1031,7 +1031,8 @@ public class LoggerMap extends MapActivity {
 			handled = true;
 			break;
 		case MENU_CURRENT_LOCATION:
-			mMapView.getController().animateTo(mMylocation.getMyLocation());
+			if (mMylocation != null && mMylocation.getMyLocation() != null)
+				mMapView.getController().animateTo(mMylocation.getMyLocation());
 			handled = true;
 			break;
 		case MENU_PICTURE:
