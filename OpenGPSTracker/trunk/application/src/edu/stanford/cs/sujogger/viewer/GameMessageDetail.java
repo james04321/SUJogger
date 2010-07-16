@@ -1,7 +1,6 @@
 package edu.stanford.cs.sujogger.viewer;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 
 import android.app.ListActivity;
 import android.content.Intent;
@@ -18,6 +17,7 @@ import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
 import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
+import edu.stanford.cs.sujogger.util.MessageObject;
 import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 import edu.stanford.cs.sujogger.util.UserListAdapter;
 
@@ -25,9 +25,9 @@ public class GameMessageDetail extends ListActivity {
 	private static final String TAG = "OGT.GameMessageDetail";
 	
 	private long mMessageId;
-	private int mMessageType;
 	private DatabaseHelper mDbHelper;
 	private Cursor mMessage;
+	private MessageObject mMsgObject;
 	private long[] mReplyRecipientIds;
 	private Cursor mPeople;
 	private SeparatedListAdapter mGroupAdapter;
@@ -58,7 +58,9 @@ public class GameMessageDetail extends ListActivity {
 		mPeople = mDbHelper.getUsersForMessage(mMessageId, mMessage.getLong(1));
 		startManagingCursor(mPeople);
 		
-		mMessageType = mMessage.getInt(2);
+		mMsgObject = new MessageObject(mMessage.getInt(2), mMessage.getLong(5), 
+				mMessage.getLong(4), mMessage.getString(6), mMessage.getString(7));
+		
 		mDidStart = mMessage.getInt(9);
 		
 		mPeople.moveToPosition(-1);
@@ -91,7 +93,7 @@ public class GameMessageDetail extends ListActivity {
 		});
 		
 		if (!(mPeople.getCount() == 1 && mPeople.getInt(1) == Common.getRegisteredUser(this).id)) {
-			if ((mMessageType == GameMessages.TYPE_INVITE || mMessageType == GameMessages.TYPE_CHALLENGE) &&
+			if ((mMsgObject.mType == GameMessages.TYPE_INVITE || mMsgObject.mType == GameMessages.TYPE_CHALLENGE) &&
 					mDidStart == 0)
 				mStartButton.setVisibility(View.VISIBLE);
 			if (!(mPeople.getCount() > 1))
@@ -135,7 +137,12 @@ public class GameMessageDetail extends ListActivity {
 		
 		if (position < 3) return;
 		
-		Log.d(TAG, "onListItemClick(): user id = " + (Integer)mGroupAdapter.getItem(position));
+		
+		int userId = (Integer)mGroupAdapter.getItem(position);
+		Log.d(TAG, "onListItemClick(): user id = " + userId);
+		Intent i = new Intent(this, PeopleTrackList.class);
+		i.putExtra("userId", userId);
+		startActivity(i);
 	}
 	
 	private void startTrack() {
@@ -152,8 +159,8 @@ public class GameMessageDetail extends ListActivity {
 		
 		Intent intent = new Intent(this, MessageSender.class);
 		intent.putExtra(Users.TABLE, mReplyRecipientIds);
-		if (mMessageType == GameMessages.TYPE_GENERIC)
-			intent.putExtra(GameMessages.SUBJECT, "Re: " + mMessage.getString(6));
+		if (mMsgObject.mType == GameMessages.TYPE_GENERIC)
+			intent.putExtra(GameMessages.SUBJECT, "Re: " + mMsgObject.mSubject);
 		startActivity(intent);
 	}
 	

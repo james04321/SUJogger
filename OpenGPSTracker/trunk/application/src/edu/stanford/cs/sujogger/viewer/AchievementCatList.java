@@ -250,10 +250,14 @@ public class AchievementCatList extends ListActivity {
 					Log.d(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
-						Toast toast = Toast.makeText(AchievementCatList.this, 
-								R.string.connection_error_toast, Toast.LENGTH_SHORT);
-						toast.show();
-						return;
+						AchievementCatList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Toast toast = Toast.makeText(AchievementCatList.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
 					}
 					
 					switch (appResponse.request_id) {

@@ -62,6 +62,7 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.android.DialogError;
 import edu.stanford.android.WADialog;
@@ -586,7 +587,23 @@ public class TrackList extends ListActivity {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-
+					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						TrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mDialogUserInit != null) mDialogUserInit.dismiss();
+								new AlertDialog.Builder(TrackList.this).setMessage(R.string.connection_error_toast)
+								.setCancelable(false)
+								.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+									public void onClick(DialogInterface dialog, int which) {
+										mWa.authorize(TrackList.this, new LoginDialogListener());
+									}
+								}).show();
+							}
+						});
+						continue;
+					}
+					
 					switch (appResponse.request_id) {
 					case GET_SBS_RID:
 						ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
