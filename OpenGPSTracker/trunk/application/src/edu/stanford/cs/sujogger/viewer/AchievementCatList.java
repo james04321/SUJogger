@@ -39,6 +39,7 @@ public class AchievementCatList extends ListActivity {
 
 	// Request IDs
 	private static final int GET_GRP_SBS_RID = 0;
+	private static final int UPDATE_SBS_RID = 1;
 
 	private DatabaseHelper mDbHelper;
 	private GamingServiceConnection mGameCon;
@@ -61,6 +62,10 @@ public class AchievementCatList extends ListActivity {
 				try {
 					mGameCon.getScoreBoards(GET_GRP_SBS_RID, statIds);
 				} catch (RemoteException e) {}
+			}
+			else {
+				if (mSharedPreferences.getBoolean(Constants.STATS_DIRTY_KEY, false))
+					updateDirtyStatistics();
 			}
 		}
 	};
@@ -203,6 +208,38 @@ public class AchievementCatList extends ListActivity {
 
 		setListAdapter(mGroupedAdapter);
 	}
+	
+	private void updateDirtyStatistics() {
+		mDbHelper.applyStatDiffs(this);
+		ScoreBoard[] scores = mDbHelper.getAllStatistics(this);
+		try {
+			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
+		} catch (RemoteException e) {}
+	}
+	
+	private void updateAchievements() {
+		Cursor newAchCursor = mDbHelper.updateAchievements();
+		if (newAchCursor.getCount() > 0) {
+			mRecAchEarned.requery();
+			mRecAchLost.requery();
+			mGroupedAdapter.notifyDataSetChanged();
+			AchievementCatList.this.getListView().invalidateViews();
+
+			newAchCursor.moveToNext();
+			View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
+					(ViewGroup) findViewById(R.id.toast_layout_root));
+			Common.displayAchievementToast(newAchCursor.getString(8), 
+					newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
+					getApplicationContext(), toastLayout);
+			newAchCursor.close();
+			return;
+		}
+		newAchCursor.close();
+		
+		Toast toast = Toast.makeText(AchievementCatList.this, 
+				"Badges up to date", Toast.LENGTH_SHORT);
+		toast.show();
+	}
 
 	private class AchievementCatListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
@@ -211,46 +248,49 @@ public class AchievementCatList extends ListActivity {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
-
+					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						Toast toast = Toast.makeText(AchievementCatList.this, 
+								R.string.connection_error_toast, Toast.LENGTH_SHORT);
+						toast.show();
+						return;
+					}
+					
 					switch (appResponse.request_id) {
 					case GET_GRP_SBS_RID:
 						final ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
-						final String resultCode = appResponse.result_code;
 						AchievementCatList.this.runOnUiThread(new Runnable() {
 							public void run() {
-								if (resultCode.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
-									Toast toast = Toast.makeText(AchievementCatList.this, 
-											R.string.connection_error_toast, Toast.LENGTH_SHORT);
-									toast.show();
-									return;
-								}
 								Editor editor = mSharedPreferences.edit();
 								editor.putLong(Constants.BADGES_UPDATE_KEY, System.currentTimeMillis());
 								editor.commit();
 								if (scores != null) {
 									mDbHelper.updateScoreboards(scores);
-									Cursor newAchCursor = mDbHelper.updateAchievements();
-									if (newAchCursor.getCount() > 0) {
-										mRecAchEarned.requery();
-										mRecAchLost.requery();
-										mGroupedAdapter.notifyDataSetChanged();
-										AchievementCatList.this.getListView().invalidateViews();
-	
-										newAchCursor.moveToNext();
-										View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast,
-												(ViewGroup) findViewById(R.id.toast_layout_root));
-										Common.displayAchievementToast(newAchCursor.getString(8), 
-												newAchCursor.getInt(7), newAchCursor.getInt(4) == 0, 
-												getApplicationContext(), toastLayout);
-										newAchCursor.close();
-										return;
-									}
-									newAchCursor.close();
+									
+									if (mSharedPreferences.getBoolean(Constants.STATS_DIRTY_KEY, false))
+										updateDirtyStatistics();
+									else
+										updateAchievements();
 								}
+							}
+						});
+						break;
+					case UPDATE_SBS_RID:
+						AchievementCatList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								//Reset dirty bit and all diffs
+								Editor editor = mSharedPreferences.edit();
+								editor.putBoolean(Constants.STATS_DIRTY_KEY, false);
+								editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f);
+								editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f);
+								editor.putInt(Constants.DIFF_NUM_RUNS_KEY, 0);
+								editor.putInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, 0);
+								editor.commit();
 								
-								Toast toast = Toast.makeText(AchievementCatList.this, 
-										"Badges up to date", Toast.LENGTH_SHORT);
-								toast.show();
+								//Only update achievements again if the user belongs to any groups
+								int[] statIds = mDbHelper.getGroupStatisticIds();
+								if (statIds != null && statIds.length > 0)
+									updateAchievements();
 							}
 						});
 						break;

@@ -39,14 +39,15 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.SharedPreferences;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.location.Location;
 import android.net.Uri;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -540,7 +541,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				Stats.GROUP_ID + "=" + groupId, null) > 0;
 	}
 	
-	//If groupId < 0, update ALL statistics with the given statisticId
+	//If groupId == -1, update ALL statistics with the given statisticId
+	//If groupId < -1, update group statistics with the given statisticId
 	public void increaseStatistic(long statisticId, long groupId, double val) {
 		ContentValues args = new ContentValues();
 		args.put(Stats.VALUE, val);
@@ -549,10 +551,15 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
 					" + ? WHERE " + Stats.STATISTIC_ID + " = ? AND " + Stats.GROUP_ID + " = ?", 
 					new Object[] {new Double(val), new Long(statisticId), new Long(groupId)});
-		else
+		else if (groupId == -1)
 			mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
 					" + ? WHERE " + Stats.STATISTIC_ID + " = ?", 
 					new Object[] {new Double(val), new Long(statisticId)});
+		else
+			mDb.execSQL("UPDATE " + Stats.TABLE + " SET " + Stats.VALUE + " = " + Stats.VALUE + 
+					" + ? WHERE " + Stats.STATISTIC_ID + " = ? AND " + Stats.GROUP_ID + " > 0", 
+					new Object[] {new Double(val), new Long(statisticId)});
+			
 	}
 	
 	public void increaseStatisticByOne(long statisticId, long groupId) {
@@ -687,6 +694,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		cursor.close();
 	}
 	*/
+	
+	public void applyStatDiffs(Context context) {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+		Log.d(TAG, "applyStatDiffs(): num runs diff = " + prefs.getInt(Constants.DIFF_NUM_RUNS_KEY, 0));
+		increaseStatistic(Stats.DISTANCE_RAN_ID, -2, 
+				prefs.getFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f));
+		increaseStatistic(Stats.RUNNING_TIME_ID, -2, 
+				prefs.getFloat(Constants.DIFF_RUNNING_TIME_KEY, 0f));
+		increaseStatistic(Stats.NUM_RUNS_ID, -2, 
+				prefs.getInt(Constants.DIFF_NUM_RUNS_KEY, 0));
+		increaseStatistic(Stats.NUM_PARTNER_RUNS_ID, -2, 
+				prefs.getInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, 0));
+	}
+	
 	// Updates solo statistics with ScoreBoards from the server
 	public void updateSoloScoreboards(ScoreBoard[] scores) {
 		boolean shouldUpdateAchievements = false;

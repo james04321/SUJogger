@@ -69,6 +69,13 @@ public class Constants
    public static final String GROUPS_UPDATE_KEY = "groups_update_time";
    public static final String FEED_UPDATE_KEY = "feed_update_time";
    
+   //Stats cache
+   public static final String STATS_DIRTY_KEY = "solo_stats_dirty";
+   public static final String DIFF_DISTANCE_RAN_KEY = "diff_distance_ran";
+   public static final String DIFF_RUNNING_TIME_KEY = "diff_running_time";
+   public static final String DIFF_NUM_RUNS_KEY = "diff_num_runs";
+   public static final String DIFF_NUM_PARTNER_RUNS_KEY = "diff_num_partner_runs";
+   
    //Gaming@Stanford stuff
    public static final int APP_ID = 1;
    public static final String APP_API_KEY = "";

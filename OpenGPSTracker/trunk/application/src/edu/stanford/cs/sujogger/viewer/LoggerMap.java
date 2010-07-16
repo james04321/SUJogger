@@ -51,7 +51,6 @@ import android.content.DialogInterface.OnClickListener;
 import android.content.DialogInterface.OnMultiChoiceClickListener;
 import android.content.SharedPreferences.Editor;
 import android.content.SharedPreferences.OnSharedPreferenceChangeListener;
-import android.content.res.Configuration;
 import android.database.ContentObserver;
 import android.database.Cursor;
 import android.graphics.Bitmap;
@@ -74,12 +73,10 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.CompoundButton;
 import android.widget.EditText;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.CompoundButton.OnCheckedChangeListener;
@@ -103,7 +100,6 @@ import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
 import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
-import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.Track;
@@ -2095,22 +2091,44 @@ public class LoggerMap extends MapActivity {
 	private void updateUserStats(double dist, long duration) {
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		int selfId = Common.getRegisteredUser(this).id;
+		
+		Editor editor = mSharedPreferences.edit();
+		// Mark statistics as dirty
+		editor.putBoolean(Constants.STATS_DIRTY_KEY, true);
+		
 		if (dist > 0 && duration > 0) {
 			mDbHelper.increaseStatistic(Stats.DISTANCE_RAN_ID, -1, dist);
 			mDbHelper.increaseStatistic(Stats.RUNNING_TIME_ID, -1, (double) duration);
 			
 			mDbHelper.updateDistanceRan(selfId);
 			mDbHelper.updateRunningTime(selfId);
+			
+			float diffDistanceRan = mSharedPreferences.getFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f);
+			float diffRunningTime = mSharedPreferences.getFloat(Constants.DIFF_RUNNING_TIME_KEY, 0f);
+			
+			editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, diffDistanceRan + (float)dist);
+			editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, diffRunningTime + (float)duration);
 		}
-		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
+		
 		if (mIsPartnerRun) {
 			mDbHelper.increaseStatisticByOne(Stats.NUM_PARTNER_RUNS_ID, -1);
 			mDbHelper.updateNumPartnerRuns(selfId);
+			
+			int diffPartnerRuns = mSharedPreferences.getInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, 0);
+			editor.putInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, diffPartnerRuns + 1);
 		}
+		
+		mDbHelper.increaseStatisticByOne(Stats.NUM_RUNS_ID, -1);
+		
 		mDbHelper.updateNumRuns(selfId);
 		mDbHelper.updateAvgSpeed();
 		//mDbHelper.updateMedDuration();
 		//mDbHelper.updateMedDistance();
+		
+		int diffRuns = mSharedPreferences.getInt(Constants.DIFF_NUM_RUNS_KEY, 0);
+		editor.putInt(Constants.DIFF_NUM_RUNS_KEY, diffRuns + 1);
+		
+		editor.commit();
 		
 		ScoreBoard[] scores = mDbHelper.getAllStatistics(this);
 		try {
@@ -2171,17 +2189,57 @@ public class LoggerMap extends MapActivity {
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
 					
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						final int requestId = appResponse.request_id;
+						LoggerMap.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mDialogUpdate != null) mDialogUpdate.dismiss();
+								Toast toast = Toast.makeText(LoggerMap.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+								
+								if (requestId == GET_SBS_RID)
+									//Continue calculating track stats even if we can't
+									// sync group stats from server
+									calculateTrackStatistics();
+								else if (requestId == UPDATE_SBS_RID)
+									//Update achievements with local solo stats even if can't
+									// do so for group stats
+									updateAchievements();
+							}
+						});
+						continue;
+					}
+					
 					switch(appResponse.request_id) {
-					case UPDATE_SBS_RID: 
-						mDialogUpdate.dismiss();
-						updateAchievements();
-						break;
 					case GET_SBS_RID:
-						ScoreBoard[] scores = (ScoreBoard[])(appResponse.object);
-						if (scores != null) {
-							mDbHelper.updateScoreboards(scores);
-						}
-						calculateTrackStatistics();
+						final ScoreBoard[] scores = (ScoreBoard[])(appResponse.object);
+						LoggerMap.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores != null) {
+									mDbHelper.updateScoreboards(scores);
+								}
+								calculateTrackStatistics();
+							}
+						});
+						break;
+					case UPDATE_SBS_RID:
+						LoggerMap.this.runOnUiThread(new Runnable() {
+							public void run() {
+								mDialogUpdate.dismiss();
+								
+								//Reset dirty bit and all diffs
+								Editor editor = mSharedPreferences.edit();
+								editor.putBoolean(Constants.STATS_DIRTY_KEY, false);
+								editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f);
+								editor.putFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f);
+								editor.putInt(Constants.DIFF_NUM_RUNS_KEY, 0);
+								editor.putInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, 0);
+								editor.commit();
+								
+								updateAchievements();
+							}
+						});
 						break;
 					default: break;
 					}
