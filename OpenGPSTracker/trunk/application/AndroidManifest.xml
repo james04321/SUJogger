@@ -249,16 +249,21 @@
                 <category android:name="android.intent.category.DEFAULT" />
 				<data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
 			</intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PUBLISH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>       			
 		</activity>
 		
 		<activity android:label="@string/receive_gpxpublish" 
 			android:name=".actions.PublishGPX"
 			android:configChanges="keyboardHidden|orientation">
-			<intent-filter>
-				<action android:name="android.intent.action.RUN" />
+            <intent-filter>
+                <action android:name="android.intent.action.PUBLISH" />
                 <category android:name="android.intent.category.DEFAULT" />
-				<data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
-			</intent-filter>
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>       
 		</activity>		
 
          <activity
@@ -270,6 +275,11 @@
                <category android:name="android.intent.category.DEFAULT" />
                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PUBLISH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>                   
          </activity>
 		
         <activity android:label="@string/receive_kmzfilewriter" 
@@ -280,6 +290,11 @@
                 <category android:name="android.intent.category.DEFAULT" />
                 <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
             </intent-filter>
+            <intent-filter>
+                <action android:name="android.intent.action.PUBLISH" />
+                <category android:name="android.intent.category.DEFAULT" />
+                <data android:mimeType="vnd.android.cursor.item/vnd.edu.stanford.cs.track" />
+            </intent-filter>            
         </activity>
       
     </application>

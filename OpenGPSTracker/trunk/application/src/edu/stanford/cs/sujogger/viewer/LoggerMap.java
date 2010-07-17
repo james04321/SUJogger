@@ -1022,14 +1022,36 @@ public class LoggerMap extends MapActivity {
 			handled = true;
 			break;
 		case MENU_SHARE:
-			Intent actionIntent = new Intent(Intent.ACTION_RUN);
+			long remoteTrackId = 0;
+			Intent actionIntent = null;
+			ContentResolver resolver = this.getApplicationContext().getContentResolver();
 			trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
+			Cursor trackCursor = null;			
+			String trackName = this.getTitle().toString();
+			try {
+				trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.TRACK_ID }, null, null, null);
+				if (trackCursor != null && trackCursor.moveToLast()) {
+					trackName = trackCursor.getString(0);
+					remoteTrackId = trackCursor.getLong(1);
+					this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
+				}	
+			}	finally {
+					if (trackCursor != null) {
+						trackCursor.close();
+					}
+				}	
+			if (remoteTrackId == 0)
+				actionIntent = new Intent("android.intent.action.PUBLISH");
+			else
+				actionIntent = new Intent(Intent.ACTION_RUN);			
+//			Intent actionIntent = new Intent(Intent.ACTION_RUN);
 			actionIntent.setDataAndType(trackUri, Tracks.CONTENT_ITEM_TYPE);
 			actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-			actionIntent.putExtra("name", this.getTitle());
+			actionIntent.putExtra("name", trackName);
 			Log.d(TAG, "MENU_TRACKLIST " + this.getTitle());
 			startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
-			handled = true;
+
+			handled = true;			
 			break;
 		case MENU_CURRENT_LOCATION:
 			if (mMylocation != null && mMylocation.getMyLocation() != null)

@@ -369,10 +369,12 @@ public class TrackList extends ListActivity {
 		Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor trackCursor = null;
+		long remoteTrackId = 0;
 		try {
-			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME }, null, null, null);
+			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.TRACK_ID }, null, null, null);
 			if (trackCursor != null && trackCursor.moveToLast()) {
 				String trackName = trackCursor.getString(0);
+				remoteTrackId = trackCursor.getLong(1);
 				this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
 			}
 
@@ -386,7 +388,11 @@ public class TrackList extends ListActivity {
 				break;
 			}
 			case MENU_SHARE: {
-				Intent actionIntent = new Intent(Intent.ACTION_RUN);
+				Intent actionIntent;
+				if (remoteTrackId == 0)
+					actionIntent = new Intent("android.intent.action.PUBLISH");
+				else
+					actionIntent = new Intent(Intent.ACTION_RUN);
 				actionIntent.setDataAndType(mDialogUri, Tracks.CONTENT_ITEM_TYPE);
 				actionIntent.putExtra("name", mDialogCurrentName);
 				actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
