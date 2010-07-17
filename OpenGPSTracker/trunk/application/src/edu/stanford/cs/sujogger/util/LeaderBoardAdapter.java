@@ -36,6 +36,11 @@ public class LeaderBoardAdapter extends CursorAdapter {
 		super.changeCursor(cursor);
 	}
 	
+	public Object getItem(int position) {
+		mCursor.moveToPosition(position);
+		return mCursor.getInt(6);
+	}
+	
 	@Override
 	public View getView(int position, View convertView, ViewGroup parent) {
 		if (position >= mCursor.getCount()) return null;

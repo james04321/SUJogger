@@ -18,6 +18,7 @@ import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.LinearLayout;
+import android.widget.ListView;
 import android.widget.Spinner;
 import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
@@ -266,6 +267,23 @@ public class LeaderBoard extends ListActivity {
 		outState.putInt(STAT_TYPE_KEY, mStatisticType);
 		outState.putInt(STAT_TIME_KEY, mTimeScale);
 		outState.putBoolean(IS_GROUP_KEY, mIsGroup);
+	}
+	
+	@Override
+	protected void onListItemClick(ListView l, View v, int position, long id) {
+		super.onListItemClick(l, v, position, id);
+		Log.v(TAG, "position = " + position + "; id = " + id);
+		
+		if (mIsGroup) {
+			
+		}
+		else {
+			int userId = (Integer) lbAdapter.getItem(position);
+			Log.d(TAG, "userID = " + userId);
+			Intent i = new Intent(this, PeopleTrackList.class);
+			i.putExtra("userId", userId);
+			startActivity(i);
+		}
 	}
 
 	private void fillData() {

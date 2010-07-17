@@ -360,7 +360,7 @@ public class GroupList extends ListActivity {
 						continue;
 					}
 					
-					if (appResponse.result_code.equals("failure")) {
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_FAILURE)) {
 						final String errorMsg;
 							if (appResponse.error != null && appResponse.error.length > 0)
 								errorMsg = appResponse.error[0];
