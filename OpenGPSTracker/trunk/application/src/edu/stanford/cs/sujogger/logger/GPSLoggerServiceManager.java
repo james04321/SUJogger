@@ -209,14 +209,19 @@ public class GPSLoggerServiceManager
 
    public static void stopGPSLogging()
    {
+	   Log.d(TAG, "mstarted is: " + mStarted);
       synchronized (mStartLock)
       {
          if( mStarted )
          {
             try
             {
+         	   Log.d(TAG, "mGPSLoggerRemote is: " + mGPSLoggerRemote);
+
                if( mGPSLoggerRemote != null )
                {
+             	   Log.d(TAG, "stopLogging");
+            	   
                   mGPSLoggerRemote.stopLogging();
                }
             }

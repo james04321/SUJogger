@@ -567,7 +567,6 @@ public class LoggerMap extends MapActivity {
 					//mStartButton.setText(R.string.map_start);
 					//mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
 					//mResumeButton.setVisibility(View.GONE);
-					
 					GPSLoggerServiceManager.stopGPSLogging();
 					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
 					syncGroupStats();
@@ -687,6 +686,8 @@ public class LoggerMap extends MapActivity {
 	@Override
 	protected void onDestroy() {
 		Log.d(TAG, "onDestroy");
+		if (mMylocation != null)
+		mMylocation.disableMyLocation();		
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
 		editor.commit();		

@@ -222,6 +222,7 @@ public class GPSLoggerService extends Service
 
          public void stopLogging() throws RemoteException
          {
+        	 Log.d("GPSRemote", "Stop logging");
             GPSLoggerService.this.stopLogging();
          }
 
@@ -396,6 +397,7 @@ public class GPSLoggerService extends Service
     */
    public synchronized void stopLogging()
    {
+	   Log.d(TAG, "Stop logging");
       PreferenceManager.getDefaultSharedPreferences( this.mContext ).unregisterOnSharedPreferenceChangeListener( this.mSharedPreferenceChangeListener );
       this.mLocationManager.removeGpsStatusListener( this.mStatusListener );
       this.mLocationManager.removeUpdates( this.mLocationListener );
@@ -403,6 +405,8 @@ public class GPSLoggerService extends Service
       updateWakeLock();
       mNoticationManager.cancel( R.layout.map );
       crashProtectState();
+	   Log.d(TAG, "Stop logging done");
+
    }
 
    private void setupNotification()
