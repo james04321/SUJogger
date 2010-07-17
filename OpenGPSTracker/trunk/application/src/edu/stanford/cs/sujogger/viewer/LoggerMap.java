@@ -1034,6 +1034,8 @@ public class LoggerMap extends MapActivity {
 		case MENU_CURRENT_LOCATION:
 			if (mMylocation != null && mMylocation.getMyLocation() != null)
 				mMapView.getController().animateTo(mMylocation.getMyLocation());
+			else 
+				Toast.makeText(this, R.string.msg_my_location_not_available, Toast.LENGTH_SHORT).show();
 			handled = true;
 			break;
 		case MENU_PICTURE:
