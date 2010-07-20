@@ -132,19 +132,16 @@ public class LoggerMap extends MapActivity {
 
 	// Dialogs
 	private static final int DIALOG_TRACKNAME = 23;
-	private static final int DIALOG_NOTRACK = 24;
-	private static final int DIALOG_LAYERS = 31;
+	//private static final int DIALOG_LAYERS = 31;
 	private static final int DIALOG_TEXT = 32;
 	private static final int DIALOG_NAME = 33;
-	private static final String TAG = "OGT.LoggerMap";
-	public static final String PARTNER_RUN_KEY = "partner_run";
 	
 	// Views
 	private MapView mMapView = null;
 	private MyLocationOverlay mMylocation;
-	private CheckBox mSatellite;
-	private CheckBox mTraffic;
-	private CheckBox mSpeed;
+	//private CheckBox mSatellite;
+	//private CheckBox mTraffic;
+	//private CheckBox mSpeed;
 	//private CheckBox mCompass;
 	//private CheckBox mLocation;
 	private EditText mTrackNameView;
@@ -154,8 +151,11 @@ public class LoggerMap extends MapActivity {
 	private EditText mNoteTextView;
 	private Button mStartButton;
 	private Button mResumeButton;
-
-	private double mAverageSpeed = 4.4704;
+	
+	private static final String TAG = "OGT.LoggerMap";
+	public static final String PARTNER_RUN_KEY = "partner_run";
+	//private double mAverageSpeed = 4.4704; //in m/s
+	private double mAverageSpeed = 3.12928; //in m/s
 	//ASLAI
 	private ArrayList<Track> mTrackIds = new ArrayList<Track>();
 	private ArrayList<Track> mTrackIdsForDialog;
@@ -341,14 +341,6 @@ public class LoggerMap extends MapActivity {
 			}
 		}
 	};
-	private final DialogInterface.OnClickListener mNoTrackDialogListener = new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int which) {
-			Log.d(TAG, "mNoTrackDialogListener" + which);
-			Intent tracklistIntent = new Intent(LoggerMap.this, TrackList.class);
-			tracklistIntent.putExtra(Tracks._ID, LoggerMap.this.getLastTrackId());
-			startActivityForResult(tracklistIntent, MENU_TRACKLIST);
-		}
-	};
 	private final DialogInterface.OnClickListener mTrackNameDialogListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
 			String trackName = mTrackNameView.getText().toString();
@@ -363,29 +355,30 @@ public class LoggerMap extends MapActivity {
 			updateTitleBar();
 		}
 	};
-	private final OnCheckedChangeListener mCheckedChangeListener = new OnCheckedChangeListener() {
-		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-			int which = buttonView.getId();
-			switch (which) {
-			case R.id.layer_satellite:
-				setSatelliteOverlay(isChecked);
-				break;
-			case R.id.layer_traffic:
-				setTrafficOverlay(isChecked);
-				break;
-			case R.id.layer_speed:
-				setSpeedOverlay(isChecked);
-				break;
-			// TODO: remove unnecessary preferences
-			/*
-			 * case R.id.layer_compass: setCompassOverlay( isChecked ); break;
-			 * case R.id.layer_location: setLocationOverlay( isChecked ); break;
-			 */
-			default:
-				break;
-			}
-		}
-	};
+	
+//	private final OnCheckedChangeListener mCheckedChangeListener = new OnCheckedChangeListener() {
+//		public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//			int which = buttonView.getId();
+//			switch (which) {
+//			case R.id.layer_satellite:
+//				setSatelliteOverlay(isChecked);
+//				break;
+//			case R.id.layer_traffic:
+//				setTrafficOverlay(isChecked);
+//				break;
+//			case R.id.layer_speed:
+//				setSpeedOverlay(isChecked);
+//				break;
+//			// TODO: remove unnecessary preferences
+//			
+//			 //case R.id.layer_compass: setCompassOverlay( isChecked ); break;
+//			 //case R.id.layer_location: setLocationOverlay( isChecked ); break;
+//			 
+//			default:
+//				break;
+//			}
+//		}
+//	};
 	private final OnSharedPreferenceChangeListener mSharedPreferenceChangeListener = new OnSharedPreferenceChangeListener() {
 		public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
 			// TODO: Clear removed preferences
@@ -1016,9 +1009,6 @@ public class LoggerMap extends MapActivity {
 				handled = true;
 				break;
 			}
-			else {
-				showDialog(DIALOG_NOTRACK);
-			}
 			handled = true;
 			break;
 		case MENU_SHARE:
@@ -1033,7 +1023,7 @@ public class LoggerMap extends MapActivity {
 				if (trackCursor != null && trackCursor.moveToLast()) {
 					trackName = trackCursor.getString(0);
 					remoteTrackId = trackCursor.getLong(1);
-					this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
+					this.setTitle(trackName);
 				}	
 			}	finally {
 					if (trackCursor != null) {
@@ -1171,14 +1161,6 @@ public class LoggerMap extends MapActivity {
 	
 			return dialog;
 			*/
-		case DIALOG_NOTRACK:
-			builder = new AlertDialog.Builder(this);
-			builder.setTitle(R.string.dialog_notrack_title).setMessage(
-					R.string.dialog_notrack_message).setIcon(android.R.drawable.ic_dialog_alert)
-					.setPositiveButton(R.string.btn_selecttrack, mNoTrackDialogListener)
-					.setNegativeButton(R.string.btn_cancel, null);
-			dialog = builder.create();
-			return dialog;
 		case DIALOG_TEXT:
 			builder = new AlertDialog.Builder(this);
 			factory = LayoutInflater.from(this);

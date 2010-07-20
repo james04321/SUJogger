@@ -3,6 +3,8 @@ package edu.stanford.cs.sujogger.util;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
+import android.graphics.drawable.Drawable;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -10,7 +12,6 @@ import android.widget.CursorAdapter;
 import android.widget.ImageView;
 import android.widget.TextView;
 import edu.stanford.cs.sujogger.R;
-import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 
 public class AchListAdapter extends CursorAdapter {
 
@@ -40,6 +41,7 @@ public class AchListAdapter extends CursorAdapter {
 		
 		ImageView achIcon = (ImageView)view.findViewById(R.id.ach_list_item_image);
 		achIcon.setImageResource(cursor.getInt(7));
+		Log.d("AchListAdapter", "title = " + cursor.getString(8) + "; icon resource = " + Integer.toHexString(cursor.getInt(7)));
 	}
 
 	@Override

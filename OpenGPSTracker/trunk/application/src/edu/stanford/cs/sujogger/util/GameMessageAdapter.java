@@ -94,11 +94,11 @@ public class GameMessageAdapter extends CursorAdapter {
 		TextView timeText = (TextView)view.findViewById(R.id.msg_item_time);
 		Calendar c = Calendar.getInstance();
 		int yearNow = c.get(Calendar.YEAR);
-		int monthNow = c.get(Calendar.MONTH);
+		int monthNow = c.get(Calendar.MONTH) + 1;
 		int dayNow = c.get(Calendar.DAY_OF_MONTH);
 		c.setTimeInMillis(sendTime);
 		int year = c.get(Calendar.YEAR);
-		int month = c.get(Calendar.MONTH);
+		int month = c.get(Calendar.MONTH) + 1;
 		int day = c.get(Calendar.DAY_OF_MONTH);
 		if (year == yearNow && month == monthNow && day == dayNow) {
 			int hour = c.get(Calendar.HOUR_OF_DAY);

@@ -6,6 +6,7 @@ import java.util.Calendar;
 import android.app.Activity;
 import android.app.DatePickerDialog;
 import android.app.Dialog;
+import android.app.ProgressDialog;
 import android.app.TimePickerDialog;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -24,6 +25,7 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.TimePicker;
 import android.widget.Toast;
+import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
@@ -40,16 +42,18 @@ public class MessageSender extends Activity {
 	private static final String TAG = "OGT.MessageSender";
 	public static final int MSG_SEND_RID = 1;
 	
-	
 	private long mGroupId;
 	private long[] mUserIds;
 	private User[] mUsers;
 	private int mMessageType;
 	private String mSubjectString;
+	private MessageObject mMsgObject;
 	private DatabaseHelper mDbHelper;
 	
 	private GamingServiceConnection mGameCon;
 	private MessageSenderReceiver mReceiver;
+	
+	private ProgressDialog mSendDialog;
 	
 	static final int DATE_DIALOG_ID = 0;
 	static final int TIME_DIALOG_ID = 1;
@@ -72,8 +76,8 @@ public class MessageSender extends Activity {
 	private EditText subjectText, bodyText;
 	private TextView msgRecipientText;
 
-	private DatePickerDialog.OnDateSetListener mDateSetListener = new DatePickerDialog.OnDateSetListener() {
-
+	private DatePickerDialog.OnDateSetListener mDateSetListener = 
+		new DatePickerDialog.OnDateSetListener() {
 		public void onDateSet(DatePicker view, int year, int monthOfYear, int dayOfMonth) {
 			mYear = year;
 			mMonth = monthOfYear;
@@ -82,17 +86,14 @@ public class MessageSender extends Activity {
 		}
 	};
 
-	private TimePickerDialog.OnTimeSetListener mTimeSetListener = new TimePickerDialog.OnTimeSetListener() {
-
+	private TimePickerDialog.OnTimeSetListener mTimeSetListener = 
+		new TimePickerDialog.OnTimeSetListener() {
 		public void onTimeSet(TimePicker view, int hourOfDay, int minute) {
 			mHour = hourOfDay;
 			mMinute = minute;
 			updateDateTimeSubject(true);
 		}
 	};
-
-	public MessageSender() {
-	}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -111,7 +112,8 @@ public class MessageSender extends Activity {
 			mUserIds = extras != null ? extras.getLongArray(Users.TABLE) : null;
 		}
 		
-		mSubjectString = savedInstanceState != null ? savedInstanceState.getString(GameMessages.SUBJECT) : null;
+		mSubjectString = savedInstanceState != null ? 
+				savedInstanceState.getString(GameMessages.SUBJECT) : null;
 		if (mSubjectString == null) {
 			Bundle extras = getIntent().getExtras();
 			mSubjectString = extras != null ? extras.getString(GameMessages.SUBJECT) : null;
@@ -386,21 +388,15 @@ public class MessageSender extends Activity {
 		Calendar c = Calendar.getInstance();
 		c.set(mYear, mMonth, mDay, mHour, mMinute);
 		long now = System.currentTimeMillis();
-		MessageObject msgObject= new MessageObject(msgSpinner.getSelectedItemPosition(), now, c.getTimeInMillis(), 
+		mMsgObject= new MessageObject(msgSpinner.getSelectedItemPosition(), now, c.getTimeInMillis(), 
 				subjectText.getText().toString(), bodyText.getText().toString());
 		User[] recipients = getArrayOfRecipients();
 		
-		mDbHelper.insertGameMessage(Common.getRegisteredUser(this), recipients, now, msgObject);
-		
+		mSendDialog = ProgressDialog.show(MessageSender.this, "", "Sending...", true);
 		try {
-			mGameCon.sendMessage(MSG_SEND_RID, msgObject, Messages.TYPE_GM, 
-					Common.getRegisteredUser(this), null, recipients, now, Feed.class.toString());	
+			mGameCon.sendMessage(MSG_SEND_RID, mMsgObject, Messages.TYPE_GM, 
+					Common.getRegisteredUser(this), null, recipients, now, MessageSender.class.toString());	
 		} catch (RemoteException e) {}
-		
-		Toast toast = Toast.makeText(MessageSender.this, 
-				"Message sent", Toast.LENGTH_SHORT);
-		toast.show();
-		finish();
 	}
 	
 	@Override
@@ -429,6 +425,44 @@ public class MessageSender extends Activity {
 	
 	// Empty receiver
 	class MessageSenderReceiver extends BroadcastReceiver {
-		public void onReceive(Context context, Intent intent) {}
+		public void onReceive(Context context, Intent intent) {
+			try {
+				AppResponse appResponse = null;
+				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
+					Log.d(TAG, appResponse.toString());
+					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
+						MessageSender.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mSendDialog != null) mSendDialog.dismiss();
+								Toast toast = Toast.makeText(MessageSender.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+							}
+						});
+						continue;
+					}
+					
+					switch (appResponse.request_id) {
+					case MSG_SEND_RID:
+						MessageSender.this.runOnUiThread(new Runnable() {
+							public void run() {
+								mDbHelper.insertGameMessage(Common.getRegisteredUser(MessageSender.this), 
+										getArrayOfRecipients(), mMsgObject.mOrigSendTime, mMsgObject);
+								mSendDialog.dismiss();
+								Toast toast = Toast.makeText(MessageSender.this, 
+										"Message sent", Toast.LENGTH_SHORT);
+								toast.show();
+								finish();
+							}
+						});
+						break;
+					default: break;
+					}
+				}
+			}
+			catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 }

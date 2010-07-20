@@ -303,7 +303,7 @@ public class SegmentOverlay extends Overlay
 
    private synchronized void calculatePath()
    {
-	   Log.d(TAG, "CALCULATING PATH");
+	  // Log.d(TAG, "CALCULATING PATH");
       mDotPath = null;
       if( this.mPath == null )
       {
@@ -387,7 +387,7 @@ public class SegmentOverlay extends Overlay
          }
       }
       //      Log.d( TAG, "transformSegmentToPath stop: points "+mCalculatedPoints+" from "+moves+" moves" );
-	   Log.d(TAG, "CALCULATING PATH DONE");
+	   //Log.d(TAG, "CALCULATING PATH DONE");
  
    }
 
@@ -585,8 +585,7 @@ public class SegmentOverlay extends Overlay
       //      Bitmap bitmap = BitmapFactory.decodeResource( this.mContext.getResources(), R.drawable.stip2 );
       //      this.mCanvas.drawBitmap( bitmap, this.mScreenPoint.x - 8, this.mScreenPoint.y - 8, new Paint() );
 
-      if( speed > 0 )
-      {
+      if( speed > 0 ) {
          int greenfactor = (int) Math.min( ( 127 * speed ) / mAvgSpeed, 255 );
          int redfactor = 255 - greenfactor;
          int currentColor = Color.rgb( redfactor, greenfactor, 0 );
@@ -619,6 +618,21 @@ public class SegmentOverlay extends Overlay
             this.mPrevScreenPoint.x = this.mScreenPoint.x;
             this.mPrevScreenPoint.y = this.mScreenPoint.y;
          }
+      }
+      else {
+    	  // Draw tracks w/o speed in a light-blue color
+          int currentColor = Color.rgb(107, 190, 222);
+          float distance = (float) distanceInPoints( this.mPrevScreenPoint, this.mScreenPoint );
+          if( distance > MINIMUM_PX_DISTANCE ) {
+             int x_circle = ( this.mPrevScreenPoint.x + this.mScreenPoint.x ) / 2;
+             int y_circle = ( this.mPrevScreenPoint.y + this.mScreenPoint.y ) / 2;
+             float radius_factor = 0.4f;
+             Shader lastShader = new RadialGradient( x_circle, y_circle, distance, new int[] { currentColor, currentColor, Color.TRANSPARENT }, new float[] { 0, radius_factor, 1 }, TileMode.CLAMP );
+             if( this.mShader != null )
+                this.mShader = new ComposeShader( this.mShader, lastShader, Mode.SRC_OVER );
+             else
+                this.mShader = lastShader;
+          }
       }
 
       this.mPath.lineTo( this.mScreenPoint.x, this.mScreenPoint.y );
