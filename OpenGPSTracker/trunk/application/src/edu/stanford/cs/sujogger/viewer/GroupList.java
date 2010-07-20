@@ -87,9 +87,11 @@ public class GroupList extends ListActivity {
 			String groupName = mGroupNameView.getText().toString();
 			Log.d(TAG, "mGroupNameDialogListener: " + groupName);
 			mCreateDialog = ProgressDialog.show(GroupList.this, "", "Creating group...", true);
-
+			Group newGroup = new Group(groupName);
+			newGroup.owner_id = Common.getRegisteredUser(GroupList.this).id;
+			
 			try {
-				mGameCon.createGroup(GRP_CREATE_RID, new Group(groupName));
+				mGameCon.createGroup(GRP_CREATE_RID, newGroup);
 			}
 			catch (RemoteException e) {}
 		}
@@ -382,7 +384,8 @@ public class GroupList extends ListActivity {
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (groups != null) {
-									ArrayList<Group> newGroups = mDbHelper.updateGroups(groups);
+									ArrayList<Group> newGroups = mDbHelper.updateGroups(groups, 
+											Common.getRegisteredUser(GroupList.this).id);
 									if (newGroups != null && newGroups.size() > 0) {
 										GroupList.this.mCursor.requery();
 										GroupList.this.mGroupAdapter.notifyDataSetChanged();

@@ -1130,7 +1130,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	//Insert all groups and group_users and let the DB constraints
 	// filter out duplicates
-	public ArrayList<Group> updateGroups(Group[] groups) {
+	public ArrayList<Group> updateGroups(Group[] groups, int selfId) {
 		if (groups == null || groups.length == 0) return null;
 		
 		ArrayList<Group> newGroups = new ArrayList<Group>();
@@ -1138,7 +1138,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		mDb.beginTransaction();
 		try {
 			for (int i = 0; i < groups.length; i++) {
-				if (addGroup(groups[i].id, groups[i].name, 0))
+				long isOwner = groups[i].owner_id == selfId ? 1 : 0;
+				if (addGroup(groups[i].id, groups[i].name, isOwner))
 					newGroups.add(groups[i]);
 				
 				users = groups[i].users;
