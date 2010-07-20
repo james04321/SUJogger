@@ -303,31 +303,33 @@ public class Feed extends ListActivity {
 					}
 					
 					switch(appResponse.request_id) {
-					case MessageSender.MSG_SEND_RID:
+					case GET_MSG_RID:
 						Message msg = (Message)appResponse.object;
+						if (msg != null) {
+							int lastConciergeId = appResponse.last_concierge_id;
+							Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
+							Editor editor = mSharedPreferences.edit();
+							editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
+							editor.commit();
+							
+							User fromUser = msg.fromUser;
+							Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
+							Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+							
+							//Ignore messages that, for some reason, has come from the same person
+							if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
+							
+							mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
+									(MessageObject)msg.msg);
+							
+							mMessages.requery();
+							mAdapter.notifyDataSetChanged();
+							Feed.this.getListView().invalidateViews();
+							
+							editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
+							editor.commit();
+						}
 						
-						int lastConciergeId = appResponse.last_concierge_id;
-						Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
-						Editor editor = mSharedPreferences.edit();
-						editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
-						editor.commit();
-						
-						User fromUser = msg.fromUser;
-						Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
-						Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
-						
-						//Ignore messages that, for some reason, has come from the same person
-						if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
-						
-						mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
-								(MessageObject)msg.msg);
-						
-						mMessages.requery();
-						mAdapter.notifyDataSetChanged();
-						Feed.this.getListView().invalidateViews();
-						
-						editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
-						editor.commit();
 						Toast toast = Toast.makeText(Feed.this, 
 								"Feed up to date", Toast.LENGTH_SHORT);
 						toast.show();

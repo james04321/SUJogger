@@ -2,14 +2,15 @@ package edu.stanford.cs.sujogger.viewer;
 
 import java.io.IOException;
 
-import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import android.app.TabActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.widget.TabHost;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
 
 public class JoggerApp extends TabActivity {
-
+	private static final int TAB_HEIGHT = 40;
+	
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
@@ -31,6 +32,10 @@ public class JoggerApp extends TabActivity {
 				setContent(new Intent(this, GroupList.class)));
 		host.addTab(host.newTabSpec("feed").setIndicator("Feed").
 				setContent(new Intent(this, Feed.class)));
+		
+		// Scale tab heights down to 40dip
+		final float scale = this.getResources().getDisplayMetrics().density;
+		for (int i = 0; i < 4; i++)
+			host.getTabWidget().getChildAt(i).getLayoutParams().height = (int)(TAB_HEIGHT * scale);
 	}
-
 }

@@ -177,7 +177,8 @@
          
          <activity
             android:name=".viewer.MessageSender"
-            android:launchMode="singleTop" 
+            android:launchMode="singleTop"
+            android:theme="@android:style/Theme.NoTitleBar"
             android:configChanges="keyboardHidden|orientation">
             <intent-filter>
                <category android:name="android.intent.category.DEFAULT" />
