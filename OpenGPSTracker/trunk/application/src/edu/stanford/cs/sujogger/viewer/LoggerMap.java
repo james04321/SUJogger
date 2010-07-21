@@ -225,15 +225,25 @@ public class LoggerMap extends MapActivity {
 		}
 		int state = GPSLoggerServiceManager.getLoggingState();
 		Log.d(TAG, "ADDTRACKIDS STATE IS " + state);
+		long loggingTrackId = GPSLoggerServiceManager.isLogging();
+		if (loggingTrackId != -1 && val != loggingTrackId) 
+            mTrackIds.add(mTrackIds.size()-1, new Track(val));
+		else
+            mTrackIds.add(mTrackIds.size(), new Track(val));
 
+/*
         if ((state == Constants.LOGGING || state == Constants.PAUSED) && !startLogging
-        		&& mTrackIds.size() > 0) {        	
+        		&& mTrackIds.size() > 0) {        
+        	Log.d(TAG, "ASLAI: Adding track while logging");
             mTrackIds.add(mTrackIds.size()-1, new Track(val));
         } else {
+        	Log.d(TAG, "ASLAI: Adding track while not logging");
 
 		  mTrackIds.add(new Track(val));
-		  
          }
+         */
+		  Log.d(TAG, "ASLAI1: " + getTrackIdsString());
+        
 	}
 	private String getTrackIdsString() {
 		String str = "Track ids are: ";
@@ -945,11 +955,14 @@ public class LoggerMap extends MapActivity {
 					.setPositiveButton(R.string.btn_okay, null).setView(view);
 			Log.d(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
 			int state = GPSLoggerServiceManager.getLoggingState();
-	        if (state == Constants.LOGGING || state == Constants.PAUSED) {     
+	        if (state == Constants.LOGGING || state == Constants.PAUSED) {  
+	        	Log.d(TAG, "ASLAI: COPYING WHEN WE ARE TRACKING");
 				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, true);
-	        } else
-				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, false);
+	        } else {
+	        	Log.d(TAG, "ASLAI: COPYING WHEN WE ARE NOT TRACKING");
 
+				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, false);
+	        }
 			if (mTrackIdsForDialog.size() > 0) {
 			builder.setMultiChoiceItems(Track.tracksToCharSequence(mTrackIdsForDialog, this), Track.tracksToVisibleBoolArray(mTrackIdsForDialog), new OnMultiChoiceClickListener() {
 				

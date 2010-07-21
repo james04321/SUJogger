@@ -59,7 +59,7 @@ import android.widget.RemoteViews;
  */
 public class ExportGPX extends Activity
 {
-   public static final String TAG = "OGT.ExportGPX";
+   public static final String TAG = "OGT.ExportGPX"; 
    
    private static final int DIALOG_FILENAME = 11;
    private static final int PROGRESS_STEPS = 10;

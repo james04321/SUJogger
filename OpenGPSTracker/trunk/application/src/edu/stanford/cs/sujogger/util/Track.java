@@ -6,10 +6,12 @@ import android.content.ContentResolver;
 import android.content.ContentUris;
 import android.content.Context;
 import android.database.Cursor;
+import android.util.Log;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 
 public class Track {
-  public long id;
+  private static final String TAG = "Track";
+public long id;
   public boolean visible;
   
   public Track(long id) {
@@ -64,9 +66,13 @@ public class Track {
 	
 	public static ArrayList<Track> shadowCopy(ArrayList<Track> tracks, boolean logging) {
 		ArrayList<Track> copiedTrack = new ArrayList<Track>();
-		for (Track track: tracks) 
+		for (Track track: tracks) {
+			Log.d(TAG, "ASLAI Shadow adding track: " + track.id);
 			copiedTrack.add(track);
-		if (logging) {
+		}
+		if (logging && copiedTrack.size() > 0) {
+			Log.d(TAG, "ASLAI Shawdow removing track: " + copiedTrack.get(copiedTrack.size()-1).id);
+			
 			copiedTrack.remove(copiedTrack.size()-1);
 		}
 		return copiedTrack;
