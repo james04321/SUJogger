@@ -1,15 +1,12 @@
 package edu.stanford.cs.sujogger.util;
 
 import edu.stanford.cs.sujogger.R;
-import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 import android.content.Context;
 import android.database.Cursor;
-import android.graphics.Color;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.CursorAdapter;
-import android.widget.ImageView;
 import android.widget.TextView;
 
 public class GroupListAdapter extends CursorAdapter {

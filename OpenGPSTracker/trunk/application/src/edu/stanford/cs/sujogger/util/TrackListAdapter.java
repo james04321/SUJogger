@@ -14,12 +14,10 @@ public class TrackListAdapter extends CursorAdapter {
 	
 	public TrackListAdapter(Context context, Cursor c) {
 		super(context, c);
-		// TODO Auto-generated constructor stub
 	}
 
 	public TrackListAdapter(Context context, Cursor c, boolean autoRequery) {
 		super(context, c, autoRequery);
-		// TODO Auto-generated constructor stub
 	}
 
 	@Override
@@ -43,13 +41,10 @@ public class TrackListAdapter extends CursorAdapter {
 		durationView.setText(duration);
 		
 		ImageView iconView = (ImageView)view.findViewById(R.id.listitem_icon);
-		if (trackId >0)
+		if (trackId > 0)
 			iconView.setVisibility(View.GONE);			
 		else
 			iconView.setVisibility(View.VISIBLE);
-
-
-		
 	}
 
 	@Override
@@ -58,5 +53,4 @@ public class TrackListAdapter extends CursorAdapter {
 		bindView(v, context, cursor);
 		return v;
 	}
-
 }
