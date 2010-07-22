@@ -150,7 +150,7 @@ public class GroupList extends ListActivity {
 			public void onValueChanged(int newValue) {
 				mDisplayFriends = newValue == 1;
 				fillData();
-				refreshData(false);
+				refreshData(false, false);
 			}
 		}), 
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
@@ -159,7 +159,7 @@ public class GroupList extends ListActivity {
 		
 		//Wait 100ms before sending request, because sometimes, the activity doesn't
 		//bind to the service quickly enough
-		refreshData(true);
+		refreshData(true, false);
 	}
 
 	@Override
@@ -203,7 +203,7 @@ public class GroupList extends ListActivity {
 
 		switch (item.getItemId()) {
 		case MENU_REFRESH:
-			mHandler.post(mGroupRefreshTask);
+			refreshData(false, true);
 			handled = true;
 			break;
 		default:
@@ -275,11 +275,11 @@ public class GroupList extends ListActivity {
 		startActivity(i);
 	}
 	
-	private void refreshData(boolean delay) {
+	private void refreshData(boolean delay, boolean force) {
 		if (mDisplayFriends) {
 			if (System.currentTimeMillis() - 
 					mSharedPreferences.getLong(Constants.ALL_USERS_UPDATE_KEY, 0) > 
-						Constants.UPDATE_INTERVAL)
+						Constants.UPDATE_INTERVAL || force)
 				if (delay)
 					mHandler.postDelayed(mFriendRefreshTask, 100);
 				else
@@ -288,7 +288,7 @@ public class GroupList extends ListActivity {
 		else {
 			if (System.currentTimeMillis() - 
 					mSharedPreferences.getLong(Constants.GROUPS_UPDATE_KEY, 0) > 
-						Constants.UPDATE_INTERVAL)
+						Constants.UPDATE_INTERVAL || force)
 				if (delay)
 					mHandler.postDelayed(mGroupRefreshTask, 100);
 				else
