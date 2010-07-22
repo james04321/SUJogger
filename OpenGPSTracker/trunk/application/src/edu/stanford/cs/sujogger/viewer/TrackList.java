@@ -44,7 +44,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.DialogInterface.OnClickListener;
 import android.content.SharedPreferences.Editor;
-import android.content.res.Configuration;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.net.Uri;
@@ -62,7 +61,6 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
-import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.android.DialogError;
 import edu.stanford.android.WADialog;
@@ -81,7 +79,6 @@ import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SegmentedControl;
-import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 import edu.stanford.cs.sujogger.util.TrackListAdapter;
 
 /**
@@ -134,7 +131,6 @@ public class TrackList extends ListActivity {
 	private TrackListAdapter trackAdapter;
 	private boolean mDownloadedTracks = false;
 	private final String DOWNLOADEDTRACKSFLAG = "DOWNLOADEDTRACKS";
-	private SeparatedListAdapter mGroupedAdapter;
 
 	private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
@@ -326,11 +322,10 @@ public class TrackList extends ListActivity {
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
-
 		Log.v("TrackList", "position = " + position + "; id = " + id);
+		
 		Intent intent = new Intent();
-		intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI,
-				getTrackIdFromRowPosition(position)));
+		intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI, id));
 		intent.setClass(this, LoggerMap.class);
 		startActivity(intent);
 	}
@@ -361,10 +356,9 @@ public class TrackList extends ListActivity {
 			Log.e(TAG, "Bad menuInfo", e);
 			return handled;
 		}
-
-		// TODO: cursor is obtained incorrectly
-		long trackId = getTrackIdFromRowPosition(info.position);
-
+		
+		long trackId = trackAdapter.getItemId(info.position);
+		
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
 		Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -372,13 +366,9 @@ public class TrackList extends ListActivity {
 		long remoteTrackId = 0;
 		try {
 			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.TRACK_ID }, null, null, null);
-			if (trackCursor != null && trackCursor.moveToLast()) {
-				String trackName = trackCursor.getString(0);
+			if (trackCursor != null && trackCursor.moveToLast())
 				remoteTrackId = trackCursor.getLong(1);
-				this.setTitle(this.getString(R.string.app_name) + ": " + trackName);
-			}
-
-			// Cursor cursor = (Cursor) getListAdapter().getItem( );
+			
 			mDialogUri = trackUri;
 			mDialogCurrentName = trackCursor.getString(0);
 			switch (item.getItemId()) {
@@ -517,8 +507,8 @@ public class TrackList extends ListActivity {
 		else {
 			// Got to nothing, make a list of everything
 			String whereClause = null;
-			whereClause = "user_id " + (mDownloadedTracks ? "!=" : "=")
-					+ Common.getRegisteredUser(this).id;
+			whereClause = Tracks.USER_ID + (mDownloadedTracks ? "!=" : "=")
+					+ Common.getRegisteredUser(this).id + " AND " + Tracks.NAME + " <> ''";
 			Log.d(TAG, "WHERECLAUSE IS " + whereClause);
 			tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
 					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID },
@@ -534,25 +524,6 @@ public class TrackList extends ListActivity {
 		Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
 		trackAdapter = new TrackListAdapter(this, tracksCursor);
 		setListAdapter(trackAdapter);
-	}
-
-	private long getTrackIdFromRowPosition(long pos) {
-
-		String whereClause = null;
-		whereClause = "user_id " + (mDownloadedTracks ? "!=" : "=")
-				+ Common.getRegisteredUser(this).id;
-		Log.d(TAG, "WHERECLAUSE IS " + whereClause);
-		Cursor tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID,
-				Tracks.NAME, Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE,
-				Tracks.TRACK_ID }, whereClause, null, null);
-		Log.d(TAG, "pos = " + pos);
-		// Cursor tracksCursor = managedQuery( Tracks.CONTENT_URI, new String[]
-		// { Tracks._ID }, null, null, null );
-		// pos = tracksCursor.getCount() - pos + 1;
-		tracksCursor.moveToPosition((int) pos);
-		long trackId = tracksCursor.getLong(0);
-		Log.d(TAG, "name = " + tracksCursor.getString(1));
-		return trackId;
 	}
 
 	private Cursor doSearchWithIntent(final Intent queryIntent) {

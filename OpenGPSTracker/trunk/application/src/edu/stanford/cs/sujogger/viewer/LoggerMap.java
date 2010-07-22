@@ -170,6 +170,8 @@ public class LoggerMap extends MapActivity {
 //	private GPSLoggerServiceManager GPSLoggerServiceManager;
 	private DatabaseHelper mDbHelper;
 	private boolean mIsPartnerRun;
+	private boolean mTrackNameDialogShowing;
+	private boolean mStatsUpdating;
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
@@ -351,10 +353,17 @@ public class LoggerMap extends MapActivity {
 			}
 		}
 	};
-	private final DialogInterface.OnClickListener mTrackNameDialogListener = new DialogInterface.OnClickListener() {
-		public void onClick(DialogInterface dialog, int which) {
+	private final View.OnClickListener mTrackNameDialogListener = new View.OnClickListener() {
+		public void onClick(View view) {
 			String trackName = mTrackNameView.getText().toString();
 			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
+			
+			if (trackName == null || trackName.trim().equals("")) {
+				Toast toast = Toast.makeText(LoggerMap.this.getApplicationContext(), 
+						"Track name cannot be empty", Toast.LENGTH_SHORT);
+				toast.show();
+				return;
+			}
 			
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
@@ -363,6 +372,14 @@ public class LoggerMap extends MapActivity {
 			getContentResolver().update(uri, values, null, null);
 			getContentResolver().notifyChange(uri, null);
 			updateTitleBar();
+			mTrackNameDialogShowing = false;
+			if (mStatsUpdating)
+				mDialogUpdate = ProgressDialog.show(LoggerMap.this, "", 
+						getString(R.string.dialog_updating_stats), true);
+			else
+				updateAchievements();
+			
+			LoggerMap.this.dismissDialog(DIALOG_TRACKNAME);
 		}
 	};
 	
@@ -554,24 +571,18 @@ public class LoggerMap extends MapActivity {
 			public void onClick(View v) {
 				int state = GPSLoggerServiceManager.getLoggingState();
 				switch (state) {
-				case Constants.STOPPED:
-					//mStartButton.setText(R.string.map_stop);
-					//mStartButton.setBackgroundResource(R.drawable.custom_btn_red);
-					//mResumeButton.setVisibility(View.VISIBLE);
-					//mResumeButton.setText(R.string.map_pause);
-					
+				case Constants.STOPPED:					
 					Log.d(TAG, "mLoggingControlListener: start GPS logging...");
 					long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
 					moveToTrack(loggerTrackId, true, true);
-					showDialog(DIALOG_TRACKNAME);
+					//showDialog(DIALOG_TRACKNAME);
 					break;
 				case Constants.LOGGING:
 				case Constants.PAUSED:
-					//mStartButton.setText(R.string.map_start);
-					//mStartButton.setBackgroundResource(R.drawable.custom_btn_green);
-					//mResumeButton.setVisibility(View.GONE);
 					GPSLoggerServiceManager.stopGPSLogging();
 					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
+					mTrackNameDialogShowing = true;
+					showDialog(DIALOG_TRACKNAME);
 					syncGroupStats();
 					break;
 				default:
@@ -586,14 +597,11 @@ public class LoggerMap extends MapActivity {
 			public void onClick(View v) {
 				int state = GPSLoggerServiceManager.getLoggingState();
 				switch (state) {
-				case Constants.STOPPED: break;
 				case Constants.LOGGING:
 					GPSLoggerServiceManager.pauseGPSLogging();
-					//mResumeButton.setText(R.string.map_resume);
 					break;
 				case Constants.PAUSED:
 					GPSLoggerServiceManager.resumeGPSLogging();
-					//mResumeButton.setText(R.string.map_pause);
 					break;
 				default:
 					break;
@@ -618,8 +626,6 @@ public class LoggerMap extends MapActivity {
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.clear();
 
-		
-
 		updateTitleBar();
 		updateDataOverlays();
 		updateSpeedbarVisibility();	
@@ -628,7 +634,6 @@ public class LoggerMap extends MapActivity {
 		overlays.add(mMylocation);
 		mMapView.invalidate();
 		Log.d(TAG, "ASLAI: Enabled my location");
-		
 	}
 
 	protected void onPause() {
@@ -1104,6 +1109,7 @@ public class LoggerMap extends MapActivity {
 		Builder builder = null;
 		switch (id) {
 		case DIALOG_TRACKNAME:
+			/*
 			builder = new AlertDialog.Builder(this);
 			factory = LayoutInflater.from(this);
 			view = factory.inflate(R.layout.namedialog, null);
@@ -1111,10 +1117,21 @@ public class LoggerMap extends MapActivity {
 			builder.setTitle(R.string.dialog_routename_title)
 			// .setMessage( R.string.dialog_routename_message )
 					.setIcon(android.R.drawable.ic_dialog_alert)
-					.setPositiveButton(
-							R.string.btn_okay, mTrackNameDialogListener).setView(view)
+			//		.setPositiveButton(
+			//				R.string.btn_okay, mTrackNameDialogListener)
+					.setView(view)
 					.setCancelable(false);
 			dialog = builder.create();
+			Button okButton = (Button)dialog.findViewById(R.id.ok_button);
+			okButton.setOnClickListener(mTrackNameDialogListener);
+			*/
+			dialog = new Dialog(this);
+			dialog.setContentView(R.layout.namedialog);
+			dialog.setTitle(R.string.dialog_routename_title);
+			dialog.setCancelable(false);
+			mTrackNameView = (EditText)dialog.findViewById(R.id.nameField);
+			Button okButton = (Button)dialog.findViewById(R.id.ok_button);
+			okButton.setOnClickListener(mTrackNameDialogListener);
 			return dialog;
 			/*
 		case DIALOG_LAYERS:
@@ -2023,7 +2040,9 @@ public class LoggerMap extends MapActivity {
 	}
 	
 	private void syncGroupStats() {
-		mDialogUpdate = ProgressDialog.show(this, "", "Updating statistics...", true);
+		mStatsUpdating = true;
+		if (!mTrackNameDialogShowing)
+			mDialogUpdate = ProgressDialog.show(this, "", getString(R.string.dialog_updating_stats), true);
 		int[] groupStatIds = mDbHelper.getGroupStatisticIds();
 		if (groupStatIds == null || groupStatIds.length == 0) {
 			calculateTrackStatistics();
@@ -2047,6 +2066,7 @@ public class LoggerMap extends MapActivity {
 		long duration = 0;
 
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
+		Log.d(TAG, "trackUri = " + trackUri);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 
 		Cursor segments = null;
@@ -2169,7 +2189,7 @@ public class LoggerMap extends MapActivity {
 			Common.displayAchievementToast(newAchCursor.getString(8), newAchCursor.getInt(7),
 					newAchCursor.getInt(4) == 0, getApplicationContext(), toastLayout);
 		}
-		newAchCursor.close();
+		newAchCursor.close();;
 	}
 
 	/***
@@ -2224,10 +2244,12 @@ public class LoggerMap extends MapActivity {
 									//Continue calculating track stats even if we can't
 									// sync group stats from server
 									calculateTrackStatistics();
-								else if (requestId == UPDATE_SBS_RID)
+								else if (requestId == UPDATE_SBS_RID) {
 									//Update achievements with local solo stats even if can't
 									// do so for group stats
-									updateAchievements();
+									mStatsUpdating = false;
+									if (!mTrackNameDialogShowing) updateAchievements();
+								}
 							}
 						});
 						continue;
@@ -2250,7 +2272,7 @@ public class LoggerMap extends MapActivity {
 					case UPDATE_SBS_RID:
 						LoggerMap.this.runOnUiThread(new Runnable() {
 							public void run() {
-								mDialogUpdate.dismiss();
+								if (mDialogUpdate != null) mDialogUpdate.dismiss();
 								
 								//Reset dirty bit and all diffs
 								Editor editor = mSharedPreferences.edit();
@@ -2261,7 +2283,8 @@ public class LoggerMap extends MapActivity {
 								editor.putInt(Constants.DIFF_NUM_PARTNER_RUNS_KEY, 0);
 								editor.commit();
 								
-								updateAchievements();
+								mStatsUpdating = false;
+								if (!mTrackNameDialogShowing) updateAchievements();
 							}
 						});
 						break;

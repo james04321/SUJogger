@@ -1,8 +1,18 @@
-<LinearLayout android:id="@+id/LinearLayout01" android:layout_height="wrap_content"
-	xmlns:android="http://schemas.android.com/apk/res/android" android:orientation="vertical"
-	android:layout_width="fill_parent">
+<LinearLayout 
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	android:id="@+id/LinearLayout01" 
+	android:layout_height="wrap_content"
+	android:orientation="vertical"
+	android:layout_width="240dip"
+	android:padding="4dip">
 	
 	<EditText android:layout_height="wrap_content" android:clickable="true"
 		android:singleLine="true" android:id="@+id/nameField" android:layout_width="fill_parent"></EditText>
-		
+	<Button 
+		android:id="@+id/ok_button"
+		android:text="@string/btn_okay"
+		android:layout_height="wrap_content"
+		android:layout_width="140dip"
+		android:layout_gravity="center_horizontal"
+		android:layout_marginTop="10dip"/>
 </LinearLayout>
