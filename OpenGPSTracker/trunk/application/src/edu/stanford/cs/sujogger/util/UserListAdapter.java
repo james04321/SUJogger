@@ -116,6 +116,15 @@ public class UserListAdapter extends CursorAdapter {
 		return checkedUsers;
 	}
 	
+	@Override
+	public void notifyDataSetChanged() {
+		if (checkmarks != null) {
+			checkmarks = new boolean[mCursor.getCount()];
+			clearAllChecked();
+		}
+		super.notifyDataSetChanged();
+	}
+	
 	/*
 	public void setFlinging(boolean flinging) {
 		mFlinging = flinging;
