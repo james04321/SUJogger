@@ -928,10 +928,11 @@ public class LoggerMap extends MapActivity {
 	public boolean onPrepareOptionsMenu(Menu menu) {
 		// MenuItem notemenu = menu.findItem( MENU_NOTE );
 		// notemenu.setEnabled( GPSLoggerServiceManager.isMediaPrepared() );
+		long loggingTrackId = GPSLoggerServiceManager.isLogging();		
 		MenuItem sharemenu = menu.findItem(MENU_SHARE);
-		sharemenu.setEnabled(mTrackIds.size() > 0);
+		sharemenu.setEnabled(mTrackIds.size() > 0 && loggingTrackId == -1);
 		MenuItem layermenu = menu.findItem(MENU_LAYERS);
-		layermenu.setEnabled(mTrackIds.size() > 0);	
+		layermenu.setEnabled(mTrackIds.size() > 1 || (mTrackIds.size() == 1 && loggingTrackId == -1));	
 		MenuItem statsmenu = menu.findItem(MENU_STATS);
 		statsmenu.setEnabled(mTrackIds.size() > 0);				
 		return super.onPrepareOptionsMenu(menu);
