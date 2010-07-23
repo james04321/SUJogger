@@ -303,7 +303,7 @@ public class GroupList extends ListActivity {
 		if (mDisplayFriends) {
 			mBottomControlBar.setVisibility(View.GONE);
 			if (mUserAdapter == null) {
-				mCursor = mDbHelper.getAllUsers(this);
+				mCursor = mDbHelper.getAllUsers();
 				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
 			}
 			setListAdapter(mUserAdapter);

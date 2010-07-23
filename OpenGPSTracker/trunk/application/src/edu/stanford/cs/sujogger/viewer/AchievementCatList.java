@@ -210,8 +210,8 @@ public class AchievementCatList extends ListActivity {
 	}
 	
 	private void updateDirtyStatistics() {
-		mDbHelper.applyStatDiffs(this);
-		ScoreBoard[] scores = mDbHelper.getAllStatistics(this);
+		mDbHelper.applyStatDiffs();
+		ScoreBoard[] scores = mDbHelper.getAllStatistics();
 		try {
 			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
 		} catch (RemoteException e) {}

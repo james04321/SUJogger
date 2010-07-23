@@ -2172,7 +2172,7 @@ public class LoggerMap extends MapActivity {
 		
 		editor.commit();
 		
-		ScoreBoard[] scores = mDbHelper.getAllStatistics(this);
+		ScoreBoard[] scores = mDbHelper.getAllStatistics();
 		try {
 			mGameCon.updateScoreBoards(UPDATE_SBS_RID, scores);
 		} catch (RemoteException e) {}
@@ -2263,7 +2263,7 @@ public class LoggerMap extends MapActivity {
 								if (scores != null) {
 									mDbHelper.updateScoreboards(scores);
 									if (mSharedPreferences.getBoolean(Constants.STATS_DIRTY_KEY, false))
-										mDbHelper.applyStatDiffs(LoggerMap.this);
+										mDbHelper.applyStatDiffs();
 								}
 								calculateTrackStatistics();
 							}
