@@ -366,17 +366,17 @@ public class LeaderBoard extends ListActivity {
 						final User[] users = (User[])appResponse.object;
 						LeaderBoard.this.runOnUiThread(new Runnable() {
 							public void run() {
-								if (users != null) {
+								if (users != null)
 									mDbHelper.addUsers(users);
-									Editor editor = mSharedPreferences.edit();
-									editor.putLong(Constants.ALL_USERS_UPDATE_KEY, 
-												System.currentTimeMillis());
-									editor.commit();
-									mGetUsersGroupsProgress++;
-									if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
-										mUserGroupWaitDialog.dismiss();
-										updateLBSelection(true);
-									}
+								
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.ALL_USERS_UPDATE_KEY, 
+											System.currentTimeMillis());
+								editor.commit();
+								mGetUsersGroupsProgress++;
+								if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
+									mUserGroupWaitDialog.dismiss();
+									updateLBSelection(true);
 								}
 							}
 						});
@@ -385,17 +385,17 @@ public class LeaderBoard extends ListActivity {
 						final Group[] groups = (Group[])appResponse.object;
 						LeaderBoard.this.runOnUiThread(new Runnable() {
 							public void run() {
-								if (groups != null) {
+								if (groups != null)
 									mDbHelper.addGroupsTemp(groups);
-									Editor editor = mSharedPreferences.edit();
-									editor.putLong(Constants.ALL_GROUPS_UPDATE_KEY, 
-												System.currentTimeMillis());
-									editor.commit();
-									mGetUsersGroupsProgress++;
-									if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
-										mUserGroupWaitDialog.dismiss();
-										updateLBSelection(true);
-									}
+								
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.ALL_GROUPS_UPDATE_KEY, 
+											System.currentTimeMillis());
+								editor.commit();
+								mGetUsersGroupsProgress++;
+								if (mGetUsersGroupsProgress >= mGetUsersGroupsGoal) {
+									mUserGroupWaitDialog.dismiss();
+									updateLBSelection(true);
 								}
 							}
 						});

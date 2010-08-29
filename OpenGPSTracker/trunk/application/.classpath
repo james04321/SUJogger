@@ -4,6 +4,6 @@
 	<classpathentry excluding="edu/stanford/cs/sujogger/util/BaseRequestListener.java" kind="src" path="src"/>
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="/Users/james04321/android_dev/Stanford-Gaming-SDK/gaming.jar"/>
-	<classpathentry kind="src" path="SUWebAuth"/>
+	<classpathentry kind="src" path="FacebookSDK"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

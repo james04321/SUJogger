@@ -32,9 +32,9 @@
 	</natures>
 	<linkedResources>
 		<link>
-			<name>SUWebAuth</name>
+			<name>FacebookSDK</name>
 			<type>2</type>
-			<locationURI>_android_SUWebAuth/src</locationURI>
+			<locationURI>_android_FacebookSDK/src</locationURI>
 		</link>
 	</linkedResources>
 </projectDescription>

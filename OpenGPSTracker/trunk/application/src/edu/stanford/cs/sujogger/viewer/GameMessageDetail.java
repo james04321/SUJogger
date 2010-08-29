@@ -35,8 +35,6 @@ public class GameMessageDetail extends ListActivity {
 	
 	private Button mStartButton;
 	private Button mReplyButton;
-
-	public GameMessageDetail() {}
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);

@@ -67,19 +67,20 @@ import android.os.PowerManager.WakeLock;
 import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
+import android.view.GestureDetector;
 import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.GestureDetector.OnDoubleTapListener;
+import android.view.GestureDetector.SimpleOnGestureListener;
 import android.widget.Button;
-import android.widget.CheckBox;
-import android.widget.CompoundButton;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
-import android.widget.CompoundButton.OnCheckedChangeListener;
 
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
@@ -565,7 +566,7 @@ public class LoggerMap extends MapActivity {
 
 		//ASLAI: Added
 		mMapController.setZoom(20);
-	
+		
 		mStartButton = (Button)findViewById(R.id.startbutton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
@@ -1320,6 +1321,21 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected boolean isRouteDisplayed() {
+		return true;
+	}
+	
+	// OnDoubleTapListener methods
+	
+	public boolean onDoubleTap(MotionEvent e) {
+		Log.d(TAG, "onDoubleTap()");
+		return true;
+	}
+	
+	public boolean onDoubleTapEvent(MotionEvent e) {
+		return true;
+	}
+	
+	public boolean onSingleTapConfirmed (MotionEvent e) {
 		return true;
 	}
 	

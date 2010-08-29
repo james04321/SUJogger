@@ -296,7 +296,7 @@ public class GroupList extends ListActivity {
 		}
 	}
 
-	private void fillData() {	
+	private void fillData() {
 		TextView emptyView = (TextView)getListView().getEmptyView();
 		emptyView.setText(mDisplayFriends ? 
 				R.string.no_friends : R.string.no_groups);
@@ -478,16 +478,16 @@ public class GroupList extends ListActivity {
 							public void run() {
 								if (users != null) {
 									mDbHelper.addUsers(users);
-									Editor editor = mSharedPreferences.edit();
-									editor.putLong(Constants.ALL_USERS_UPDATE_KEY, System.currentTimeMillis());
-									editor.commit();
 									mCursor.requery();
 									mUserAdapter.notifyDataSetChanged();
 									GroupList.this.getListView().invalidateViews();
-									Toast toast = Toast.makeText(GroupList.this, 
-											"Friends up to date", Toast.LENGTH_SHORT);
-									toast.show();
 								}
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.ALL_USERS_UPDATE_KEY, System.currentTimeMillis());
+								editor.commit();
+								Toast toast = Toast.makeText(GroupList.this, 
+										"Friends up to date", Toast.LENGTH_SHORT);
+								toast.show();
 							}
 						});
 						break;
