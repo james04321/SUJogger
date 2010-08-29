@@ -27,7 +27,7 @@
  *
  */
 package edu.stanford.cs.sujogger.viewer;
-
+ 
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -104,7 +104,7 @@ import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.Track;
 import edu.stanford.cs.sujogger.util.UnitsI18n;
-
+ 
 /**
  * Main activity showing a track and allowing logging control
  * 
