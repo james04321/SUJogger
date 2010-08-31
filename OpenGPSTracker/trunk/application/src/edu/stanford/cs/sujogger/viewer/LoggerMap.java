@@ -173,6 +173,8 @@ public class LoggerMap extends MapActivity {
 	private boolean mIsPartnerRun;
 	private boolean mTrackNameDialogShowing;
 	private boolean mStatsUpdating;
+	private double mCalculatedDistance;
+	private long mCalculatedDuration;
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
@@ -582,9 +584,16 @@ public class LoggerMap extends MapActivity {
 				case Constants.PAUSED:
 					GPSLoggerServiceManager.stopGPSLogging();
 					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
-					mTrackNameDialogShowing = true;
-					showDialog(DIALOG_TRACKNAME);
-					syncGroupStats();
+					if (calculateTrackStatistics()) {
+						mTrackNameDialogShowing = true;
+						showDialog(DIALOG_TRACKNAME);
+						syncGroupStats();
+					}
+					else {
+						Toast toast = Toast.makeText(LoggerMap.this.getApplicationContext(), 
+								"Discarding track of zero length", Toast.LENGTH_SHORT);
+						toast.show();
+					}
 					break;
 				default:
 					break;
@@ -2061,7 +2070,7 @@ public class LoggerMap extends MapActivity {
 			mDialogUpdate = ProgressDialog.show(this, "", getString(R.string.dialog_updating_stats), true);
 		int[] groupStatIds = mDbHelper.getGroupStatisticIds();
 		if (groupStatIds == null || groupStatIds.length == 0) {
-			calculateTrackStatistics();
+			updateUserStats();
 		}
 		else {
 			try {
@@ -2073,9 +2082,9 @@ public class LoggerMap extends MapActivity {
 	/**
 	 * Calculates track duration, distance, etc. right after we stop tracking
 	 */
-	private void calculateTrackStatistics() {
+	private boolean calculateTrackStatistics() {
 		if (statisticsPresent)
-			return;
+			return false;
 		Log.d(TAG, "calculateTrackStatistics()");
 		long starttime = 0;
 		double distanceTraveled = 0f;
@@ -2136,17 +2145,28 @@ public class LoggerMap extends MapActivity {
 
 		ContentValues values = new ContentValues();
 		values.put(Tracks.DURATION, new Long(duration));
+		mCalculatedDuration = duration;
 		values.put(Tracks.DISTANCE, new Double(distanceTraveled));
+		mCalculatedDistance = distanceTraveled;
 		if (mIsPartnerRun)
 			values.put(Tracks.IS_PARTNER, 1);
 		Log.d(TAG, "calculateTrackStatistics(): duration = " + duration
 				+ "; distanceTraveled = " + distanceTraveled);
 		resolver.update(trackUri, values, null, null);
 		// resolver.notifyChange(trackUri, null);
-		updateUserStats(distanceTraveled, duration);
+		
+		if (distanceTraveled > 0) {
+			return true;
+		}
+		else {
+			resolver.delete(trackUri, null, null);
+			return false;
+		}
 	}
 	
-	private void updateUserStats(double dist, long duration) {
+	private void updateUserStats() {
+		double dist = mCalculatedDistance;
+		long duration = mCalculatedDuration;
 		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		int selfId = Common.getRegisteredUser(this).id;
 		
@@ -2259,7 +2279,7 @@ public class LoggerMap extends MapActivity {
 								if (requestId == GET_SBS_RID)
 									//Continue calculating track stats even if we can't
 									// sync group stats from server
-									calculateTrackStatistics();
+									updateUserStats();
 								else if (requestId == UPDATE_SBS_RID) {
 									//Update achievements with local solo stats even if can't
 									// do so for group stats
@@ -2281,7 +2301,7 @@ public class LoggerMap extends MapActivity {
 									if (mSharedPreferences.getBoolean(Constants.STATS_DIRTY_KEY, false))
 										mDbHelper.applyStatDiffs();
 								}
-								calculateTrackStatistics();
+								updateUserStats();
 							}
 						});
 						break;

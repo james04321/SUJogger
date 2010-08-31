@@ -1397,7 +1397,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String tables = ScoreboardTemp.TABLE + "," + Users.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.USER_ID + "=" +
 			Users.TABLE + "." + Users.USER_ID + " AND " + 
-			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId + " AND " +
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
 				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;
@@ -1407,7 +1408,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String tables = ScoreboardTemp.TABLE + "," + GroupsTemp.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.GROUP_ID + "=" +
 			GroupsTemp.TABLE + "." + GroupsTemp.GROUP_ID + " AND " + 
-			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId + " AND " +
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
 				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;

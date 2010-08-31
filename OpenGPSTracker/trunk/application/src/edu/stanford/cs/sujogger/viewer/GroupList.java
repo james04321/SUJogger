@@ -109,7 +109,7 @@ public class GroupList extends ListActivity {
 	private Runnable mFriendRefreshTask = new Runnable() {
 		public void run() {
 			try {
-				mGameCon.getAppsUser(GET_USERS_RID);
+				mGameCon.getInvitableFriends(GET_USERS_RID);
 			}
 			catch (RemoteException e) {}
 		}
