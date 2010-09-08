@@ -104,7 +104,7 @@
       android:id="@+id/speedbar"
       android:layout_height="100dp"
       android:layout_width="30dp"
-      android:src="@drawable/speedindexbar_new"
+      android:src="@drawable/speedindexbar"
       android:visibility="invisible" 
       android:layout_alignParentTop="true"
       android:layout_alignParentRight="true"

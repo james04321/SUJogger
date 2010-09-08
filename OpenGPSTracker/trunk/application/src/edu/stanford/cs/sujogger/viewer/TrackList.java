@@ -28,6 +28,14 @@
  */
 package edu.stanford.cs.sujogger.viewer;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -61,11 +69,17 @@ import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
-import edu.stanford.android.DialogError;
-import edu.stanford.android.WADialog;
-import edu.stanford.android.WebAuth;
-import edu.stanford.android.WebAuth.DialogListener;
+
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.DialogError;
+import com.facebook.android.Facebook;
+import com.facebook.android.FacebookError;
+import com.facebook.android.Util;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
+import com.facebook.android.Facebook.DialogListener;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
 import edu.stanford.cs.gaming.sdk.model.User;
@@ -108,7 +122,7 @@ public class TrackList extends ListActivity {
 	public static final int GET_CG_RID = 4;
 
 	private SharedPreferences mSharedPreferences;
-	//private ProgressDialog mDialogFriendInit;
+	private ProgressDialog mDialogFriendInit;
 	private ProgressDialog mDialogUserInit;
 	private Button mStartButton;
 
@@ -117,12 +131,12 @@ public class TrackList extends ListActivity {
 	private ScoreboardReceiver mReceiver;
 	
 	//TODO: Facebook
-	//private Facebook mFacebook;
-	//private AsyncFacebookRunner mAsyncRunner;
-	private WebAuth mWa;
+	private Facebook mFacebook;
+	private AsyncFacebookRunner mAsyncRunner;
+	//private WebAuth mWa;
 
 	// Temp attribute to store FB friends until we get everything we need
-	//private long[] mFriendFbIds;
+	private long[] mFriendFbIds;
 
 	private EditText mTrackNameView;
 	private Uri mDialogUri;
@@ -204,7 +218,7 @@ public class TrackList extends ListActivity {
 		registerForContextMenu(getListView());
 		
 		//TODO: Facebook
-		/*
+		
 		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 			mFacebook = new Facebook();
 			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
@@ -212,12 +226,12 @@ public class TrackList extends ListActivity {
 			mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
 					new LoginDialogListener());
 		}
-		*/
 		
+		/*
 		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 			mWa = new WebAuth();
 			mWa.authorize(this, new LoginDialogListener());
-		}
+		}*/
 	}
 
 	private void initializeSelfStatistics() {
@@ -538,18 +552,19 @@ public class TrackList extends ListActivity {
 
 	private void registerUser() {
 		//TODO: Facebook
-		//if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
-		//	return;
-		
-		if (Common.getRegisteredUser(this) == null)
+		if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
 			return;
 		
+		//TODO: Stanford WebAuth
+		//if (Common.getRegisteredUser(this) == null)
+		//	return;
+		
 		//TODO: Facebook
-		//mDialogFriendInit.dismiss();
+		mDialogFriendInit.dismiss();
 		mDialogUserInit = ProgressDialog.show(this, "", "Initializing user profile...", true);
 		User user = Common.getRegisteredUser(this);
-		//user.friend_fb_ids = mFriendFbIds;
-		user.friend_fb_ids = null;
+		user.friend_fb_ids = mFriendFbIds;
+		//user.friend_fb_ids = null; // when using Stanford WebAuth
 		try {
 			mGameCon.registerUser(USERREG_RID, user);
 		}
@@ -560,7 +575,6 @@ public class TrackList extends ListActivity {
 		public void onReceive(Context context, Intent intent) {
 			Log.d(TAG, "onReceive()");
 			try {
-
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
 					Log.d(TAG, appResponse.toString());
@@ -573,7 +587,7 @@ public class TrackList extends ListActivity {
 								.setCancelable(false)
 								.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) {
-										mWa.authorize(TrackList.this, new LoginDialogListener());
+										//mWa.authorize(TrackList.this, new LoginDialogListener());
 									}
 								}).show();
 							}
@@ -583,41 +597,55 @@ public class TrackList extends ListActivity {
 					
 					switch (appResponse.request_id) {
 					case GET_SBS_RID:
-						ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
-						if (scores == null) {
-							Log.d(TAG, "onReceive(): no scores available");
-							initializeSelfStatistics();
-						}
-						else {
-							Log.d(TAG, "onReceive(): scores found");
-							mDbHelper.updateSoloScoreboards(scores);
-
-							Editor editorGetSb = mSharedPreferences.edit();
-							editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
-							editorGetSb.commit();
-							mDialogUserInit.dismiss();
-						}
+						final ScoreBoard[] scores = (ScoreBoard[]) appResponse.object;
+						TrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scores == null) {
+									Log.d(TAG, "onReceive(): no scores available");
+									initializeSelfStatistics();
+								}
+								else {
+									Log.d(TAG, "onReceive(): scores found");
+									mDbHelper.updateSoloScoreboards(scores);
+		
+									Editor editorGetSb = mSharedPreferences.edit();
+									editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
+									editorGetSb.commit();
+									mDialogUserInit.dismiss();
+								}
+							}
+						});
 						break;
 					case CREATE_SB_RID:
-						Integer[] scoreIds = (Integer[]) appResponse.object;
-						if (scoreIds != null)
-							mDbHelper.updateSoloScoreboardIds(scoreIds);
-
-						Editor editorCreateSb = mSharedPreferences.edit();
-						editorCreateSb.putBoolean(Constants.USER_REGISTERED, true);
-						editorCreateSb.commit();
-						mDialogUserInit.dismiss();
+						final Integer[] scoreIds = (Integer[]) appResponse.object;
+						TrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (scoreIds != null)
+									mDbHelper.updateSoloScoreboardIds(scoreIds);
+		
+								Editor editorCreateSb = mSharedPreferences.edit();
+								editorCreateSb.putBoolean(Constants.USER_REGISTERED, true);
+								editorCreateSb.commit();
+								mDialogUserInit.dismiss();
+							}
+						});
 						break;
 					case USERREG_RID:
-						int userId = (Integer) appResponse.object;
-						Editor editorUser = mSharedPreferences.edit();
-						editorUser.putInt(Constants.USERREG_ID_KEY, userId);
-						editorUser.commit();
-						try {
-							mGameCon.getScoreBoards(GET_SBS_RID, userId, -1, null, null);
-						}
-						catch (RemoteException e) {
-						}
+						final int userId = (Integer) appResponse.object;
+						TrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Log.d(TAG, "onReceive(): user registered");
+								Editor editorUser = mSharedPreferences.edit();
+								editorUser.putInt(Constants.USERREG_ID_KEY, userId);
+								editorUser.commit();
+								try {
+									mGameCon.getScoreBoards(GET_SBS_RID, userId, -1, null, null);
+								}
+								catch (RemoteException e) {
+								}
+							}
+						});
+						break;
 					default:
 						break;
 					}
@@ -630,7 +658,7 @@ public class TrackList extends ListActivity {
 	}
 	
 	//TODO: Facebook
-	/*
+	
 	private final class LoginDialogListener implements DialogListener {
 		public void onComplete(Bundle values) {
 			// SessionEvents.onLoginSuccess();
@@ -660,7 +688,7 @@ public class TrackList extends ListActivity {
 		}
 	}
 
-	private class UserInfoRequestListener extends BaseRequestListener {
+	private class UserInfoRequestListener implements RequestListener {
 
 		public void onComplete(final String response) {
 			try {
@@ -690,9 +718,17 @@ public class TrackList extends ListActivity {
 				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
 			}
 		}
+
+		public void onFacebookError(FacebookError e) {}
+
+		public void onFileNotFoundException(FileNotFoundException e) {}
+
+		public void onIOException(IOException e) {}
+
+		public void onMalformedURLException(MalformedURLException e) {}
 	}
 
-	private class FriendsRequestListener extends BaseRequestListener {
+	private class FriendsRequestListener implements RequestListener {
 
 		public void onComplete(final String response) {
 			try {
@@ -705,7 +741,6 @@ public class TrackList extends ListActivity {
 					return;
 
 				long[] fbIds = new long[friends.length()];
-				// long[] fbIds = new long[10];
 				JSONObject friend;
 				for (int i = 0; i < friends.length(); i++) {
 					friend = friends.getJSONObject(i);
@@ -728,8 +763,18 @@ public class TrackList extends ListActivity {
 				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
 			}
 		}
-	}*/
+
+		public void onFacebookError(FacebookError e) {}
+
+		public void onFileNotFoundException(FileNotFoundException e) {}
+
+		public void onIOException(IOException e) {}
+
+		public void onMalformedURLException(MalformedURLException e) {}
+	}
 	
+	//TODO: Stanford WebAuth
+	/*
 	private final class LoginDialogListener implements DialogListener {
     	public void onComplete(Bundle values) {
     		Log.d(TAG, values.toString());
@@ -757,5 +802,5 @@ public class TrackList extends ListActivity {
 					}
 				}).show();
         }
-    }
+    }*/
 }

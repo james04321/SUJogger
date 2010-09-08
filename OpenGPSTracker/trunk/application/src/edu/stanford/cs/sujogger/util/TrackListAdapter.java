@@ -42,9 +42,9 @@ public class TrackListAdapter extends CursorAdapter {
 		
 		ImageView iconView = (ImageView)view.findViewById(R.id.listitem_icon);
 		if (trackId > 0)
-			iconView.setVisibility(View.GONE);			
+			iconView.setVisibility(View.VISIBLE);			
 		else
-			iconView.setVisibility(View.VISIBLE);
+			iconView.setVisibility(View.GONE);
 	}
 
 	@Override

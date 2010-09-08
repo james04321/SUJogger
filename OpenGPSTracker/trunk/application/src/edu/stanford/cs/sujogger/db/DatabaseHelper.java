@@ -447,7 +447,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		ContentValues args = new ContentValues();
 		args.put(TracksColumns.NAME, name);
 		args.put(TracksColumns.CREATION_TIME, currentTime);
-
+		args.put(TracksColumns.USER_ID, Common.getRegisteredUser(mContext).id);
+		
 		long trackId = mDb.insert(Tracks.TABLE, null, args);
 
 		ContentResolver resolver = this.mContext.getContentResolver();
@@ -492,7 +493,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return statVal;
 	}
 	
-	public ScoreBoard[] scoreBoardArrayFromScores(Cursor scores, Context context) {
+	public ScoreBoard[] scoreBoardArrayFromScores(Cursor scores) {
 		ScoreBoard score;
 		ScoreBoard[] scoreArray = new ScoreBoard[scores.getCount()];
 		int i = 0;
@@ -501,7 +502,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			score.id = scores.getInt(2);
 			score.app_id = Constants.APP_ID;
 			score.user_id = scores.getInt(3) > 0 ? 0 : 
-				Common.getRegisteredUser(context).id;
+				Common.getRegisteredUser(mContext).id;
 			score.group_id = scores.getInt(3);
 			score.value = (int)scores.getDouble(4);
 			score.sb_type = scores.getString(1);
@@ -524,21 +525,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return scoreArray;
 	}
 	
-	public ScoreBoard[] getSoloStatistics(Context context) {
+	public ScoreBoard[] getSoloStatistics() {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
 				Stats.GROUP_ID + "=" + 0, null);
-		return scoreBoardArrayFromScores(cursor, context);
+		return scoreBoardArrayFromScores(cursor);
 	}
 	
-	public ScoreBoard[] getGroupStatistics(Context context) {
+	public ScoreBoard[] getGroupStatistics() {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM statistics WHERE " + 
 				Stats.GROUP_ID + ">" + 0, null);
-		return scoreBoardArrayFromScores(cursor, context);
+		return scoreBoardArrayFromScores(cursor);
 	}
 	
-	public ScoreBoard[] getAllStatistics(Context context) {
+	public ScoreBoard[] getAllStatistics() {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Stats.TABLE, null);
-		return scoreBoardArrayFromScores(cursor, context);
+		return scoreBoardArrayFromScores(cursor);
 	}
 	
 	public int[] getGroupStatisticIds() {
@@ -710,8 +711,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	*/
 	
-	public void applyStatDiffs(Context context) {
-		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);
+	public void applyStatDiffs() {
+		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
 		Log.d(TAG, "applyStatDiffs(): num runs diff = " + prefs.getInt(Constants.DIFF_NUM_RUNS_KEY, 0));
 		increaseStatistic(Stats.DISTANCE_RAN_ID, -2, 
 				prefs.getFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f));
@@ -1352,9 +1353,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//cursor.close();
 	}
 	
-	public Cursor getAllUsers(Context context) {
+	public Cursor getAllUsers() {
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
-				Users.USER_ID + "<>" + Common.getRegisteredUser(context).id +
+				Users.USER_ID + "<>" + Common.getRegisteredUser(mContext).id +
 				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
 				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;
@@ -1411,7 +1412,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String tables = ScoreboardTemp.TABLE + "," + Users.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.USER_ID + "=" +
 			Users.TABLE + "." + Users.USER_ID + " AND " + 
-			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId + " AND " +
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
 				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;
@@ -1421,7 +1423,8 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String tables = ScoreboardTemp.TABLE + "," + GroupsTemp.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.GROUP_ID + "=" +
 			GroupsTemp.TABLE + "." + GroupsTemp.GROUP_ID + " AND " + 
-			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId;
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId + " AND " +
+			ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +
 				" ORDER BY " + ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + " DESC", null);
 		return cursor;

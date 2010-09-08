@@ -47,14 +47,6 @@ public class Common {
 	public static User getRegisteredUser(Context context) {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(context);		
 		User user = new User();
-		/*
-		user.id = 6;
-		user.first_name = "James";
-		user.last_name = "Yang";
-		user.email = "jkyang09@stanford.edu";
-		user.fb_id = 12345;
-		user.fb_photo = "http://profile.ak.fbcdn.net/v224/841/70/n213003_7394.jpg";
-		*/
 		
 		user.id = prefs.getInt(Constants.USERREG_ID_KEY, 0);
 		user.first_name = prefs.getString(Constants.USERREG_FIRSTNAME_KEY, null);
