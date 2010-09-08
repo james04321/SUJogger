@@ -2,8 +2,8 @@
 <classpath>
 	<classpathentry kind="con" path="com.android.ide.eclipse.adt.ANDROID_FRAMEWORK"/>
 	<classpathentry excluding="edu/stanford/cs/sujogger/util/BaseRequestListener.java" kind="src" path="src"/>
+	<classpathentry kind="src" path="FacebookSDK"/>
 	<classpathentry kind="src" path="gen"/>
-	<classpathentry kind="src" path="SUWebAuth"/>
 	<classpathentry kind="lib" path="/Volumes/Data/aslai/dev/cs294s/GamingSDK/gaming.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
