@@ -87,6 +87,7 @@ import com.google.android.maps.MapController;
 import com.google.android.maps.MapView;
 import com.google.android.maps.MyLocationOverlay;
 import com.google.android.maps.Overlay;
+import com.snaptic.integration.IntentIntegrator;
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -378,7 +379,18 @@ public class LoggerMap extends MapActivity {
 						getString(R.string.dialog_updating_stats), true);
 			else
 				updateAchievements();
-			
+			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
+			notesIntent.createNote("I am feeling good as I have exercised and created the " + trackName + " track.\n\n#Moovy", true);
+			/*
+			// Create a sample location
+			Location location = new Location(LocationManager.NETWORK_PROVIDER);
+			location.setLatitude(30.267153);
+			location.setLongitude(-97.743061);
+			  
+			// Create the note
+			IntentIntegrator notesIntent = new IntentIntegrator(context);
+			notesIntent.createNote("#sample", location);
+			*/
 			LoggerMap.this.dismissDialog(DIALOG_TRACKNAME);
 		}
 	};
