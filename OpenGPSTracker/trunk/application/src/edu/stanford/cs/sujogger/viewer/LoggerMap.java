@@ -1131,28 +1131,13 @@ public class LoggerMap extends MapActivity {
 		Builder builder = null;
 		switch (id) {
 		case DIALOG_TRACKNAME:
-			/*
-			builder = new AlertDialog.Builder(this);
-			factory = LayoutInflater.from(this);
-			view = factory.inflate(R.layout.namedialog, null);
-			mTrackNameView = (EditText) view.findViewById(R.id.nameField);
-			builder.setTitle(R.string.dialog_routename_title)
-			// .setMessage( R.string.dialog_routename_message )
-					.setIcon(android.R.drawable.ic_dialog_alert)
-			//		.setPositiveButton(
-			//				R.string.btn_okay, mTrackNameDialogListener)
-					.setView(view)
-					.setCancelable(false);
-			dialog = builder.create();
-			Button okButton = (Button)dialog.findViewById(R.id.ok_button);
-			okButton.setOnClickListener(mTrackNameDialogListener);
-			*/
 			dialog = new Dialog(this);
 			dialog.setContentView(R.layout.namedialog);
 			dialog.setTitle(R.string.dialog_routename_title);
 			dialog.setCancelable(false);
 			mTrackNameView = (EditText)dialog.findViewById(R.id.nameField);
 			Button okButton = (Button)dialog.findViewById(R.id.ok_button);
+			okButton.setVisibility(View.VISIBLE);
 			okButton.setOnClickListener(mTrackNameDialogListener);
 			return dialog;
 			/*

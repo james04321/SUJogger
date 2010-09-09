@@ -11,6 +11,7 @@
 	<Button 
 		android:id="@+id/ok_button"
 		android:text="@string/btn_okay"
+		android:visibility="gone"
 		android:layout_height="wrap_content"
 		android:layout_width="140dip"
 		android:layout_gravity="center_horizontal"
