@@ -26,6 +26,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.utils.TrackCreator;
+import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.DateView;
@@ -88,6 +89,7 @@ public class PeopleTrackList extends ListActivity {
 			}
 		}
 	};
+	private DatabaseHelper mDbHelper;
 	
 	class PeopleTrackListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
@@ -161,17 +163,20 @@ public class PeopleTrackList extends ListActivity {
 		
 		trackList = new ArrayList<Track>();
 		trackHash = new Hashtable<Integer, Track>();
-		
+		mDbHelper = new DatabaseHelper(this);
+		mDbHelper.openAndGetDb();
 		mHandler.postDelayed(mRefreshTask, 100);
 	}
 
 	public void finalize() {
+		mDbHelper.close();
 		mGamingServiceConn.unbind();
 		finish();
 		onDestroy();
 	}
 
 	public void onDestroy() {
+		mDbHelper.close();
 		mGamingServiceConn.unbind();
 		super.onDestroy();
 	}
@@ -224,8 +229,11 @@ public class PeopleTrackList extends ListActivity {
 		int objId = trackList.get(position).id;
 		String name = trackHash.get(objId).name;
 		Log.d(TAG, "objId = " + objId);
+		if (mDbHelper.getIdFromTrackId(objId) == -1) {
 		TrackCreator trackCreator = new TrackCreator(this);
 		trackCreator.downloadTrack(objId, name);
+		} else
+			Toast.makeText(this, "The track is already downloaded", Toast.LENGTH_LONG).show();
 	}
 	
 	class PeopleTrackListAdapter extends ArrayAdapter<Track> {

@@ -175,6 +175,21 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	}
 	
 	//ASLAI
+	public long getIdFromTrackId(long trackId) {
+    	openAndGetDb();	
+    	long id = -1;
+		Cursor cursor = mDb.query(Tracks.TABLE, new String[] { "_ID" }, "track_id = " + trackId, null, null, null, null);
+	    if (cursor != null) {
+	        if (cursor.getCount() > 0) {
+	        	cursor.moveToFirst();
+	        	id = cursor.getLong(0);
+	        }
+	    } 
+		cursor.close();
+		close();	
+		return id;		
+	}
+	//ASLAI
 	public ArrayList<Statistic> getStatistics(long group_id) {
 		ArrayList<Statistic> stats = new ArrayList<Statistic>();
     	openAndGetDb();	
