@@ -167,7 +167,10 @@ public class UserListAdapter extends CursorAdapter {
 			image.setLocalURI(Common.getCacheFileName(imgUrl));
 			image.setRemoteURI(imgUrl);
 		}
-		image.setVisibility(View.GONE);
+		else
+			image.setImageResource(R.drawable.icon);
+		
+		//image.setVisibility(View.GONE);
 	}
 
 	@Override
