@@ -395,7 +395,7 @@ public class MessageSender extends Activity {
 		mSendDialog = ProgressDialog.show(MessageSender.this, "", "Sending...", true);
 		try {
 			mGameCon.sendMessage(MSG_SEND_RID, mMsgObject, Messages.TYPE_GM, 
-					Common.getRegisteredUser(this), null, recipients, now, MessageSender.class.toString());	
+					Common.getRegisteredUser(this), null, recipients, now, Feed.class.toString());	
 		} catch (RemoteException e) {}
 	}
 	
