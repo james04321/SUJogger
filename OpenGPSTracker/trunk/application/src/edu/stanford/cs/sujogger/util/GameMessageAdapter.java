@@ -50,14 +50,14 @@ public class GameMessageAdapter extends CursorAdapter {
 	public View getView(int position, View convertView, ViewGroup parent) {
 		View ret = super.getView(position, convertView, parent);
 		//TODO: Facebook
-		/*
+		
 		if (ret != null) {
 			RemoteImageView image = (RemoteImageView) ret.findViewById(R.id.msg_item_image);
 			if (image != null && !mFlinging) {
 				Log.d(TAG, "getView(): trying to fetch image");
 				image.loadImage();
 			}
-		}*/
+		}
 		return ret;
 	}
 
@@ -79,11 +79,11 @@ public class GameMessageAdapter extends CursorAdapter {
 		
 		//TODO: Facebook
 		RemoteImageView image = (RemoteImageView)view.findViewById(R.id.msg_item_image);
-		//if (imgUrl != null) {
-		//	image.setLocalURI(Common.getCacheFileName(imgUrl));
-		//	image.setRemoteURI(imgUrl);
-		//}
-		image.setVisibility(View.GONE);
+		if (imgUrl != null) {
+			image.setLocalURI(Common.getCacheFileName(imgUrl));
+			image.setRemoteURI(imgUrl);
+		}
+		//image.setVisibility(View.GONE);
 		
 		TextView nameText = (TextView)view.findViewById(R.id.msg_item_name);
 		nameText.setText(firstName + " " + lastName);
