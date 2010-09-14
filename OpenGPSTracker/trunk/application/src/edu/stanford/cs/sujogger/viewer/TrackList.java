@@ -525,7 +525,7 @@ public class TrackList extends ListActivity {
 					+ Common.getRegisteredUser(this).id + " AND " + Tracks.NAME + " <> ''";
 			Log.d(TAG, "WHERECLAUSE IS " + whereClause);
 			tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
-					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID },
+					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID, Tracks.USER_ID },
 					whereClause, null, null);
 			Log.d(TAG, "displayIntent(): displaying all tracks. count = "
 							+ tracksCursor.getCount());
@@ -587,6 +587,10 @@ public class TrackList extends ListActivity {
 								.setCancelable(false)
 								.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) {
+										//TODO:Facebook
+										mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+												new LoginDialogListener());
+										
 										//mWa.authorize(TrackList.this, new LoginDialogListener());
 									}
 								}).show();
@@ -675,9 +679,19 @@ public class TrackList extends ListActivity {
 
 		public void onError(DialogError error) {
 			// SessionEvents.onLoginError(error.getMessage());
+			new AlertDialog.Builder(TrackList.this).setMessage(error.getMessage())
+				.setCancelable(false)
+				.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+							new LoginDialogListener());
+				}
+			}).show();
 		}
 
 		public void onCancel() {
+			Log.d(TAG, "onCancel()");
 			if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 				Toast toast = Toast.makeText(TrackList.this.getApplicationContext(),
 						"Facebook login is required", Toast.LENGTH_SHORT);

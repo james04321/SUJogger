@@ -83,6 +83,8 @@ public class GameMessageAdapter extends CursorAdapter {
 			image.setLocalURI(Common.getCacheFileName(imgUrl));
 			image.setRemoteURI(imgUrl);
 		}
+		else
+			image.setImageResource(R.drawable.icon);
 		//image.setVisibility(View.GONE);
 		
 		TextView nameText = (TextView)view.findViewById(R.id.msg_item_name);

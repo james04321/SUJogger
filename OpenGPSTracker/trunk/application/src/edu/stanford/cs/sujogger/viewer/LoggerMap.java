@@ -382,8 +382,7 @@ public class LoggerMap extends MapActivity {
 						getString(R.string.dialog_updating_stats), true);
 			else
 				updateAchievements();
-			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-			notesIntent.createNote("I am feeling good as I have exercised and created the " + trackName + " track.\n\n#Moovy", true);
+			
 			/*
 			// Create a sample location
 			Location location = new Location(LocationManager.NETWORK_PROVIDER);
@@ -2219,10 +2218,19 @@ public class LoggerMap extends MapActivity {
 			View toastLayout = getLayoutInflater().inflate(R.layout.ach_toast, 
 					(ViewGroup) findViewById(R.id.toast_layout_root));
 			
-			Common.displayAchievementToast(newAchCursor.getString(8), newAchCursor.getInt(7),
+			String title = newAchCursor.getString(8);
+			Common.displayAchievementToast(title, newAchCursor.getInt(7),
 					newAchCursor.getInt(4) == 0, getApplicationContext(), toastLayout);
+			
+			//TODO:Snaptic integration
+			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
+			notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + " miles. Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
 		}
-		newAchCursor.close();;
+		else {
+			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
+			notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + " miles!\n\n#HappyFeet", true);
+		}
+		newAchCursor.close();
 	}
 
 	/***

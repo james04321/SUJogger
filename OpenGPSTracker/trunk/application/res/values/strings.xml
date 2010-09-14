@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-	<string name="app_name">Stanford Jogger</string>
+	<string name="app_name">Happy Feet</string>
     <string name="service_start">Activating logging service</string>
 	<string name="service_gpsstatus">Logging: %s (%s with %d satellites)</string>
     <string name="service_networkstatus">Logging: %s (%s with cell tower and wifi)</string>
@@ -185,6 +185,6 @@
 <string name="menu_current_location">Current Location</string>
 <string name="btn_remove_all">Remove All</string>
 <string name="btn_clear_all">Clear All</string>
-<string name="map_title">Stanford Jogger</string>
+<string name="map_title">Happy Feet</string>
 <string name="msg_my_location_not_available">Your current location is not yet available</string>
 </resources>

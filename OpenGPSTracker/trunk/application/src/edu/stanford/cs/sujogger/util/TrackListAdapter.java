@@ -27,6 +27,7 @@ public class TrackListAdapter extends CursorAdapter {
 		String duration = cursor.getString(3);
 		String distance = cursor.getString(4);
 		int trackId = cursor.getInt(5);
+		int userId = cursor.getInt(6);
 		
 		TextView titleView = (TextView)view.findViewById(R.id.listitem_name);
 		titleView.setText(title);
@@ -41,7 +42,7 @@ public class TrackListAdapter extends CursorAdapter {
 		durationView.setText(duration);
 		
 		ImageView iconView = (ImageView)view.findViewById(R.id.listitem_icon);
-		if (trackId > 0)
+		if (trackId > 0 && userId == Common.getRegisteredUser(context).id)
 			iconView.setVisibility(View.VISIBLE);			
 		else
 			iconView.setVisibility(View.GONE);

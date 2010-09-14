@@ -584,8 +584,8 @@ public class SegmentOverlay extends Overlay
 
       //      Bitmap bitmap = BitmapFactory.decodeResource( this.mContext.getResources(), R.drawable.stip2 );
       //      this.mCanvas.drawBitmap( bitmap, this.mScreenPoint.x - 8, this.mScreenPoint.y - 8, new Paint() );
-
-      if( speed > 0 ) {
+      Log.d(TAG, "speed = " + speed);
+      if( speed >= 0.0 ) {
          int greenfactor = (int) Math.min( ( 127 * speed ) / mAvgSpeed, 255 );
          int redfactor = 255 - greenfactor;
          int currentColor = Color.rgb( redfactor, greenfactor, 0 );
