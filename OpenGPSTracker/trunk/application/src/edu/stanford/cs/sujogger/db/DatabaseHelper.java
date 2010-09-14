@@ -728,18 +728,18 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public void updateSoloScoreboards(ScoreBoard[] scores) {
 		boolean shouldUpdateAchievements = false;
 		ContentValues values = new ContentValues();
-		int[] allStats = Stats.ALL_STAT_IDS;
 		for (int i = 0; i < scores.length; i++) {
 			values.clear();
+			int statId = Integer.parseInt(scores[i].sb_type);
 			values.put(Stats.SCOREBOARD_ID, scores[i].id);
-			if (allStats[i] < 10) {//only retain previous "all time" statistics
+			if (statId < 10) {//only retain previous "all time" statistics
 				values.put(Stats.VALUE, scores[i].value);
 				if (scores[i].value > 0)
 					shouldUpdateAchievements = true;
 			}
 			mDb.update(Stats.TABLE, values, 
 					Stats.GROUP_ID + "=" + 0 + " AND " +
-					Stats.STATISTIC_ID + "=" + allStats[i], null);
+					Stats.STATISTIC_ID + "=" + statId, null);
 		}
 		
 		if (shouldUpdateAchievements)

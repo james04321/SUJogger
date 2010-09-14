@@ -2224,11 +2224,11 @@ public class LoggerMap extends MapActivity {
 			
 			//TODO:Snaptic integration
 			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-			notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + " miles. Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
+			notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
 		}
 		else {
 			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-			notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + " miles!\n\n#HappyFeet", true);
+			notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + "!\n\n#HappyFeet", true);
 		}
 		newAchCursor.close();
 	}
