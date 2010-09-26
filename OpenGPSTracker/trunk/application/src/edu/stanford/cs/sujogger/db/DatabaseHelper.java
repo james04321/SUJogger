@@ -1096,7 +1096,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return userArray;
 	}
 	
-	public Cursor getAllUsersExcludingGroup(long groupId, int selfId) {
+	public Cursor getAllUsersExcludingGroup(long groupId, int selfId, boolean onlyFriends) {
 		/**
 		 * SELECT DISTINCT users.* FROM users, groups_users WHERE users.user_id=groups_users.user_id
 		 * AND users.user_id NOT IN 
@@ -1108,6 +1108,9 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * AND users.user_id <> selfId
 		 * ORDER BY users.last_name, users.first_name
 		 */
+		
+		String friendCondition = onlyFriends ? " AND " + Users.TABLE + "." + Users.IS_FRIEND + "=1" : "";
+		
 		String subQuery = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
 			GroupsUsers.TABLE + " WHERE " + 
 			GroupsUsers.TABLE + "." + GroupsUsers.GROUP_ID + "=" + groupId + ")";
@@ -1120,7 +1123,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String subQuery2 = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
 			GroupsUsers.TABLE + ")";
 		String whereClause2 = Users.TABLE + "." + Users.USER_ID + " NOT IN " + subQuery2 + " AND " +
-			Users.TABLE + "." + Users.USER_ID + "<>" + selfId;
+			Users.TABLE + "." + Users.USER_ID + "<>" + selfId + friendCondition;
 		Cursor cursor = mDb.rawQuery("SELECT DISTINCT " + Users.TABLE + ".* FROM " + tables + 
 				" WHERE " + whereClause + " UNION" +
 				" SELECT " + Users.TABLE + ".* FROM " + Users.TABLE + " WHERE " + whereClause2 +
@@ -1353,9 +1356,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//cursor.close();
 	}
 	
-	public Cursor getAllUsers() {
+	public Cursor getAllUsers(boolean onlyFriends) {
+		String friendCondition = onlyFriends ? " AND " + Users.TABLE + "." + Users.IS_FRIEND + "=1" : "";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
-				Users.USER_ID + "<>" + Common.getRegisteredUser(mContext).id +
+				Users.USER_ID + "<>" + Common.getRegisteredUser(mContext).id + friendCondition +
 				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
 				Users.TABLE + "." + Users.FIRST_NAME, null);
 		return cursor;

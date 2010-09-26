@@ -75,7 +75,7 @@ public class GroupList extends ListActivity {
 	private static final int GRP_GET_RID = 2;
 	private static final int SB_CREATE_RID = 3;
 	private static final int SB_GET_RID = 4;
-	private static final int GET_USERS_RID = 5;
+	private static final int GET_FRIENDS_RID = 5;
 
 	// Views
 	private EditText mGroupNameView;
@@ -109,7 +109,7 @@ public class GroupList extends ListActivity {
 	private Runnable mFriendRefreshTask = new Runnable() {
 		public void run() {
 			try {
-				mGameCon.getInvitableFriends(GET_USERS_RID);
+				mGameCon.getInvitableFriends(GET_FRIENDS_RID);
 			}
 			catch (RemoteException e) {}
 		}
@@ -303,7 +303,7 @@ public class GroupList extends ListActivity {
 		if (mDisplayFriends) {
 			mBottomControlBar.setVisibility(View.GONE);
 			if (mUserAdapter == null) {
-				mCursor = mDbHelper.getAllUsers();
+				mCursor = mDbHelper.getAllUsers(true);
 				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
 			}
 			setListAdapter(mUserAdapter);
@@ -472,12 +472,12 @@ public class GroupList extends ListActivity {
 							}
 						});
 						break;
-					case GET_USERS_RID:
+					case GET_FRIENDS_RID:
 						final User[] users = (User[])appResponse.object;
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (users != null) {
-									mDbHelper.addUsers(users);
+									mDbHelper.addFriends(users);
 									mCursor.requery();
 									mUserAdapter.notifyDataSetChanged();
 									GroupList.this.getListView().invalidateViews();

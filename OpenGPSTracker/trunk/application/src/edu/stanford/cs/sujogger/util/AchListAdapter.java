@@ -41,7 +41,7 @@ public class AchListAdapter extends CursorAdapter {
 		
 		ImageView achIcon = (ImageView)view.findViewById(R.id.ach_list_item_image);
 		achIcon.setImageResource(cursor.getInt(7));
-		Log.d("AchListAdapter", "title = " + cursor.getString(8) + "; icon resource = " + Integer.toHexString(cursor.getInt(7)));
+		//Log.d("AchListAdapter", "title = " + cursor.getString(8) + "; icon resource = " + Integer.toHexString(cursor.getInt(7)));
 	}
 
 	@Override

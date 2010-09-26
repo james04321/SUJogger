@@ -59,14 +59,14 @@ public class FriendPicker extends ListActivity {
 	
 	//Request IDs
 	private static final int GRP_ADDUSER_RID = 1;
-	private static final int GET_USERS_RID = 2;
-	//private static final int GET_FRIENDS_RID = 3;
+	//private static final int GET_USERS_RID = 2;
+	private static final int GET_FRIENDS_RID = 3;
 	
 	private Runnable mRefreshTask = new Runnable() {
 		public void run() {
 			mUserWaitDialog = ProgressDialog.show(FriendPicker.this, "", "Retrieving friends...", true);
 			try {
-				mGameCon.getAppsUser(GET_USERS_RID);
+				mGameCon.getAppsUser(GET_FRIENDS_RID);
 				//mGameCon.getInvitableFriends(GET_FRIENDS_RID);
 			} catch (RemoteException e) {}
 		}
@@ -102,7 +102,7 @@ public class FriendPicker extends ListActivity {
 		mGameCon.bind();
 		mGameCon.setUserId(Common.getRegisteredUser(this).id);
 		
-		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId, Common.getRegisteredUser(this).id);
+		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId, Common.getRegisteredUser(this).id, true);
 		startManagingCursor(mUsers);
 		
 		setTitle("Friends");
@@ -251,12 +251,12 @@ public class FriendPicker extends ListActivity {
 							}
 						});
 						break;
-					case GET_USERS_RID:
+					case GET_FRIENDS_RID:
 						final User[] users = (User[])appResponse.object;
 						FriendPicker.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (users != null) {
-									mDbHelper.addUsers(users);
+									mDbHelper.addFriends(users);
 									//mGetUsersFriendsProgress++;
 									//if (mGetUsersFriendsProgress >= 2) {
 										Editor editor = mSharedPreferences.edit();
