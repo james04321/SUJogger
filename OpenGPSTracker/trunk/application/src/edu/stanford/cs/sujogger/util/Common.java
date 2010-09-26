@@ -29,6 +29,7 @@ public class Common {
 	}
 	
 	public static String getCacheFileName(String url) {
+		if (url == null) return null;
 		return CACHE_DIRECTORY + url.hashCode() + ".jpg";
 	}
 	

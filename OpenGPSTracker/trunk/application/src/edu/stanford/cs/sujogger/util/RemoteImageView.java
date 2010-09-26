@@ -29,7 +29,8 @@ public class RemoteImageView extends ImageView {
 	}
 
 	public void setRemoteURI(String uri) {
-		if (uri.startsWith("http")) {
+		if (uri == null) mRemote = null;
+		else if (uri.startsWith("http")) {
 			mRemote = uri;
 		}
 	}
@@ -54,6 +55,8 @@ public class RemoteImageView extends ImageView {
 				queue();
 			}
 		}
+		else
+			setImageResource(R.drawable.icon);
 	}
 
 	@Override

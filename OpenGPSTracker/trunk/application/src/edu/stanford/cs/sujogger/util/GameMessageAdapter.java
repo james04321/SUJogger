@@ -79,12 +79,8 @@ public class GameMessageAdapter extends CursorAdapter {
 		
 		//TODO: Facebook
 		RemoteImageView image = (RemoteImageView)view.findViewById(R.id.msg_item_image);
-		if (imgUrl != null) {
-			image.setLocalURI(Common.getCacheFileName(imgUrl));
-			image.setRemoteURI(imgUrl);
-		}
-		else
-			image.setImageResource(R.drawable.icon);
+		image.setLocalURI(Common.getCacheFileName(imgUrl));
+		image.setRemoteURI(imgUrl);
 		//image.setVisibility(View.GONE);
 		
 		TextView nameText = (TextView)view.findViewById(R.id.msg_item_name);
