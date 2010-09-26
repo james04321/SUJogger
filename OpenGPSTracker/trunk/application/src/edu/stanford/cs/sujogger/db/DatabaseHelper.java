@@ -1320,9 +1320,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
 		values.put(Users.IS_FRIEND, 1);
-		if (mDb.insert(Users.TABLE, null, values) == 0) {
+		
+		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.USER_ID + "=" + user.id, null);
+		if (existingUser.getCount() > 0)
 			mDb.update(Users.TABLE, values, Users.USER_ID + "=" + user.id, null);
-		}
+		else
+			mDb.insert(Users.TABLE, null, values);
 	}
 	
 	//Add all users to user table and let table constraints handle duplicates
