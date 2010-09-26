@@ -163,12 +163,8 @@ public class UserListAdapter extends CursorAdapter {
 		
 		//TODO: Facebook
 		RemoteImageView image = (RemoteImageView)view.findViewById(R.id.user_image);
-		if (imgUrl != null) {
-			image.setLocalURI(Common.getCacheFileName(imgUrl));
-			image.setRemoteURI(imgUrl);
-		}
-		else
-			image.setImageResource(R.drawable.icon);
+		image.setLocalURI(Common.getCacheFileName(imgUrl));
+		image.setRemoteURI(imgUrl);
 		
 		//image.setVisibility(View.GONE);
 	}
