@@ -1,6 +1,13 @@
 package edu.stanford.cs.sujogger.viewer;
 
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+
+import org.json.JSONArray;
+import org.json.JSONException;
+import org.json.JSONObject;
 
 import android.app.AlertDialog;
 import android.app.Dialog;
@@ -32,6 +39,13 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
+
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.Facebook;
+import com.facebook.android.FacebookError;
+import com.facebook.android.Util;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
@@ -67,6 +81,10 @@ public class GroupList extends ListActivity {
 	private GamingServiceConnection mGameCon;
 	private GroupListReceiver mReceiver;
 	private Handler mHandler = new Handler();
+	
+	//TODO: Facebook
+	private Facebook mFacebook;
+	private AsyncFacebookRunner mAsyncRunner;
 
 	private static final int MENU_REFRESH = 0;
 	
@@ -76,6 +94,7 @@ public class GroupList extends ListActivity {
 	private static final int SB_CREATE_RID = 3;
 	private static final int SB_GET_RID = 4;
 	private static final int GET_FRIENDS_RID = 5;
+	private static final int USERREG_RID = 6;
 
 	// Views
 	private EditText mGroupNameView;
@@ -132,6 +151,17 @@ public class GroupList extends ListActivity {
 				Constants.APP_API_KEY, GroupList.class.toString());
 		mGameCon.bind();
 		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		
+		//TODO: Facebook
+		mFacebook = null;
+		mAsyncRunner = null;
+		if (mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
+			mFacebook = new Facebook();
+			String accessToken = mSharedPreferences.getString(Constants.FB_ACCESS_TOKEN_KEY, null);
+			mFacebook.setAccessToken(accessToken);
+			
+			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
+		}
 		
 		mGroupIdTemp = 0;
 		
@@ -277,7 +307,13 @@ public class GroupList extends ListActivity {
 	
 	private void refreshData(boolean delay, boolean force) {
 		if (mDisplayFriends) {
-			if (System.currentTimeMillis() - 
+			if ((System.currentTimeMillis() - 
+					mSharedPreferences.getLong(Constants.FB_UPDATE_KEY, 0) >
+						Constants.FB_UPDATE_INTERVAL || force) && 
+						mSharedPreferences.getString(Constants.FB_ACCESS_TOKEN_KEY, null) != null) {
+				mAsyncRunner.request("me/friends", new FriendsRequestListener());
+			}
+			else if (System.currentTimeMillis() - 
 					mSharedPreferences.getLong(Constants.ALL_USERS_UPDATE_KEY, 0) > 
 						Constants.UPDATE_INTERVAL || force)
 				if (delay)
@@ -379,6 +415,18 @@ public class GroupList extends ListActivity {
 					}
 					
 					switch (appResponse.request_id) {
+					case USERREG_RID:
+						final int userId = (Integer) appResponse.object;
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Log.d(TAG, "onReceive(): user registered");
+								Editor editor = mSharedPreferences.edit();
+								editor.putLong(Constants.FB_UPDATE_KEY, System.currentTimeMillis());
+								editor.commit();
+								mHandler.post(mFriendRefreshTask);
+							}
+						});
+						break;
 					case GRP_GET_RID:
 						final Group[] groups = (Group[]) (appResponse.object);
 						GroupList.this.runOnUiThread(new Runnable() {
@@ -500,5 +548,64 @@ public class GroupList extends ListActivity {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private class FriendsRequestListener implements RequestListener {
+
+		public void onComplete(final String response) {
+			try {
+				// process the response here: executed in background thread
+				Log.d(TAG, "Response: " + response.toString());
+				JSONObject json = Util.parseJson(response);
+
+				JSONArray friends = json.getJSONArray("data");
+				if (friends == null)
+					return;
+
+				final long[] fbIds = new long[friends.length()];
+				JSONObject friend;
+				for (int i = 0; i < friends.length(); i++) {
+					friend = friends.getJSONObject(i);
+					fbIds[i] = friend.getInt("id");
+					Log.d(TAG, "fb_id = " + fbIds[i]);
+				}
+
+				GroupList.this.runOnUiThread(new Runnable() {
+					public void run() {
+						User user = Common.getRegisteredUser(GroupList.this);
+						user.friend_fb_ids = fbIds;
+						
+						try {
+							mGameCon.registerUser(USERREG_RID, user);
+						}
+						catch (RemoteException e) {}
+					}
+				});
+			}
+			catch (JSONException e) {
+				Log.w("Facebook-Example", "JSON Error in response");
+			}
+			catch (FacebookError e) {
+				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+			}
+		}
+
+		public void onFacebookError(FacebookError e) {}
+
+		public void onFileNotFoundException(FileNotFoundException e) {
+			Log.d(TAG, "onFileNotFoundException");
+		}
+
+		public void onIOException(IOException e) {
+			GroupList.this.runOnUiThread(new Runnable() {
+				public void run() {
+					Toast toast = Toast.makeText(GroupList.this, 
+							R.string.connection_error_toast, Toast.LENGTH_SHORT);
+					toast.show();
+				}
+			});
+		}
+
+		public void onMalformedURLException(MalformedURLException e) {}
 	}
 }

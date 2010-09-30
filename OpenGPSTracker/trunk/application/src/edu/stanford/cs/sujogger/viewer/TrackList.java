@@ -218,7 +218,6 @@ public class TrackList extends ListActivity {
 		registerForContextMenu(getListView());
 		
 		//TODO: Facebook
-		
 		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 			mFacebook = new Facebook();
 			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
@@ -667,6 +666,11 @@ public class TrackList extends ListActivity {
 		public void onComplete(Bundle values) {
 			// SessionEvents.onLoginSuccess();
 			Log.d(TAG, "Facebook login successfull!!!");
+			if (mFacebook.getAccessToken() != null) {
+				Editor editor = mSharedPreferences.edit();
+				editor.putString(Constants.FB_ACCESS_TOKEN_KEY, mFacebook.getAccessToken());
+				editor.commit();
+			}
 			mDialogFriendInit = ProgressDialog.show(TrackList.this, "",
 					"Retrieving your friends...", true);
 			mAsyncRunner.request("me", new UserInfoRequestListener());
