@@ -38,7 +38,7 @@ public class DurationView extends TextView {
 		
 		long hours, minutes, seconds;
 		hours = mDurationSec / 3600;
-		longVal = mDurationSec - (hours * 3600);
+		mDurationSec = mDurationSec - (hours * 3600);
 		minutes = mDurationSec / 60;
 		mDurationSec = mDurationSec - (minutes * 60);
 		seconds = mDurationSec;

@@ -91,7 +91,7 @@ public class Common {
 		long durationSec = val / 1000;
 		long hours, minutes, seconds;
 		hours = durationSec / 3600;
-		val = durationSec - (hours * 3600);
+		durationSec = durationSec - (hours * 3600);
 		minutes = durationSec / 60;
 		durationSec = durationSec - (minutes * 60);
 		seconds = durationSec;
