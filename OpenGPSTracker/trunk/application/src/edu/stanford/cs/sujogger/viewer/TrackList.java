@@ -521,6 +521,7 @@ public class TrackList extends ListActivity {
 			// Got to nothing, make a list of everything
 			if (mDownloadedTracks) {
 				tracksCursor = mDbHelper.getDownloadedTracks(Common.getRegisteredUser(this).id);
+				startManagingCursor(tracksCursor);
 			}
 			else {
 				String whereClause = null;
