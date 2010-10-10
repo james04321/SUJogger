@@ -16,9 +16,11 @@
 	   		android:layout_height="wrap_content">
 	   		
 			<TextView android:id="@+id/listitem_name"
-				android:layout_width="wrap_content"
+				android:layout_width="200dip"
 	   			android:layout_height="wrap_content"
 	   			android:layout_marginBottom="2dip"
+	   			android:singleLine="true"
+	   			android:ellipsize="end"
 				android:textAppearance="?android:attr/textAppearanceLarge"
 				/>
 			<ImageView android:id="@+id/listitem_icon"
@@ -39,7 +41,7 @@
 	
 	<TableRow android:id="@+id/TableRow01">
 				
-		<edu.stanford.cs.sujogger.util.DateView
+		<TextView
 			android:id="@+id/listitem_from"
 			android:textAppearance="?android:attr/textAppearanceSmall"
 			/>

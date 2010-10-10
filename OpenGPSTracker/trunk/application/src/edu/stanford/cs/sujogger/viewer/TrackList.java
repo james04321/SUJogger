@@ -519,13 +519,18 @@ public class TrackList extends ListActivity {
 		}
 		else {
 			// Got to nothing, make a list of everything
-			String whereClause = null;
-			whereClause = Tracks.USER_ID + (mDownloadedTracks ? "!=" : "=")
-					+ Common.getRegisteredUser(this).id + " AND " + Tracks.NAME + " <> ''";
-			Log.d(TAG, "WHERECLAUSE IS " + whereClause);
-			tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
-					Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID, Tracks.USER_ID },
-					whereClause, null, null);
+			if (mDownloadedTracks) {
+				tracksCursor = mDbHelper.getDownloadedTracks(Common.getRegisteredUser(this).id);
+			}
+			else {
+				String whereClause = null;
+				whereClause = Tracks.USER_ID + (mDownloadedTracks ? "!=" : "=")
+						+ Common.getRegisteredUser(this).id + " AND " + Tracks.NAME + " <> ''";
+				Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+				tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
+						Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID, Tracks.USER_ID },
+						whereClause, null, null);
+			}
 			Log.d(TAG, "displayIntent(): displaying all tracks. count = "
 							+ tracksCursor.getCount());
 			displayCursor(tracksCursor);

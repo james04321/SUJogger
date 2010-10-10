@@ -1,5 +1,7 @@
 package edu.stanford.cs.sujogger.util;
 
+import java.text.DateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -101,6 +103,11 @@ public class Common {
 		text += String.format("%02d", minutes) + ":";
 		text += String.format("%02d", seconds);
 		return text;
+	}
+	
+	public static String dateString(long val) {
+		Date date = new Date(val);
+	    return DateFormat.getInstance().format(date);
 	}
 	
 	public static String speedString(Context context, double val) {

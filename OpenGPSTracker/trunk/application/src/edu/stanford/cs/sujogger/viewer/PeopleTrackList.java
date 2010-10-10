@@ -29,7 +29,6 @@ import edu.stanford.cs.sujogger.actions.utils.TrackCreator;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
-import edu.stanford.cs.sujogger.util.DateView;
 import edu.stanford.cs.sujogger.util.DistanceView;
 import edu.stanford.cs.sujogger.util.DurationView;
 import android.app.ListActivity;
@@ -255,24 +254,15 @@ public class PeopleTrackList extends ListActivity {
 			if (o != null) {
 				TextView titleView = (TextView) v.findViewById(R.id.listitem_name);
 				titleView.setText(o.name);
-
-				DateView creationTimeView = (DateView) v.findViewById(R.id.listitem_from);
-				// creationTimeView.setText(creationTime);
-				creationTimeView.setVisibility(View.INVISIBLE);
+				
 				DistanceView distanceView = (DistanceView) v.findViewById(R.id.listitem_distance);
 				distanceView.setText("" + o.distance);
 
 				DurationView durationView = (DurationView) v.findViewById(R.id.listitem_duration);
 				durationView.setText("" + o.duration);
+				
 				ImageView iconView = (ImageView) v.findViewById(R.id.listitem_icon);
-				// if (trackId != null)
 				iconView.setVisibility(View.GONE);
-				/*
-				 * TextView tt = (TextView) v.findViewById(R.id.toptext);
-				 * TextView bt = (TextView) v.findViewById(R.id.bottomtext); if
-				 * (tt != null) { tt.setText("Name: "+o.getOrderName()); } if(bt
-				 * != null){ bt.setText("Status: "+ o.getOrderStatus()); }
-				 */
 			}
 			return v;
 		}

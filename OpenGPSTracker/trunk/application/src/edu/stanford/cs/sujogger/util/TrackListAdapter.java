@@ -23,17 +23,24 @@ public class TrackListAdapter extends CursorAdapter {
 	@Override
 	public void bindView(View view, Context context, Cursor cursor) {
 		String title = cursor.getString(1);
-		String creationTime = cursor.getString(2);
+		long creationTime = cursor.getLong(2);
 		String duration = cursor.getString(3);
 		String distance = cursor.getString(4);
 		int trackId = cursor.getInt(5);
 		int userId = cursor.getInt(6);
+		String firstName = cursor.getString(8);
+		String lastName = cursor.getString(9);
+		int myUserId = Common.getRegisteredUser(context).id;
 		
 		TextView titleView = (TextView)view.findViewById(R.id.listitem_name);
 		titleView.setText(title);
 		
-		DateView creationTimeView = (DateView)view.findViewById(R.id.listitem_from);
-		creationTimeView.setText(creationTime);
+		TextView dateView = (TextView)view.findViewById(R.id.listitem_from);
+		if (userId == myUserId)
+			dateView.setText(Common.dateString(creationTime));
+		else {
+			dateView.setText(firstName + " " + lastName);
+		}
 		
 		DistanceView distanceView = (DistanceView)view.findViewById(R.id.listitem_distance);
 		distanceView.setText(distance);
@@ -42,7 +49,7 @@ public class TrackListAdapter extends CursorAdapter {
 		durationView.setText(duration);
 		
 		ImageView iconView = (ImageView)view.findViewById(R.id.listitem_icon);
-		if (trackId > 0 && userId == Common.getRegisteredUser(context).id)
+		if (trackId > 0 && userId == myUserId)
 			iconView.setVisibility(View.VISIBLE);			
 		else
 			iconView.setVisibility(View.GONE);

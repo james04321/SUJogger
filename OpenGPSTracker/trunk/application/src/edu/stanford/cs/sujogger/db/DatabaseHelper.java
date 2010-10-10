@@ -309,6 +309,20 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return mediaId;
 	}
 	
+	public Cursor getDownloadedTracks(int myUserId) {
+		/*
+		 * SELECT tracks.*,users.first_name,users.last_name FROM tracks LEFT JOIN users ON
+		 * tracks.user_id = users.user_id WHERE tracks.user_id <> myUserId
+		 */
+		String whereClause = Tracks.TABLE + "." + Tracks.USER_ID + "<>" + myUserId;
+		String joinCondition = Tracks.TABLE + "." + Tracks.USER_ID + "=" + Users.TABLE + "." + Users.USER_ID;
+		Cursor cursor = mDb.rawQuery("SELECT " + Tracks.TABLE + ".*," + 
+				Users.TABLE + "." + Users.FIRST_NAME + "," + 
+				Users.TABLE + "." + Users.LAST_NAME + " FROM " + Tracks.TABLE + " LEFT JOIN " +
+				Users.TABLE + " ON " + joinCondition + " WHERE " + whereClause, null);
+		return cursor;
+	}
+	
 	public long createTrack(ContentValues contentValues) {
 //		contentValues.put(Tracks.CREATION_TIME, new Date().getTime());
 		long id = mDb.insert(Tracks.TABLE, null, contentValues);
