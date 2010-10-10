@@ -157,7 +157,7 @@ public class LoggerMap extends MapActivity {
 	private static final String TAG = "OGT.LoggerMap";
 	public static final String PARTNER_RUN_KEY = "partner_run";
 	//private double mAverageSpeed = 4.4704; //in m/s
-	private double mAverageSpeed = 3.12928; //in m/s
+	private double mAverageSpeed = 2.2352; //in m/s
 	//ASLAI
 	private ArrayList<Track> mTrackIds = new ArrayList<Track>();
 	private ArrayList<Track> mTrackIdsForDialog;

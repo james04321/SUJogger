@@ -152,7 +152,7 @@ public class MessageSender extends Activity {
 				case GameMessages.TYPE_GENERIC: 
 					mMessageType = GameMessages.TYPE_GENERIC;
 					datetimeLayout.setVisibility(View.GONE);
-					allButton.setVisibility(View.VISIBLE);
+					//allButton.setVisibility(View.VISIBLE);
 					subjectText.setEnabled(true);
 					subjectText.setHint("Subject");
 					subjectText.requestFocus();
@@ -160,14 +160,14 @@ public class MessageSender extends Activity {
 				case GameMessages.TYPE_INVITE:
 					mMessageType = GameMessages.TYPE_INVITE;
 					datetimeLayout.setVisibility(View.VISIBLE);
-					allButton.setVisibility(View.GONE);
+					//allButton.setVisibility(View.GONE);
 					subjectText.setEnabled(false);
 					bodyText.requestFocus();
 					break;
 				case GameMessages.TYPE_CHALLENGE: 
 					mMessageType = GameMessages.TYPE_CHALLENGE;
 					datetimeLayout.setVisibility(View.VISIBLE);
-					allButton.setVisibility(View.GONE);
+					//allButton.setVisibility(View.GONE);
 					subjectText.setEnabled(false);
 					bodyText.requestFocus();
 					break;
@@ -201,6 +201,7 @@ public class MessageSender extends Activity {
 		datetimeLayout = findViewById(R.id.msg_datetime_layout);
 		
 		allButton = (Button) findViewById(R.id.msg_to_all);
+		allButton.setVisibility(View.GONE);
 		allButton.setOnClickListener(new View.OnClickListener() {
 			
 			public void onClick(View v) {
@@ -251,7 +252,8 @@ public class MessageSender extends Activity {
 		sendButton.setOnClickListener(new View.OnClickListener() {
 			
 			public void onClick(View v) {
-				if (mMessageType != GameMessages.TYPE_GENERIC && mGroupId == 0 && mUsers == null) {
+				//if (mMessageType != GameMessages.TYPE_GENERIC && mGroupId == 0 && mUsers == null) {
+				if (mGroupId == 0 && mUsers == null) {
 					Toast toast = Toast.makeText(MessageSender.this, 
 							"Select a group or some friends to send to", Toast.LENGTH_SHORT);
 					toast.show();
@@ -326,9 +328,9 @@ public class MessageSender extends Activity {
 	private void updateRecipients() {
 		Log.d(TAG, "updateRecipients()");
 		if (mGroupId == 0 && mUsers == null) {
-			if (mMessageType == GameMessages.TYPE_GENERIC)
-				msgRecipientText.setText("To: All");
-			else
+			//if (mMessageType == GameMessages.TYPE_GENERIC)
+			//	msgRecipientText.setText("To: All");
+			//else
 				msgRecipientText.setText("To: ");
 		}
 		else if (mGroupId > 0) {
