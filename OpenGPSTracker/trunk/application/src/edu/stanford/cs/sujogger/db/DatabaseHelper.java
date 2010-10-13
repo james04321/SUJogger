@@ -89,7 +89,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	private static int DB_VERSION = 1;
 	
 	private Context mContext;
-	private SQLiteDatabase mDb;
+	public SQLiteDatabase mDb;
 
 	public DatabaseHelper(Context context) {
 		super(context, DB_NAME, null, DB_VERSION);
@@ -1316,30 +1316,38 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		return mDb.update(GameMessages.TABLE, values, GameMessages._ID + "=" + msgId, null) == 1;
 	}
 	
-	public boolean addUser(User user) {
+	public void addUser(User user) {
 		ContentValues values = new ContentValues();
 		values.put(Users.USER_ID, user.id);
 		values.put(Users.FB_ID, user.fb_id);
 		values.put(Users.FIRST_NAME, user.first_name);
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
-		return mDb.insert(Users.TABLE, null, values) > 0;
+		
+		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.FB_ID + "=" + user.fb_id, null);
+		if (existingUser.getCount() > 0)
+			mDb.update(Users.TABLE, values, Users.FB_ID + "=" + user.fb_id, null);
+		else
+			mDb.insert(Users.TABLE, null, values);
+		existingUser.close();
 	}
 	
 	public void addFriend(User user) {
 		ContentValues values = new ContentValues();
 		values.put(Users.USER_ID, user.id);
 		values.put(Users.FB_ID, user.fb_id);
-		values.put(Users.FIRST_NAME, user.first_name);
+		if (user.first_name != null)
+			values.put(Users.FIRST_NAME, user.first_name);
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
 		values.put(Users.IS_FRIEND, 1);
 		
-		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.USER_ID + "=" + user.id, null);
+		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.FB_ID + "=" + user.fb_id, null);
 		if (existingUser.getCount() > 0)
-			mDb.update(Users.TABLE, values, Users.USER_ID + "=" + user.id, null);
+			mDb.update(Users.TABLE, values, Users.FB_ID + "=" + user.fb_id, null);
 		else
 			mDb.insert(Users.TABLE, null, values);
+		existingUser.close();
 	}
 	
 	//Add all users to user table and let table constraints handle duplicates
@@ -1373,12 +1381,12 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		//cursor.close();
 	}
 	
-	public Cursor getAllUsers(boolean onlyFriends) {
-		String friendCondition = onlyFriends ? " AND " + Users.TABLE + "." + Users.IS_FRIEND + "=1" : "";
+	public Cursor getAllUsers(boolean onlyFriends, boolean registered) {
+		String friendCondition = onlyFriends ? " AND " + Users.IS_FRIEND + "=1" : "";
+		String regCondition = registered ? " AND " + Users.USER_ID + ">0" : " AND " + Users.USER_ID + "=0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " +
 				Users.USER_ID + "<>" + Common.getRegisteredUser(mContext).id + friendCondition +
-				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
-				Users.TABLE + "." + Users.FIRST_NAME, null);
+				regCondition + " ORDER BY " + Users.FIRST_NAME + "," + Users.LAST_NAME, null);
 		return cursor;
 	}
 	

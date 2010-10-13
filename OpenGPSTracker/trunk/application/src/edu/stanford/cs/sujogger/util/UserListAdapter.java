@@ -52,7 +52,11 @@ public class UserListAdapter extends CursorAdapter {
 	public Object getItem(int position) {
 		if (position >= 0 && position < mCursor.getCount()) {
 			mCursor.moveToPosition(position);
-			return mCursor.getInt(1);
+			int userId = mCursor.getInt(1);
+			if (userId > 0)
+				return userId;
+			else
+				return mCursor.getLong(2);
 		}
 		else return null;
 	}
@@ -159,7 +163,10 @@ public class UserListAdapter extends CursorAdapter {
 		String imgUrl = cursor.getString(5);
 		
 		TextView name = (TextView)view.findViewById(R.id.user_name);
-		name.setText(firstName + " " + lastName);
+		if (firstName == null)
+			name.setText(lastName);
+		else
+			name.setText(firstName + " " + lastName);
 		
 		//TODO: Facebook
 		RemoteImageView image = (RemoteImageView)view.findViewById(R.id.user_image);

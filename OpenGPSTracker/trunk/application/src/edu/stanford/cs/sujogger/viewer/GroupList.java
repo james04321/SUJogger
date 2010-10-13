@@ -22,6 +22,7 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
+import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -59,6 +60,7 @@ import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GroupListAdapter;
 import edu.stanford.cs.sujogger.util.SegmentedControl;
+import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 import edu.stanford.cs.sujogger.util.UserListAdapter;
 
 public class GroupList extends ListActivity {
@@ -69,8 +71,11 @@ public class GroupList extends ListActivity {
 
 	private DatabaseHelper mDbHelper;
 	private Cursor mCursor;
+	private Cursor mUnregFriendsCursor;
 	private GroupListAdapter mGroupAdapter;
 	private UserListAdapter mUserAdapter;
+	private UserListAdapter mUnregFriendsAdapter;
+	private SeparatedListAdapter mGroupedAdapter;
 	private int mGroupIdTemp;
 	private SharedPreferences mSharedPreferences;
 	private boolean mDisplayFriends;
@@ -249,11 +254,20 @@ public class GroupList extends ListActivity {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
 		if (mDisplayFriends) {
-			int userId = (Integer) mUserAdapter.getItem(position);
-			Log.d(TAG, "userID = " + userId);
-			Intent i = new Intent(this, PeopleTrackList.class);
-			i.putExtra("userId", userId);
-			startActivity(i);
+			Object item = mGroupedAdapter.getItem(position);
+			if (item.getClass() == Integer.class) {
+				int userId = (Integer) item;
+				Log.d(TAG, "userID = " + userId);
+				Intent i = new Intent(this, PeopleTrackList.class);
+				i.putExtra("userId", userId);
+				startActivity(i);
+			}
+			else if (item.getClass() == Long.class) {
+				long fbId = (Long) item;
+				Log.d(TAG, "fbId = " + fbId);
+				Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse("http://m.facebook.com/inbox/?compose&ids=" + fbId));  
+				startActivity(viewIntent);
+			}
 		}
 		else {
 			Object item = mGroupAdapter.getItem(position);
@@ -339,10 +353,20 @@ public class GroupList extends ListActivity {
 		if (mDisplayFriends) {
 			mBottomControlBar.setVisibility(View.GONE);
 			if (mUserAdapter == null) {
-				mCursor = mDbHelper.getAllUsers(true);
+				mCursor = mDbHelper.getAllUsers(true, true);
 				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
 			}
-			setListAdapter(mUserAdapter);
+			if (mUnregFriendsAdapter == null) {
+				mUnregFriendsCursor = mDbHelper.getAllUsers(true, false);
+				startManagingCursor(mUnregFriendsCursor);
+				mUnregFriendsAdapter = new UserListAdapter(this, mUnregFriendsCursor, false, null);
+			}
+			if (mGroupedAdapter == null) {
+				mGroupedAdapter = new SeparatedListAdapter(this);
+				mGroupedAdapter.addSection("Friends on Happy Feet", mUserAdapter);
+				mGroupedAdapter.addSection("Unregistered Friends", mUnregFriendsAdapter);
+			}
+			setListAdapter(mGroupedAdapter);
 		}
 		else {
 			mBottomControlBar.setVisibility(View.VISIBLE);
@@ -558,27 +582,44 @@ public class GroupList extends ListActivity {
 				Log.d(TAG, "Response: " + response.toString());
 				JSONObject json = Util.parseJson(response);
 
-				JSONArray friends = json.getJSONArray("data");
+				final JSONArray friends = json.getJSONArray("data");
 				if (friends == null)
 					return;
-
-				final long[] fbIds = new long[friends.length()];
-				JSONObject friend;
-				for (int i = 0; i < friends.length(); i++) {
-					friend = friends.getJSONObject(i);
-					fbIds[i] = friend.getInt("id");
-					Log.d(TAG, "fb_id = " + fbIds[i]);
-				}
-
+				
 				GroupList.this.runOnUiThread(new Runnable() {
 					public void run() {
-						User user = Common.getRegisteredUser(GroupList.this);
-						user.friend_fb_ids = fbIds;
-						
 						try {
-							mGameCon.registerUser(USERREG_RID, user);
+							final long[] fbIds = new long[friends.length()];
+							User newFriend = new User();
+							JSONObject friend;
+							mDbHelper.mDb.beginTransaction();
+							try {
+								for (int i = 0; i < friends.length(); i++) {
+									friend = friends.getJSONObject(i);
+									fbIds[i] = friend.getInt("id");
+									Log.d(TAG, "fb_id = " + fbIds[i]);
+									
+									newFriend.fb_id = friend.getInt("id");
+									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
+									newFriend.last_name = friend.getString("name");
+									mDbHelper.addFriend(newFriend);
+								}
+								mDbHelper.mDb.setTransactionSuccessful();
+							} finally {
+								mDbHelper.mDb.endTransaction();
+							}
+					
+							User user = Common.getRegisteredUser(GroupList.this);
+							user.friend_fb_ids = fbIds;
+							
+							try {
+								mGameCon.registerUser(USERREG_RID, user);
+							}
+							catch (RemoteException e) {}
 						}
-						catch (RemoteException e) {}
+						catch (JSONException e) {
+							Log.w("Facebook-Example", "JSON Error in response");
+						}
 					}
 				});
 			}

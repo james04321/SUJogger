@@ -646,6 +646,7 @@ public class TrackList extends ListActivity {
 								Log.d(TAG, "onReceive(): user registered");
 								Editor editorUser = mSharedPreferences.edit();
 								editorUser.putInt(Constants.USERREG_ID_KEY, userId);
+								editorUser.putLong(Constants.FB_UPDATE_KEY, System.currentTimeMillis());
 								editorUser.commit();
 								try {
 									mGameCon.getScoreBoards(GET_SBS_RID, userId, -1, null, null);
@@ -760,23 +761,39 @@ public class TrackList extends ListActivity {
 				Log.d(TAG, "Response: " + response.toString());
 				JSONObject json = Util.parseJson(response);
 
-				JSONArray friends = json.getJSONArray("data");
+				final JSONArray friends = json.getJSONArray("data");
 				if (friends == null)
 					return;
-
-				long[] fbIds = new long[friends.length()];
-				JSONObject friend;
-				for (int i = 0; i < friends.length(); i++) {
-					friend = friends.getJSONObject(i);
-					fbIds[i] = friend.getInt("id");
-					Log.d(TAG, "fb_id = " + fbIds[i]);
-				}
-
-				mFriendFbIds = fbIds;
-
+				
 				TrackList.this.runOnUiThread(new Runnable() {
 					public void run() {
-						registerUser();
+						try {
+							long[] fbIds = new long[friends.length()];
+							User newFriend = new User();
+							JSONObject friend;
+							mDbHelper.mDb.beginTransaction();
+							try {
+								for (int i = 0; i < friends.length(); i++) {
+									friend = friends.getJSONObject(i);
+									fbIds[i] = friend.getInt("id");
+									Log.d(TAG, "fb_id = " + fbIds[i]);
+									
+									newFriend.fb_id = friend.getInt("id");
+									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
+									newFriend.last_name = friend.getString("name");
+									mDbHelper.addFriend(newFriend);
+								}
+								mDbHelper.mDb.setTransactionSuccessful();
+							} finally {
+								mDbHelper.mDb.endTransaction();
+							}
+							
+							mFriendFbIds = fbIds;
+							registerUser();
+						}
+						catch (JSONException e) {
+							Log.w("Facebook-Example", "JSON Error in response");
+						}
 					}
 				});
 			}
