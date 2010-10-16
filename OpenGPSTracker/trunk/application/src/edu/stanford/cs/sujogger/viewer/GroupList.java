@@ -80,7 +80,7 @@ public class GroupList extends ListActivity {
 	private SharedPreferences mSharedPreferences;
 	private boolean mDisplayFriends;
 	
-	private Button mNewGroupButton;
+	private Button mBottomButton;
 	private LinearLayout mBottomControlBar;
 	
 	private GamingServiceConnection mGameCon;
@@ -171,13 +171,7 @@ public class GroupList extends ListActivity {
 		
 		mGroupIdTemp = 0;
 		
-		mNewGroupButton = (Button)findViewById(R.id.newgroupbutton);
-		mNewGroupButton.setOnClickListener(new View.OnClickListener() {
-			public void onClick(View v) {
-				showDialog(DIALOG_GRPNAME);
-			}
-		});
-		
+		mBottomButton = (Button)findViewById(R.id.bottombutton);
 		mBottomControlBar = (LinearLayout)findViewById(R.id.bottom_control_bar);
 		
 		LinearLayout topControlBar = (LinearLayout)findViewById(R.id.top_control_bar);
@@ -186,12 +180,14 @@ public class GroupList extends ListActivity {
 			public void onValueChanged(int newValue) {
 				mDisplayFriends = newValue == 1;
 				fillData();
+				updateButton();
 				refreshData(false, false);
 			}
 		}), 
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		
 		fillData();
+		updateButton();
 		
 		//Wait 100ms before sending request, because sometimes, the activity doesn't
 		//bind to the service quickly enough
@@ -264,10 +260,18 @@ public class GroupList extends ListActivity {
 				startActivity(i);
 			}
 			else if (item.getClass() == Long.class) {
+				/*
 				long fbId = (Long) item;
 				Log.d(TAG, "fbId = " + fbId);
 				Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse("http://m.facebook.com/inbox/?compose&ids=" + fbId));  
 				startActivity(viewIntent);
+				*/
+				
+				int numChecked = mUnregFriendsAdapter.toggleItemAtPosition(position - mUserAdapter.getCount() - 2);
+				Log.d(TAG, "onListItemClicked(): numChecked = " + numChecked);
+				getListView().invalidateViews();
+				
+				updateButton();
 			}
 		}
 		else {
@@ -275,6 +279,33 @@ public class GroupList extends ListActivity {
 			Log.d(TAG, "starting GroupDetail for group_id = " + (Integer) item);
 			long groupId = ((Integer) item).longValue();
 			startGroupDetail(groupId);
+		}
+	}
+	
+	private void updateButton() {
+		if (mDisplayFriends) {
+			mBottomButton.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					
+				}
+			});
+			
+			int numChecked = mUnregFriendsAdapter.getNumChecked();
+			if (numChecked > 0) {
+				mBottomControlBar.setVisibility(View.VISIBLE);
+				mBottomButton.setText("Invite (" + numChecked + ")");
+			}
+			else
+				mBottomControlBar.setVisibility(View.GONE);
+		}
+		else {
+			mBottomControlBar.setVisibility(View.VISIBLE);
+			mBottomButton.setText("New Group");
+			mBottomButton.setOnClickListener(new View.OnClickListener() {
+				public void onClick(View v) {
+					showDialog(DIALOG_GRPNAME);
+				}
+			});
 		}
 	}
 
@@ -352,7 +383,6 @@ public class GroupList extends ListActivity {
 		emptyView.setText(mDisplayFriends ? 
 				R.string.no_friends : R.string.no_groups);
 		if (mDisplayFriends) {
-			mBottomControlBar.setVisibility(View.GONE);
 			if (mUserAdapter == null) {
 				mCursor = mDbHelper.getAllUsers(true, true);
 				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
@@ -360,7 +390,7 @@ public class GroupList extends ListActivity {
 			if (mUnregFriendsAdapter == null) {
 				mUnregFriendsCursor = mDbHelper.getAllUsers(true, false);
 				startManagingCursor(mUnregFriendsCursor);
-				mUnregFriendsAdapter = new UserListAdapter(this, mUnregFriendsCursor, false, null);
+				mUnregFriendsAdapter = new UserListAdapter(this, mUnregFriendsCursor, true, null);
 			}
 			if (mGroupedAdapter == null) {
 				mGroupedAdapter = new SeparatedListAdapter(this);
@@ -370,7 +400,6 @@ public class GroupList extends ListActivity {
 			setListAdapter(mGroupedAdapter);
 		}
 		else {
-			mBottomControlBar.setVisibility(View.VISIBLE);
 			if (mGroupAdapter == null) {
 				mCursor = mDbHelper.getGroups();
 				mGroupAdapter = new GroupListAdapter(this, mCursor, true);

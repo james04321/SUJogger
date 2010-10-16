@@ -17,7 +17,7 @@
 		android:background="@drawable/toolbar_bg_grey">
 		
 		<Button 
-			android:id="@+id/newgroupbutton"
+			android:id="@+id/bottombutton"
 			android:layout_width="fill_parent"
 			android:layout_height="wrap_content" 
 			android:text="New Group" 
