@@ -100,7 +100,8 @@ public class FriendPicker extends ListActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, FriendPicker.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		mUsers = mDbHelper.getAllUsersExcludingGroup(mGroupId, Common.getRegisteredUser(this).id, true);
 		startManagingCursor(mUsers);

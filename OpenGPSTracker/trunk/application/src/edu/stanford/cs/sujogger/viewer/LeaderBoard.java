@@ -113,7 +113,8 @@ public class LeaderBoard extends ListActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, LeaderBoard.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		mGetUsersGroupsProgress = 0;
 		

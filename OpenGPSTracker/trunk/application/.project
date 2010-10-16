@@ -34,7 +34,7 @@
 		<link>
 			<name>FacebookSDK</name>
 			<type>2</type>
-			<locationURI>_android_FacebookSDK/src</locationURI>
+			<location>/Volumes/Data/aslai/dev/eclipse/facebook-android-sdk/facebook/src</location>
 		</link>
 	</linkedResources>
 </projectDescription>

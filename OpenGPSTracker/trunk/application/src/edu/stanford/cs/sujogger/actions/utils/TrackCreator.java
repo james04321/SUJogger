@@ -23,6 +23,7 @@ import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
@@ -56,7 +57,8 @@ public class TrackCreator {
 		mGamingServiceConn = new GamingServiceConnection(activity, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, this.getClass().getName());
 		mGamingServiceConn.bind();
-		mGamingServiceConn.setUserId(Common.getRegisteredUser(activity).id);
+		User user = Common.getRegisteredUser(activity);
+		mGamingServiceConn.setUserId(user.id, user.fb_id, user.fb_token);
 
 	}
 

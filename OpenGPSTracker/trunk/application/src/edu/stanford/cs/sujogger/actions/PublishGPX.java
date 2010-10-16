@@ -51,6 +51,7 @@ import android.widget.RemoteViews;
 import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.utils.GpxCreator;
@@ -171,7 +172,8 @@ public class PublishGPX extends Activity {
 		mGamingServiceConn = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, this.getClass().getName());
 		mGamingServiceConn.bind();
-		mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGamingServiceConn.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		showDialog(DIALOG_FILENAME);
 	}

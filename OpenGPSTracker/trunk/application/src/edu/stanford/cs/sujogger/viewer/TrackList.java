@@ -728,6 +728,7 @@ public class TrackList extends ListActivity {
 				editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
 				editor.putString(Constants.USERREG_PICTURE_KEY, Constants.GRAPH_BASE_URL
 						+ json.getLong("id") + "/picture");
+				editor.putString(Constants.USERREG_TOKEN_KEY, mFacebook.getAccessToken());
 				editor.commit();
 
 				TrackList.this.runOnUiThread(new Runnable() {

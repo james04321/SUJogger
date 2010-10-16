@@ -58,7 +58,8 @@ public class Constants
    public static final String USERREG_FIRSTNAME_KEY = "userreg_firstname";
    public static final String USERREG_LASTNAME_KEY = "userreg_lastname";
    public static final String USERREG_PICTURE_KEY = "userreg_picture";
-   
+   public static final String USERREG_TOKEN_KEY = "userreg_token";
+
    public static final String LAST_CONCIERGE_ID_KEY = "last_concierge_id";
    public static final String FB_ACCESS_TOKEN_KEY = "fb_access_token";
    

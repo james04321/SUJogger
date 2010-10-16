@@ -53,10 +53,12 @@ public class Common {
 		
 		user.id = prefs.getInt(Constants.USERREG_ID_KEY, 0);
 		user.first_name = prefs.getString(Constants.USERREG_FIRSTNAME_KEY, null);
-		user.last_name = prefs.getString(Constants.USERREG_LASTNAME_KEY, null);;
-		user.email = prefs.getString(Constants.USERREG_EMAIL_KEY, null);;
+		user.last_name = prefs.getString(Constants.USERREG_LASTNAME_KEY, null);
+		user.email = prefs.getString(Constants.USERREG_EMAIL_KEY, null);
 		user.fb_id = prefs.getLong(Constants.USERREG_FBID_KEY, 0);
-		user.fb_photo = prefs.getString(Constants.USERREG_PICTURE_KEY, null);;
+		user.fb_photo = prefs.getString(Constants.USERREG_PICTURE_KEY, null);
+		user.fb_token = prefs.getString(Constants.USERREG_TOKEN_KEY, null);
+
 		return user;
 	}
 	

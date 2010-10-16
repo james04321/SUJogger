@@ -22,6 +22,7 @@ import java.util.Hashtable;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 
 import edu.stanford.cs.sujogger.R;
@@ -158,7 +159,8 @@ public class PeopleTrackList extends ListActivity {
 		mGamingServiceConn = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, this.getClass().getName());
 		mGamingServiceConn.bind();
-		mGamingServiceConn.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGamingServiceConn.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		trackList = new ArrayList<Track>();
 		trackHash = new Hashtable<Integer, Track>();

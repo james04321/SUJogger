@@ -10,6 +10,7 @@ import android.util.Log;
 import android.widget.LinearLayout;
 import android.widget.LinearLayout.LayoutParams;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
@@ -55,7 +56,8 @@ public class UserDetail extends ListActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, UserDetail.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		LinearLayout bottomControlBar = (LinearLayout)findViewById(R.id.bottom_control_bar);
 		bottomControlBar.addView(new SegmentedControl(this, new String[] {"Groups", "Tracks"}, 

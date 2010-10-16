@@ -92,6 +92,7 @@ import com.snaptic.integration.IntentIntegrator;
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.actions.Statistics;
@@ -551,8 +552,8 @@ public class LoggerMap extends MapActivity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, LoggerMap.class.toString());
 		mGameCon.bind();
-
-		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);
 

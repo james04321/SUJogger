@@ -129,7 +129,8 @@ public class MessageSender extends Activity {
 		mGameCon = new GamingServiceConnection(this, mReceiver, 
 				Constants.APP_ID, Constants.APP_API_KEY, MessageSender.class.toString());
 		mGameCon.bind();
-		mGameCon.setUserId(Common.getRegisteredUser(this).id);
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 
 		setTitle("New Message");
 		
