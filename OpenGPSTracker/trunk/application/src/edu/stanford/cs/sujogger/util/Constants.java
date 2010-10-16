@@ -61,7 +61,6 @@ public class Constants
    public static final String USERREG_TOKEN_KEY = "userreg_token";
 
    public static final String LAST_CONCIERGE_ID_KEY = "last_concierge_id";
-   public static final String FB_ACCESS_TOKEN_KEY = "fb_access_token";
    
    //Last-updated keys (for Activities that request network updates
    public static final String BADGES_UPDATE_KEY = "badges_update_time";

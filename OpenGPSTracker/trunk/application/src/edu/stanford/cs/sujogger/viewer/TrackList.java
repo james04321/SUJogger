@@ -648,6 +648,9 @@ public class TrackList extends ListActivity {
 								editorUser.putInt(Constants.USERREG_ID_KEY, userId);
 								editorUser.putLong(Constants.FB_UPDATE_KEY, System.currentTimeMillis());
 								editorUser.commit();
+								
+								User selfUser = Common.getRegisteredUser(TrackList.this);
+								mGameCon.setUserId(userId, selfUser.fb_id, selfUser.fb_token);
 								try {
 									mGameCon.getScoreBoards(GET_SBS_RID, userId, -1, null, null);
 								}
@@ -675,7 +678,7 @@ public class TrackList extends ListActivity {
 			Log.d(TAG, "Facebook login successfull!!!");
 			if (mFacebook.getAccessToken() != null) {
 				Editor editor = mSharedPreferences.edit();
-				editor.putString(Constants.FB_ACCESS_TOKEN_KEY, mFacebook.getAccessToken());
+				editor.putString(Constants.USERREG_TOKEN_KEY, mFacebook.getAccessToken());
 				editor.commit();
 			}
 			mDialogFriendInit = ProgressDialog.show(TrackList.this, "",
@@ -728,7 +731,6 @@ public class TrackList extends ListActivity {
 				editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
 				editor.putString(Constants.USERREG_PICTURE_KEY, Constants.GRAPH_BASE_URL
 						+ json.getLong("id") + "/picture");
-				editor.putString(Constants.USERREG_TOKEN_KEY, mFacebook.getAccessToken());
 				editor.commit();
 
 				TrackList.this.runOnUiThread(new Runnable() {

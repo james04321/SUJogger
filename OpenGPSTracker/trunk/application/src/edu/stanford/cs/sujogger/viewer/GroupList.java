@@ -163,7 +163,7 @@ public class GroupList extends ListActivity {
 		mAsyncRunner = null;
 		if (mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 			mFacebook = new Facebook();
-			String accessToken = mSharedPreferences.getString(Constants.FB_ACCESS_TOKEN_KEY, null);
+			String accessToken = mSharedPreferences.getString(Constants.USERREG_TOKEN_KEY, null);
 			mFacebook.setAccessToken(accessToken);
 			
 			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
@@ -356,7 +356,7 @@ public class GroupList extends ListActivity {
 			if ((System.currentTimeMillis() - 
 					mSharedPreferences.getLong(Constants.FB_UPDATE_KEY, 0) >
 						Constants.FB_UPDATE_INTERVAL || force) && 
-						mSharedPreferences.getString(Constants.FB_ACCESS_TOKEN_KEY, null) != null) {
+						mSharedPreferences.getString(Constants.USERREG_TOKEN_KEY, null) != null) {
 				mAsyncRunner.request("me/friends", new FriendsRequestListener());
 			}
 			else if (System.currentTimeMillis() - 
