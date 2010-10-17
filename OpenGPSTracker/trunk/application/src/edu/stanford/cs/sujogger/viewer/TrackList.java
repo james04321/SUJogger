@@ -136,7 +136,7 @@ public class TrackList extends ListActivity {
 	//private WebAuth mWa;
 
 	// Temp attribute to store FB friends until we get everything we need
-	private long[] mFriendFbIds;
+	private long[] mFriendFbIds = null;
 
 	private EditText mTrackNameView;
 	private Uri mDialogUri;
@@ -722,19 +722,23 @@ public class TrackList extends ListActivity {
 			try {
 				// process the response here: executed in background thread
 				Log.d(TAG, "Response: " + response.toString());
-				JSONObject json = Util.parseJson(response);
-
-				Editor editor = mSharedPreferences.edit();
-				editor.putLong(Constants.USERREG_FBID_KEY, json.getLong("id"));
-				editor.putString(Constants.USERREG_EMAIL_KEY, json.getString("email"));
-				editor.putString(Constants.USERREG_FIRSTNAME_KEY, json.getString("first_name"));
-				editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
-				editor.putString(Constants.USERREG_PICTURE_KEY, Constants.GRAPH_BASE_URL
-						+ json.getLong("id") + "/picture");
-				editor.commit();
-
+				final JSONObject json = Util.parseJson(response);
+				
 				TrackList.this.runOnUiThread(new Runnable() {
 					public void run() {
+						try {
+							Editor editor = mSharedPreferences.edit();
+							editor.putLong(Constants.USERREG_FBID_KEY, json.getLong("id"));
+							editor.putString(Constants.USERREG_EMAIL_KEY, json.getString("email"));
+							editor.putString(Constants.USERREG_FIRSTNAME_KEY, json.getString("first_name"));
+							editor.putString(Constants.USERREG_LASTNAME_KEY, json.getString("last_name"));
+							editor.putString(Constants.USERREG_PICTURE_KEY, Constants.GRAPH_BASE_URL
+									+ json.getLong("id") + "/picture");
+							editor.commit();
+						} catch (JSONException e) {
+							Log.w("Facebook-Example", "JSON Error in response");
+						}
+				
 						registerUser();
 					}
 				});
