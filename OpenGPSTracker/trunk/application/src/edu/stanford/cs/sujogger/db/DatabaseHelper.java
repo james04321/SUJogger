@@ -1440,7 +1440,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	public Cursor getScoresWithUsers(int statisticId) {
 		String tables = ScoreboardTemp.TABLE + "," + Users.TABLE;
 		String whereClause = ScoreboardTemp.TABLE + "." + ScoreboardTemp.USER_ID + "=" +
-			Users.TABLE + "." + Users.USER_ID + " AND " + 
+			Users.TABLE + "." + Users.USER_ID + " AND " + Users.TABLE + "." + Users.USER_ID + ">0 AND "+ 
 			ScoreboardTemp.TABLE + "." + ScoreboardTemp.TYPE + "=" + statisticId + " AND " +
 			ScoreboardTemp.TABLE + "." + ScoreboardTemp.VALUE + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT * FROM " + tables + " WHERE " + whereClause +

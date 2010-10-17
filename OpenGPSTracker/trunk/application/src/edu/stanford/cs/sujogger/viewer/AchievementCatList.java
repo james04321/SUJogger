@@ -23,6 +23,7 @@ import android.widget.ListView;
 import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.ScoreBoard;
+import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
@@ -84,6 +85,8 @@ public class AchievementCatList extends ListActivity {
 		mGameCon = new GamingServiceConnection(this.getParent(), mReceiver, Constants.APP_ID,
 				Constants.APP_API_KEY, AchievementCatList.class.toString());
 		mGameCon.bind();
+		User user = Common.getRegisteredUser(this);
+		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 
 		// Create cursors
 		mRecAchEarned = mDbHelper.getRecentAchievementsEarned();
