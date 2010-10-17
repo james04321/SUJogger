@@ -1341,10 +1341,10 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		values.put(Users.LAST_NAME, user.last_name);
 		values.put(Users.IMG_URL, user.fb_photo);
 		values.put(Users.IS_FRIEND, 1);
-		
-		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.FB_ID + "=" + user.fb_id, null);
+
+		Cursor existingUser = mDb.rawQuery("SELECT * FROM " + Users.TABLE + " WHERE " + Users.FB_ID + "=?", new String[] {Long.toString(user.fb_id)});
 		if (existingUser.getCount() > 0)
-			mDb.update(Users.TABLE, values, Users.FB_ID + "=" + user.fb_id, null);
+			mDb.update(Users.TABLE, values, Users.FB_ID + "=?", new String[] {Long.toString(user.fb_id)});
 		else
 			mDb.insert(Users.TABLE, null, values);
 		existingUser.close();

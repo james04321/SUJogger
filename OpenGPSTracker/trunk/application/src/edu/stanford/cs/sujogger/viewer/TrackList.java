@@ -557,7 +557,7 @@ public class TrackList extends ListActivity {
 
 	private void registerUser() {
 		//TODO: Facebook
-		if (Common.getRegisteredUser(this) == null || mFriendFbIds == null)
+		if (Common.getRegisteredUser(this).fb_id == 0 || mFriendFbIds == null)
 			return;
 		
 		//TODO: Stanford WebAuth
