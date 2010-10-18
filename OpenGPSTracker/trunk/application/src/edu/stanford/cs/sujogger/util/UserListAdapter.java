@@ -61,6 +61,19 @@ public class UserListAdapter extends CursorAdapter {
 		else return null;
 	}
 	
+	public User getUser(int position) {
+		if (position >= 0 && position < mCursor.getCount()) {
+			mCursor.moveToPosition(position);
+			User user = new User();
+			user.id = mCursor.getInt(1);
+			user.fb_id = mCursor.getLong(2);
+			user.first_name = mCursor.getString(3);
+			user.last_name = mCursor.getString(4);
+			return user;
+		}
+		else return null;
+	}
+	
 	public int getNumChecked() {
 		return numChecked;
 	}

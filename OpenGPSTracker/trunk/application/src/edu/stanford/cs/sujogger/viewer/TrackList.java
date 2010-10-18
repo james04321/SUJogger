@@ -765,7 +765,6 @@ public class TrackList extends ListActivity {
 		public void onComplete(final String response) {
 			try {
 				// process the response here: executed in background thread
-				Log.d(TAG, "Response: " + response.toString());
 				JSONObject json = Util.parseJson(response);
 
 				final JSONArray friends = json.getJSONArray("data");
@@ -782,10 +781,10 @@ public class TrackList extends ListActivity {
 							try {
 								for (int i = 0; i < friends.length(); i++) {
 									friend = friends.getJSONObject(i);
-									fbIds[i] = friend.getInt("id");
+									fbIds[i] = friend.getLong("id");
 									Log.d(TAG, "fb_id = " + fbIds[i]);
 									
-									newFriend.fb_id = friend.getInt("id");
+									newFriend.fb_id = friend.getLong("id");
 									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
 									newFriend.last_name = friend.getString("name");
 									mDbHelper.addFriend(newFriend);

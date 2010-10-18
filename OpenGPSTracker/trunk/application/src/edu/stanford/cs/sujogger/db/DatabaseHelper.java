@@ -1120,7 +1120,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		 * SELECT users.* FROM users WHERE users.user_id NOT IN 
 		 * (SELECT groups_users.user_id FROM groups_users)
 		 * AND users.user_id <> selfId
-		 * ORDER BY users.last_name, users.first_name
+		 * ORDER BY users.first_name, users.last_name
 		 */
 		
 		String friendCondition = onlyFriends ? " AND " + Users.TABLE + "." + Users.IS_FRIEND + "=1" : "";
@@ -1137,12 +1137,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String subQuery2 = "(SELECT " + GroupsUsers.TABLE + "." + GroupsUsers.USER_ID + " FROM " + 
 			GroupsUsers.TABLE + ")";
 		String whereClause2 = Users.TABLE + "." + Users.USER_ID + " NOT IN " + subQuery2 + " AND " +
-			Users.TABLE + "." + Users.USER_ID + "<>" + selfId + friendCondition;
+			Users.TABLE + "." + Users.USER_ID + "<>" + selfId + friendCondition + " AND " +
+			Users.TABLE + "." + Users.USER_ID + ">0";
 		Cursor cursor = mDb.rawQuery("SELECT DISTINCT " + Users.TABLE + ".* FROM " + tables + 
 				" WHERE " + whereClause + " UNION" +
 				" SELECT " + Users.TABLE + ".* FROM " + Users.TABLE + " WHERE " + whereClause2 +
-				" ORDER BY " + Users.TABLE + "." + Users.LAST_NAME + "," + 
-				Users.TABLE + "." + Users.FIRST_NAME, null);
+				" ORDER BY " + Users.TABLE + "." + Users.FIRST_NAME + "," + 
+				Users.TABLE + "." + Users.LAST_NAME, null);
 		return cursor;
 	}
 	

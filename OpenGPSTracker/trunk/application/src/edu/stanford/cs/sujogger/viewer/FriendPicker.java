@@ -66,8 +66,7 @@ public class FriendPicker extends ListActivity {
 		public void run() {
 			mUserWaitDialog = ProgressDialog.show(FriendPicker.this, "", "Retrieving friends...", true);
 			try {
-				mGameCon.getAppsUser(GET_FRIENDS_RID);
-				//mGameCon.getInvitableFriends(GET_FRIENDS_RID);
+				mGameCon.getInvitableFriends(GET_FRIENDS_RID);
 			} catch (RemoteException e) {}
 		}
 	};
@@ -272,21 +271,6 @@ public class FriendPicker extends ListActivity {
 							}
 						});
 						break;
-					/*
-					case GET_FRIENDS_RID:
-						users = (User[])appResponse.object;
-						if (users != null) {
-							mDbHelper.addFriends(users);
-							mGetUsersFriendsProgress++;
-							if (mGetUsersFriendsProgress >= 2) {
-								mUserWaitDialog.dismiss();
-								mUsers.requery();
-								mUserAdapter.notifyDataSetChanged();
-								FriendPicker.this.getListView().invalidateViews();
-							}
-						}
-						break;
-					*/
 					default: break;
 					}
 				}

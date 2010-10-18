@@ -22,7 +22,6 @@ import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -42,10 +41,12 @@ import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 
 import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
 import com.facebook.android.FacebookError;
 import com.facebook.android.Util;
 import com.facebook.android.AsyncFacebookRunner.RequestListener;
+import com.facebook.android.Facebook.DialogListener;
 
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Group;
@@ -267,11 +268,27 @@ public class GroupList extends ListActivity {
 				startActivity(viewIntent);
 				*/
 				
+				/*
 				int numChecked = mUnregFriendsAdapter.toggleItemAtPosition(position - mUserAdapter.getCount() - 2);
 				Log.d(TAG, "onListItemClicked(): numChecked = " + numChecked);
 				getListView().invalidateViews();
+				*/
+				//updateButton();
 				
-				updateButton();
+				User user = mUnregFriendsAdapter.getUser(position - mUserAdapter.getCount() - 2);
+				Log.d(TAG, "fb_id: " + user.fb_id);
+				Bundle params = new Bundle();
+				params.putString("target_id", Long.toString(user.fb_id));
+				params.putString("message", "Hi " + user.last_name + ", care to join me in Happy Feet?");
+				params.putString("attachment", 
+						"{\"name\":\"Happy Feet for Android\"," + 
+						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
+						"\"caption\":\"The premier social running app for Android.\"," +
+						"\"media\":[{\"type\":\"image\",\"src\":\"" + 
+						"http://happyfeet.heroku.com/Happy_Feet_files/logo.png" + 
+						"\",\"href\":\""+"http://happyfeet.heroku.com/"+"\"}]" + "}");
+				params.putString("privacy", "{\"value\": \"ALL_FRIENDS\"}");
+				mFacebook.dialog(this, "stream.publish", params, new PostDialogListener());
 			}
 		}
 		else {
@@ -626,10 +643,10 @@ public class GroupList extends ListActivity {
 							try {
 								for (int i = 0; i < friends.length(); i++) {
 									friend = friends.getJSONObject(i);
-									fbIds[i] = friend.getInt("id");
+									fbIds[i] = friend.getLong("id");
 									Log.d(TAG, "fb_id = " + fbIds[i]);
 									
-									newFriend.fb_id = friend.getInt("id");
+									newFriend.fb_id = friend.getLong("id");
 									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
 									newFriend.last_name = friend.getString("name");
 									mDbHelper.addFriend(newFriend);
@@ -678,5 +695,20 @@ public class GroupList extends ListActivity {
 		}
 
 		public void onMalformedURLException(MalformedURLException e) {}
+	}
+	
+	private final class PostDialogListener implements DialogListener {
+		public void onComplete(Bundle values) {
+			
+		}
+		
+		public void onFacebookError(FacebookError error) {
+		}
+
+		public void onError(DialogError error) {
+		}
+
+		public void onCancel() {
+		}
 	}
 }
