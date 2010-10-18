@@ -4,6 +4,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.util.ArrayList;
+import java.util.StringTokenizer;
 
 import org.json.JSONArray;
 import org.json.JSONException;
@@ -275,11 +276,20 @@ public class GroupList extends ListActivity {
 				*/
 				//updateButton();
 				
+				
+				
 				User user = mUnregFriendsAdapter.getUser(position - mUserAdapter.getCount() - 2);
+				
+				String firstName = user.last_name;
+				StringTokenizer st = new StringTokenizer(user.last_name);
+				if (st.hasMoreTokens())
+					firstName = st.nextToken();
+				
 				Log.d(TAG, "fb_id: " + user.fb_id);
 				Bundle params = new Bundle();
 				params.putString("target_id", Long.toString(user.fb_id));
-				params.putString("message", "Hi " + user.last_name + ", care to join me in Happy Feet?");
+				params.putString("message", "Hi " + firstName + ", I really like using Happy Feet. Check it out and join me on a run!");
+				/*
 				params.putString("attachment", 
 						"{\"name\":\"Happy Feet for Android\"," + 
 						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
@@ -287,6 +297,11 @@ public class GroupList extends ListActivity {
 						"\"media\":[{\"type\":\"image\",\"src\":\"" + 
 						"http://happyfeet.heroku.com/Happy_Feet_files/logo.png" + 
 						"\",\"href\":\""+"http://happyfeet.heroku.com/"+"\"}]" + "}");
+				*/
+				params.putString("attachment", 
+						"{\"name\":\"Happy Feet for Android\"," + 
+						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
+						"\"caption\":\"The premier social running app for Android.\"}");
 				params.putString("privacy", "{\"value\": \"ALL_FRIENDS\"}");
 				mFacebook.dialog(this, "stream.publish", params, new PostDialogListener());
 			}
@@ -412,7 +427,7 @@ public class GroupList extends ListActivity {
 			if (mGroupedAdapter == null) {
 				mGroupedAdapter = new SeparatedListAdapter(this);
 				mGroupedAdapter.addSection("Friends on Happy Feet", mUserAdapter);
-				mGroupedAdapter.addSection("Unregistered Friends", mUnregFriendsAdapter);
+				mGroupedAdapter.addSection("Unregistered Friends  (Tap to invite)", mUnregFriendsAdapter);
 			}
 			setListAdapter(mGroupedAdapter);
 		}
