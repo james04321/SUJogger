@@ -3,7 +3,22 @@
 <PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
     android:title="@string/opengpstracker_title">
     <PreferenceCategory
-        android:title="@string/preference_behavior">
+    	android:title="@string/preference_sharing">
+    	<CheckBoxPreference
+    		android:key="post_fb"
+    		android:title="Facebook"
+    		android:summary="Post to your Facebook wall after every run"
+    		android:defaultValue="true"
+    	/>
+    	<CheckBoxPreference
+    		android:key="post_catch"
+    		android:title="Catch"
+    		android:summary="Create a Catch note after every run"
+    		android:defaultValue="false"
+    	/>
+    </PreferenceCategory>
+    <PreferenceCategory
+        android:title="@string/preference_logging">
         <ListPreference
             android:key="precision"
             android:title="@string/precision_title"
@@ -52,7 +67,7 @@
             android:entryValues="@array/units_values"
             android:defaultValue="0"/>
         
-        
+        <!--
         <CheckBoxPreference
             android:key="SATELLITE"
             android:title="@string/showsatellite_title"
@@ -71,8 +86,7 @@
             android:summary="@string/showspeed_summary"
             android:defaultValue="true" 
          />
-         
-         <!-- 
+          
          <CheckBoxPreference
             android:key="COMPASS"
             android:title="@string/showcompass_title"

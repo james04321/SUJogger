@@ -28,9 +28,16 @@
  */
 package edu.stanford.cs.sujogger.logger;
 
-import edu.stanford.cs.sujogger.R;
+import com.snaptic.integration.IntentIntegrator;
+
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.preference.PreferenceActivity;
+import android.preference.PreferenceManager;
+import android.util.Log;
+import edu.stanford.cs.sujogger.R;
+import edu.stanford.cs.sujogger.util.Constants;
+import edu.stanford.cs.sujogger.viewer.LoggerMap;
 
 /**
  * Controller for the settings dialog
@@ -38,15 +45,23 @@ import android.preference.PreferenceActivity;
  * @version $Id: SettingsDialog.java 468 2010-03-28 13:47:13Z rcgroot $
  * @author rene (c) Jan 18, 2009, Sogeti B.V.
  */
-public class SettingsDialog extends PreferenceActivity
-{
+public class SettingsDialog extends PreferenceActivity implements SharedPreferences.OnSharedPreferenceChangeListener{
 
    @Override
-   protected void onCreate( Bundle savedInstanceState ) 
-   {
+   protected void onCreate( Bundle savedInstanceState ) {
        super.onCreate( savedInstanceState );
-
        addPreferencesFromResource( R.layout.settings );
+       
+       SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(this);
+       prefs.registerOnSharedPreferenceChangeListener(this);
    }
-
+   
+  public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+	  if (key.equals(Constants.POST_CATCH_KEY)) {
+		  if (sharedPreferences.getBoolean(key, false)) {
+			  IntentIntegrator notesIntent = new IntentIntegrator(this);
+			  notesIntent.isNotesInstalled();
+		  }
+	  }
+  }
 }

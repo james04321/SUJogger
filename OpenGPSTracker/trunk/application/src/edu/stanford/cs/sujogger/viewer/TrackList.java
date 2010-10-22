@@ -61,6 +61,7 @@ import android.preference.PreferenceManager;
 import android.util.Log;
 import android.view.ContextMenu;
 import android.view.LayoutInflater;
+import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.AdapterView;
@@ -94,6 +95,7 @@ import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SegmentedControl;
 import edu.stanford.cs.sujogger.util.TrackListAdapter;
+import edu.stanford.cs.sujogger.logger.SettingsDialog;
 
 /**
  * Show a list view of all tracks, also doubles for showing search results
@@ -107,6 +109,8 @@ public class TrackList extends ListActivity {
 	private static final int MENU_SHARE = 1;
 	private static final int MENU_RENAME = 2;
 	private static final int MENU_STATS = 3;
+	
+	private static final int MENU_SETTINGS = 10;
 
 	public static final int DIALOG_FILENAME = 0;
 	private static final int DIALOG_RENAME = 23;
@@ -331,6 +335,32 @@ public class TrackList extends ListActivity {
 		mGameCon.unbind();
 		super.onDestroy();
 	}
+	
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		boolean result = super.onCreateOptionsMenu(menu);
+		menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, "Settings")
+			.setIcon(R.drawable.ic_menu_preferences);
+		return result;
+	}
+	
+	@Override
+	public boolean onOptionsItemSelected(MenuItem item) {
+		boolean handled = false;
+
+		switch (item.getItemId()) {
+		case MENU_SETTINGS:
+			Intent i = new Intent(this, SettingsDialog.class);
+			startActivity(i);
+			handled = true;
+			break;
+		default:
+			handled = super.onOptionsItemSelected(item);
+			break;
+		}
+
+		return handled;
+	}
 
 	@Override
 	protected void onListItemClick(ListView l, View v, int position, long id) {
@@ -540,7 +570,7 @@ public class TrackList extends ListActivity {
 	}
 
 	private void displayCursor(Cursor tracksCursor) {
-		Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
+		//Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
 		trackAdapter = new TrackListAdapter(this, tracksCursor);
 		setListAdapter(trackAdapter);
 	}
@@ -621,6 +651,9 @@ public class TrackList extends ListActivity {
 									editorGetSb.putBoolean(Constants.USER_REGISTERED, true);
 									editorGetSb.commit();
 									mDialogUserInit.dismiss();
+									TrackList.this.startActivity(new Intent(TrackList.this, SettingsDialog.class));
+									Toast.makeText(
+											TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_SHORT).show();
 								}
 							}
 						});
@@ -636,6 +669,9 @@ public class TrackList extends ListActivity {
 								editorCreateSb.putBoolean(Constants.USER_REGISTERED, true);
 								editorCreateSb.commit();
 								mDialogUserInit.dismiss();
+								TrackList.this.startActivity(new Intent(TrackList.this, SettingsDialog.class));
+								Toast.makeText(
+										TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_SHORT).show();
 							}
 						});
 						break;

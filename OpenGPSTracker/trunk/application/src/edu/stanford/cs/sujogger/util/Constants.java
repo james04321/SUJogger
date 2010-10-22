@@ -41,11 +41,20 @@ public class Constants
    public static final long UPDATE_INTERVAL = 900000; //ms in 15 minutes
    public static final long FB_UPDATE_INTERVAL = 3600000; //ms in 1 hour
    
+   //Posting preferences
+   public static final String POST_FB_KEY = "post_fb";
+   public static final String POST_CATCH_KEY = "post_catch";
+   
+   public static final String SITE_URL = "http://happyfeet.heroku.com/";
+   public static final String SITE_LOGO = "http://happyfeet.heroku.com/Happy_Feet_files/logo.png";
+   public static final String SITE_TITLE = "Happy Feet for Android";
+   public static final String SITE_SLOGAN = "The premier social running app for Android";
+   
    //Facebook integration
    public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
    public static final String FB_APP_ID = "127241693959042";
    public static final String[] FB_PERMISSIONS =
-       new String[] {"read_friendlists", "email", "offline_access"};
+       new String[] {"read_friendlists", "email", "offline_access", "publish_stream"};
    
    //First launch flags
    public static final String STATS_INITIALIZED = "stats_initialized";

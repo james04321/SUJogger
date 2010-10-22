@@ -28,8 +28,6 @@ public class TrackListAdapter extends CursorAdapter {
 		String distance = cursor.getString(4);
 		int trackId = cursor.getInt(5);
 		int userId = cursor.getInt(6);
-		String firstName = cursor.getString(8);
-		String lastName = cursor.getString(9);
 		int myUserId = Common.getRegisteredUser(context).id;
 		
 		TextView titleView = (TextView)view.findViewById(R.id.listitem_name);
@@ -39,6 +37,8 @@ public class TrackListAdapter extends CursorAdapter {
 		if (userId == myUserId)
 			dateView.setText(Common.dateString(creationTime));
 		else {
+			String firstName = cursor.getString(8);
+			String lastName = cursor.getString(9);
 			dateView.setText(firstName + " " + lastName);
 		}
 		

@@ -58,6 +58,7 @@ import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
+import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GroupListAdapter;
@@ -94,6 +95,7 @@ public class GroupList extends ListActivity {
 	private AsyncFacebookRunner mAsyncRunner;
 
 	private static final int MENU_REFRESH = 0;
+	private static final int MENU_SETTINGS = 10;
 	
 	// Request IDs
 	private static final int GRP_CREATE_RID = 1;
@@ -228,6 +230,8 @@ public class GroupList extends ListActivity {
 
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
 			.setIcon(R.drawable.ic_menu_refresh);
+		menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, "Settings")
+			.setIcon(R.drawable.ic_menu_preferences);
 		return result;
 	}
 
@@ -238,6 +242,10 @@ public class GroupList extends ListActivity {
 		switch (item.getItemId()) {
 		case MENU_REFRESH:
 			refreshData(false, true);
+			handled = true;
+			break;
+		case MENU_SETTINGS:
+			startActivity(new Intent(this, SettingsDialog.class));
 			handled = true;
 			break;
 		default:
@@ -441,8 +449,8 @@ public class GroupList extends ListActivity {
 		
 		startManagingCursor(mCursor);
 		
-		Log.d(TAG, "fillData()");
-		DatabaseUtils.dumpCursor(mCursor);
+		//Log.d(TAG, "fillData()");
+		//DatabaseUtils.dumpCursor(mCursor);
 	}
 
 	private void initializeStatsForGroup(int groupId) {

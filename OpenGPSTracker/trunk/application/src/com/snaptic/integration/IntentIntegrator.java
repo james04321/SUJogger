@@ -124,7 +124,7 @@ public class IntentIntegrator {
 		startNotesIntent(intent);
 	}	
 	
-	private boolean isNotesInstalled() {
+	public boolean isNotesInstalled() {
 		// Verify that correct version of notes is installed
 		try {
 			PackageInfo packageInfo = _context.getPackageManager().getPackageInfo(NOTES_PACKAGE_NAME, PackageManager.GET_ACTIVITIES);

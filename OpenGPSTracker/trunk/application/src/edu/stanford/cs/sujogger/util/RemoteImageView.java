@@ -41,7 +41,7 @@ public class RemoteImageView extends ImageView {
 				mLocal = Common.getCacheFileName(mRemote);
 				//Environment.getExternalStorageDirectory() + "/.remote-image-view-cache/" + mRemote.hashCode() + ".jpg";
 			}
-			Log.d("OGT.RemoteImageView", "loadImage(): mLocal = " + mLocal + "; mRemote = " + mRemote);
+			//Log.d("OGT.RemoteImageView", "loadImage(): mLocal = " + mLocal + "; mRemote = " + mRemote);
 			// check for the local file here instead of in the thread because
 			// otherwise previously-cached files wouldn't be loaded until after
 			// the remote ones have been downloaded.

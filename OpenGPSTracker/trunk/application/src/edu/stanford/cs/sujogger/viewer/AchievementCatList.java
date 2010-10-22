@@ -28,6 +28,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Categories;
+import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.AchCatAdapter;
 import edu.stanford.cs.sujogger.util.AchListAdapter;
 import edu.stanford.cs.sujogger.util.Common;
@@ -37,6 +38,7 @@ import edu.stanford.cs.sujogger.util.SeparatedListAdapter;
 public class AchievementCatList extends ListActivity {
 	private static final String TAG = "OGT.AchievementsActivity";
 	private static final int MENU_REFRESH = 1;
+	private static final int MENU_SETTINGS = 10;
 
 	// Request IDs
 	private static final int GET_GRP_SBS_RID = 0;
@@ -146,9 +148,8 @@ public class AchievementCatList extends ListActivity {
 	protected void onResume() {
 		Log.d(TAG, "onResume()");
 		super.onResume();
-		Log.d(TAG, "fillData(): dumping recent achievements cursor");
-		DatabaseUtils.dumpCursor(mRecAchEarned);
-
+		//Log.d(TAG, "fillData(): dumping recent achievements cursor");
+		//DatabaseUtils.dumpCursor(mRecAchEarned);
 	}
 
 	@Override
@@ -180,6 +181,8 @@ public class AchievementCatList extends ListActivity {
 		
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh).setIcon(
 				R.drawable.ic_menu_refresh);
+		menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, "Settings")
+			.setIcon(R.drawable.ic_menu_preferences);
 		return result;
 	}
 
@@ -190,6 +193,12 @@ public class AchievementCatList extends ListActivity {
 		switch (item.getItemId()) {
 		case MENU_REFRESH:
 			refreshAchievements();
+			handled = true;
+			break;
+		case MENU_SETTINGS:
+			Intent i = new Intent(this, SettingsDialog.class);
+			startActivity(i);
+			handled = true;
 			break;
 		default:
 			handled = super.onOptionsItemSelected(item);

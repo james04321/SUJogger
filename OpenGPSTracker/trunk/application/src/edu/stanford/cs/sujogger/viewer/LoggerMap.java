@@ -29,8 +29,10 @@
 package edu.stanford.cs.sujogger.viewer;
  
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
@@ -82,6 +84,10 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.facebook.android.AsyncFacebookRunner;
+import com.facebook.android.Facebook;
+import com.facebook.android.FacebookError;
+import com.facebook.android.AsyncFacebookRunner.RequestListener;
 import com.google.android.maps.GeoPoint;
 import com.google.android.maps.MapActivity;
 import com.google.android.maps.MapController;
@@ -115,7 +121,7 @@ import edu.stanford.cs.sujogger.util.UnitsI18n;
  * @author rene (c) Jan 18, 2009, Sogeti B.V.
  */
 public class LoggerMap extends MapActivity {
-	private static final int ZOOM_LEVEL = 16;
+	private static final int ZOOM_LEVEL = 19;
 	
 	// Menus
 	//private static final int MENU_SETTINGS = 1;
@@ -177,6 +183,9 @@ public class LoggerMap extends MapActivity {
 	private boolean mStatsUpdating;
 	private double mCalculatedDistance;
 	private long mCalculatedDuration;
+	
+	private Facebook mFacebook;
+	private AsyncFacebookRunner mAsyncRunner;
 	
 	public static final int UPDATE_SBS_RID = 1;
 	public static final int GET_SBS_RID = 2;
@@ -555,6 +564,10 @@ public class LoggerMap extends MapActivity {
 		User user = Common.getRegisteredUser(this);
 		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
+		mFacebook = new Facebook();
+		mAsyncRunner = new AsyncFacebookRunner(mFacebook);
+		mFacebook.setAccessToken(mSharedPreferences.getString(Constants.USERREG_TOKEN_KEY, null));
+		
 		mUnits = new UnitsI18n(this, mUnitsChangeListener);
 
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -579,7 +592,7 @@ public class LoggerMap extends MapActivity {
 		mMapView.setTraffic(mSharedPreferences.getBoolean(Constants.TRAFFIC, false));
 
 		//ASLAI: Added
-		mMapController.setZoom(20);
+		mMapController.setZoom(ZOOM_LEVEL);
 		
 		mStartButton = (Button)findViewById(R.id.startbutton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
@@ -790,7 +803,7 @@ public class LoggerMap extends MapActivity {
 			this.mMapController.setZoom(load.getInt("zoom"));
 		}
 		else {
-			this.mMapController.setZoom(LoggerMap.ZOOM_LEVEL);
+			this.mMapController.setZoom(ZOOM_LEVEL);
 		}
 
 		if (load != null && load.containsKey("e6lat") && load.containsKey("e6long")) {
@@ -2223,13 +2236,39 @@ public class LoggerMap extends MapActivity {
 			Common.displayAchievementToast(title, newAchCursor.getInt(7),
 					newAchCursor.getInt(4) == 0, getApplicationContext(), toastLayout);
 			
+			if (mSharedPreferences.getBoolean(Constants.POST_FB_KEY, false)) {
+				Bundle params = new Bundle();
+				params.putString("message", "I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!");
+				params.putString("link", Constants.SITE_URL);
+				params.putString("name", Constants.SITE_TITLE);
+				params.putString("caption", Constants.SITE_SLOGAN);
+				params.putString("picture", Constants.SITE_LOGO);
+				params.putString("privacy", "{\"value\": \"ALL_FRIENDS\"}");
+				mAsyncRunner.request("me/feed", params, "POST", new WallPostListener());
+			}
+			
 			//TODO:Snaptic integration
-			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-			notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
+			if (mSharedPreferences.getBoolean(Constants.POST_CATCH_KEY, false)) {
+				IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
+				notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
+			}
 		}
 		else {
-			IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-			notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + "!\n\n#HappyFeet", true);
+			if (mSharedPreferences.getBoolean(Constants.POST_FB_KEY, false)) {
+				Bundle params = new Bundle();
+				params.putString("message", "Just ran " + Common.distanceString(this, mCalculatedDistance) + "!");
+				params.putString("link", Constants.SITE_URL);
+				params.putString("name", Constants.SITE_TITLE);
+				params.putString("caption", Constants.SITE_SLOGAN);
+				params.putString("picture", Constants.SITE_LOGO);
+				params.putString("privacy", "{\"value\": \"ALL_FRIENDS\"}");
+				mAsyncRunner.request("me/feed", params, "POST", new WallPostListener());
+			}
+			
+			if (mSharedPreferences.getBoolean(Constants.POST_CATCH_KEY, false)) {
+				IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
+				notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + "!\n\n#HappyFeet", true);
+			}
 		}
 		newAchCursor.close();
 	}
@@ -2338,5 +2377,21 @@ public class LoggerMap extends MapActivity {
 				e.printStackTrace();
 			}
 		}
+	}
+	
+	private class WallPostListener implements RequestListener {
+
+		public void onComplete(final String response) {
+			// process the response here: executed in background thread
+			Log.d(TAG, "Wall Post Response: " + response.toString());
+		}
+
+		public void onFacebookError(FacebookError e) {}
+
+		public void onFileNotFoundException(FileNotFoundException e) {}
+
+		public void onIOException(IOException e) {}
+
+		public void onMalformedURLException(MalformedURLException e) {}
 	}
 }

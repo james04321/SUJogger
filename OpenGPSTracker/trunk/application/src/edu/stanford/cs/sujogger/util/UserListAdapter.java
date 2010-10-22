@@ -154,7 +154,7 @@ public class UserListAdapter extends CursorAdapter {
 			//TODO: Facebook
 			RemoteImageView image = (RemoteImageView) ret.findViewById(R.id.user_image);
 			if (image != null && !mFlinging) {
-				Log.d(TAG, "getView(): trying to fetch image");
+				//Log.d(TAG, "getView(): trying to fetch image");
 				image.loadImage();
 			}
 			

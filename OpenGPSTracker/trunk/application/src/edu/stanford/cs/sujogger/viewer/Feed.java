@@ -32,6 +32,7 @@ import edu.stanford.cs.gaming.sdk.service.GamingServiceConnection;
 import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.GameMessages;
+import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.GameMessageAdapter;
@@ -65,6 +66,7 @@ public class Feed extends ListActivity {
 	//Options menu items
 	private static final int MENU_FILTER = 0;
 	private static final int MENU_REFRESH = 2;
+	private static final int MENU_SETTINGS = 10;
 	
 	//Dialogs
 	private static final int DIALOG_FILTER = 1;
@@ -161,7 +163,7 @@ public class Feed extends ListActivity {
 		super.onResume();
 		mAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
-		DatabaseUtils.dumpCursor(mMessages);
+		//DatabaseUtils.dumpCursor(mMessages);
 	}
 	
 	@Override
@@ -200,10 +202,12 @@ public class Feed extends ListActivity {
 		boolean result = super.onCreateOptionsMenu(menu);
 		Log.d(TAG, "onCreateOptionsMenu()");
 		
-		menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
-			.setIcon(R.drawable.ic_menu_agenda);
+		//menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
+		//	.setIcon(R.drawable.ic_menu_agenda);
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
-		.setIcon(R.drawable.ic_menu_refresh);
+			.setIcon(R.drawable.ic_menu_refresh);
+		menu.add(ContextMenu.NONE, MENU_SETTINGS, ContextMenu.NONE, "Settings")
+			.setIcon(R.drawable.ic_menu_preferences);
 		return result;
 	}
 	
@@ -212,13 +216,18 @@ public class Feed extends ListActivity {
 		boolean handled = false;
 		
 		switch (item.getItemId()) {
+		/*
 		case MENU_FILTER:
 			showDialog(DIALOG_FILTER);
 			handled = true;
-			break;
+			break;*/
 		case MENU_REFRESH:
 			Log.d(TAG, "refreshing...");
 			mHandler.post(mRefreshTask);
+			break;
+		case MENU_SETTINGS:
+			startActivity(new Intent(this, SettingsDialog.class));
+			handled = true;
 			break;
 		default:
 			handled = super.onOptionsItemSelected(item);
