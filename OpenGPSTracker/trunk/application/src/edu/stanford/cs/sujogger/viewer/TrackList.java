@@ -653,7 +653,7 @@ public class TrackList extends ListActivity {
 									mDialogUserInit.dismiss();
 									TrackList.this.startActivity(new Intent(TrackList.this, SettingsDialog.class));
 									Toast.makeText(
-											TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_SHORT).show();
+											TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_LONG).show();
 								}
 							}
 						});
@@ -671,7 +671,7 @@ public class TrackList extends ListActivity {
 								mDialogUserInit.dismiss();
 								TrackList.this.startActivity(new Intent(TrackList.this, SettingsDialog.class));
 								Toast.makeText(
-										TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_SHORT).show();
+										TrackList.this, "Hit \"back\" to dismiss settings", Toast.LENGTH_LONG).show();
 							}
 						});
 						break;
