@@ -1,8 +1,5 @@
-package com.snaptic.integration;
+package com.catchnotes.integration;
 
-import com.snaptic.intent.SnapticIntent;
-//import com.snaptic.samples.NotesIntegration.R;
-import edu.stanford.cs.sujogger.R;
 import android.app.AlertDialog;
 import android.content.ActivityNotFoundException;
 import android.content.Context;
@@ -15,11 +12,17 @@ import android.location.Location;
 import android.net.Uri;
 import android.widget.Toast;
 
+import com.catchnotes.intent.CatchIntent;
+
+import edu.stanford.cs.sujogger.R;
+
 public class IntentIntegrator {
+	// Note: "3banana" was the original name of Catch Notes. Though it has been
+	// rebranded, the package name must persist.
 	private static final String NOTES_PACKAGE_NAME = "com.threebanana.notes"; 
 	private static final String NOTES_MARKET_URI = "http://market.android.com/search?q=pname:" + NOTES_PACKAGE_NAME;
 	
-	private static final int NOTES_MIN_VERSION_CODE = 19;
+	private static final int NOTES_MIN_VERSION_CODE = 38;
 	
 	private final Context _context;
 	
@@ -57,7 +60,7 @@ public class IntentIntegrator {
 		Intent intent = new Intent();
 		
 		// This action signifies you want to add a new note to the user's notebook
-		intent.setAction(SnapticIntent.ACTION_ADD);
+		intent.setAction(CatchIntent.ACTION_ADD);
 		
 		// Mandatory. This will be the content of the note. The object should be
 		// a String.
@@ -65,14 +68,14 @@ public class IntentIntegrator {
 
 		// Mandatory; EXTRA_SOURCE identifies your app as the source
 		// for this note. Don't use the example below; please arrange with the
-		// Snaptic development team for the string you will use to identify your
+		// Catch development team for the string you will use to identify your
 		// app. The object should be a String.
-		intent.putExtra(SnapticIntent.EXTRA_SOURCE, "Moovy");
+		intent.putExtra(CatchIntent.EXTRA_SOURCE, "Catch Intent Test Utility");
 		
 		// Optional; if EXTRA_TITLE is supplied it will appear in the
-		// titlebar of the note editor activity in 3banana. The object should be
+		// titlebar of the note editor activity in Catch Notes. The object should be
 		// a String.
-		intent.putExtra(Intent.EXTRA_TITLE, "Moovy");
+		intent.putExtra(Intent.EXTRA_TITLE, "Intent Testing");
 
 		// Optional: include an image. Image URIs should point to JPEG images,
 		// accessible to external packages (i.e., don't point to content private
@@ -83,13 +86,13 @@ public class IntentIntegrator {
 		
 		// Optional: include a location. The object should be a Location.
 		if (location != null) {
-			intent.putExtra(SnapticIntent.EXTRA_LOCATION, location);		
+			intent.putExtra(CatchIntent.EXTRA_LOCATION, location);		
 		}
 		
 		// Optional: specify a cursor position for the editor. The type should
 		// be an int.
 		if (cursorPosition >= 0) {
-			intent.putExtra(SnapticIntent.EXTRA_CURSOR_POSITION, cursorPosition);
+			intent.putExtra(CatchIntent.EXTRA_CURSOR_POSITION, cursorPosition);
 		}
 		
 		// Optional: specify autosave. Intents with autosave set will send the
@@ -97,7 +100,7 @@ public class IntentIntegrator {
 		// activity. You may want to provide feedback to your users that the
 		// action completed. The type should be a boolean.
 		if (autoSave) {
-			intent.putExtra(SnapticIntent.EXTRA_AUTOSAVE, true);
+			intent.putExtra(CatchIntent.EXTRA_AUTOSAVE, true);
 		}
 
 		// Start the Intent
@@ -117,8 +120,8 @@ public class IntentIntegrator {
 		
 		// Create the Intent		
 		Intent intent = new Intent();
-		intent.setAction(SnapticIntent.ACTION_VIEW);
-		intent.putExtra(SnapticIntent.EXTRA_VIEW_FILTER, tag);
+		intent.setAction(CatchIntent.ACTION_VIEW);
+		intent.putExtra(CatchIntent.EXTRA_VIEW_FILTER, tag);
 
 		// Start the Intent
 		startNotesIntent(intent);
@@ -181,6 +184,7 @@ public class IntentIntegrator {
 		try {
 			Uri uri = Uri.parse(NOTES_MARKET_URI);
 			Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+			intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
 			_context.startActivity(intent);
 		} catch (ActivityNotFoundException e) {
 			e.printStackTrace();
@@ -202,14 +206,12 @@ public class IntentIntegrator {
 		try {
 			_context.startActivity(intent);
 			
-			if (intent.hasExtra(SnapticIntent.EXTRA_AUTOSAVE)) {
+			if (intent.hasExtra(CatchIntent.EXTRA_AUTOSAVE)) {
 				// Pop up a mesage to let your users know when a quick note has
 				// been added.
-				/*
 	    		Toast.makeText(_context,
 	    				R.string.toast_quick_note,
 	    				Toast.LENGTH_SHORT).show(); 
-	    				*/
 			}
 		} catch (ActivityNotFoundException e) {
 			e.printStackTrace();
