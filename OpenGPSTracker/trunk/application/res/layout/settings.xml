@@ -100,4 +100,17 @@
             android:defaultValue="false" 
          />        -->
     </PreferenceCategory>
+    <PreferenceCategory
+        android:title="About">
+        <Preference
+        	android:key="settings_feedback"
+        	android:title="Feedback"
+        	android:summary="Email us feedback on Happy Feet"
+        />
+        <Preference
+        	android:key="settings_website"
+        	android:title="Website"
+        	android:summary="Visit our website"
+        />
+    </PreferenceCategory>
 </PreferenceScreen>

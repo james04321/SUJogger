@@ -49,6 +49,7 @@ public class Constants
    public static final String SITE_LOGO = "http://happyfeet.heroku.com/Happy_Feet_files/logo.png";
    public static final String SITE_TITLE = "Happy Feet for Android";
    public static final String SITE_SLOGAN = "The premier social running app for Android";
+   public static final String SITE_EMAIL = "happyfeetdev@gmail.com";
    
    //Facebook integration
    public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";

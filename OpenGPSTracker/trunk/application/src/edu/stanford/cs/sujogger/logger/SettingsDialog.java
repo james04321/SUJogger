@@ -28,10 +28,18 @@
  */
 package edu.stanford.cs.sujogger.logger;
 
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageInfo;
+import android.content.pm.PackageManager;
+import android.content.pm.PackageManager.NameNotFoundException;
+import android.net.Uri;
 import android.os.Bundle;
+import android.preference.Preference;
 import android.preference.PreferenceActivity;
 import android.preference.PreferenceManager;
+import android.preference.PreferenceScreen;
+import android.util.Log;
 
 import com.catchnotes.integration.IntentIntegrator;
 
@@ -56,11 +64,38 @@ public class SettingsDialog extends PreferenceActivity implements SharedPreferen
    }
    
   public void onSharedPreferenceChanged(SharedPreferences sharedPreferences, String key) {
+	  Log.d("SettingsDialog", "key= " + key);
 	  if (key.equals(Constants.POST_CATCH_KEY)) {
 		  if (sharedPreferences.getBoolean(key, false)) {
 			  IntentIntegrator notesIntent = new IntentIntegrator(this);
 			  notesIntent.isNotesInstalled();
 		  }
 	  }
+  }
+  
+  public boolean onPreferenceTreeClick(PreferenceScreen preferenceScreen, Preference preference) {
+	  String versionString = null;
+	  if (preference.getTitle().equals("Feedback")) {
+		  try {
+			  PackageInfo pkgInfo = this.getPackageManager().getPackageInfo(this.getPackageName(), PackageManager.GET_ACTIVITIES);
+			  versionString = this.getString(R.string.app_name) + " " + pkgInfo.versionName;
+		  } catch (NameNotFoundException e) {}
+		  
+		  Intent msg = new Intent(Intent.ACTION_SEND);
+		  msg.putExtra(Intent.EXTRA_EMAIL, new String[] {Constants.SITE_EMAIL});
+		  msg.putExtra(Intent.EXTRA_SUBJECT, "");
+		  msg.putExtra(Intent.EXTRA_TEXT, "\n\n-------------\n" + 
+				  "App version: " + versionString + "\n" + 
+				  "OS: Android " + android.os.Build.VERSION.RELEASE + "\n" +
+				  "Device: " + android.os.Build.MANUFACTURER + " " + android.os.Build.MODEL);
+		  msg.setType("message/rfc822");
+		  startActivity(Intent.createChooser(msg, "Select email application"));
+	  }
+	  else if (preference.getTitle().equals("Website")) {
+		  Intent myIntent = new Intent(Intent.ACTION_VIEW, Uri.parse(Constants.SITE_URL));
+		  startActivity(myIntent);
+	  }
+	  
+	  return super.onPreferenceTreeClick(preferenceScreen, preference);
   }
 }
