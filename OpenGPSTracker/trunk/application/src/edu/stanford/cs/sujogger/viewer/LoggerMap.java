@@ -27,7 +27,7 @@
  *
  */
 package edu.stanford.cs.sujogger.viewer;
- 
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileWriter;

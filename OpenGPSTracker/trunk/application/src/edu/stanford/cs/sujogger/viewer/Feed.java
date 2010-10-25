@@ -314,7 +314,10 @@ public class Feed extends ListActivity {
 					
 					switch(appResponse.request_id) {
 					case GET_MSG_RID:
-						Message msg = (Message)appResponse.object;
+//						Message msg = (Message)appResponse.object;
+						Message[] msgs = (Message[]) appResponse.object;
+						for (int i=0; i < msgs.length; i++) {
+							Message msg = msgs[i];
 						if (msg != null) {
 							int lastConciergeId = appResponse.last_concierge_id;
 							Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
@@ -325,6 +328,8 @@ public class Feed extends ListActivity {
 							User fromUser = msg.fromUser;
 							Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
 							Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+							Log.d(TAG, "onReceive(): msg = " + ((MessageObject) msg.msg).mBody);
+
 							
 							//Ignore messages that, for some reason, has come from the same person
 							if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
@@ -338,6 +343,7 @@ public class Feed extends ListActivity {
 							
 							editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
 							editor.commit();
+						}
 						}
 						
 						Toast toast = Toast.makeText(Feed.this, 
