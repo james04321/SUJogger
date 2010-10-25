@@ -315,6 +315,7 @@ public class Feed extends ListActivity {
 					switch(appResponse.request_id) {
 					case GET_MSG_RID:
 //						Message msg = (Message)appResponse.object;
+						if (appResponse.object == null) return;
 						Message[] msgs = (Message[]) appResponse.object;
 						for (int i=0; i < msgs.length; i++) {
 							Message msg = msgs[i];
@@ -354,6 +355,7 @@ public class Feed extends ListActivity {
 					}
 				}
 			}
+				
 			catch (Exception e) {
 				e.printStackTrace();
 			}
