@@ -10,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -64,7 +63,7 @@ public class Feed extends ListActivity {
 	private RadioGroup mFilterOptions;
 	
 	//Options menu items
-	private static final int MENU_FILTER = 0;
+	//private static final int MENU_FILTER = 0;
 	private static final int MENU_REFRESH = 2;
 	private static final int MENU_SETTINGS = 10;
 	
@@ -341,7 +340,7 @@ public class Feed extends ListActivity {
 						}
 						
 						Toast toast = Toast.makeText(Feed.this, 
-								"Feed up to date", Toast.LENGTH_SHORT);
+								"Inbox up to date", Toast.LENGTH_SHORT);
 						toast.show();
 						break;
 					default: break;

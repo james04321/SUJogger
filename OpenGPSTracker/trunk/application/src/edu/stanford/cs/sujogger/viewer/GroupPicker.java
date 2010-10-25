@@ -38,7 +38,7 @@ public class GroupPicker extends ListActivity {
 		emptyView.setText(R.string.no_groups);
 		
 		// Create cursors
-		mGroupsCursor = mDbHelper.getGroups();
+		mGroupsCursor = mDbHelper.getGroups(true);
 		startManagingCursor(mGroupsCursor);
 		
 		fillData();

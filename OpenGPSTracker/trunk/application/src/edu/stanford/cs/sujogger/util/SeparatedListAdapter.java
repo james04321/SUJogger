@@ -1,10 +1,10 @@
 package edu.stanford.cs.sujogger.util;
 
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Adapter;
@@ -17,9 +17,11 @@ public class SeparatedListAdapter extends BaseAdapter {
 	public final Map<String,Adapter> sections = new LinkedHashMap<String,Adapter>();
 	public final ArrayAdapter<String> headers;
 	public final static int TYPE_SECTION_HEADER = 0;
+	private Context mContext;
 
 	public SeparatedListAdapter(Context context) {
 		headers = new ArrayAdapter<String>(context, R.layout.list_header);
+		mContext = context;
 	}
 
 	public void addSection(String section, Adapter adapter) {
@@ -96,13 +98,30 @@ public class SeparatedListAdapter extends BaseAdapter {
 		for(Object section : this.sections.keySet()) {
 			Adapter adapter = sections.get(section);
 			int size = adapter.getCount() + 1;
-
-			// check if position inside this section
-			if(position == 0) return headers.getView(sectionnum, convertView, parent);
-			if(position < size) return adapter.getView(position - 1, convertView, parent);
-
-			// otherwise jump into next section
-			position -= size;
+			//Log.d("SeparatedListAdapter", "sectionnum= " + sectionnum + "; position= " + position);
+			/*
+			if (((String)headers.getItem(sectionnum)).equals("")) {
+				// check if position inside this section
+				if(position == 0) {
+					//if (((String)headers.getItem(sectionnum)).equals("")) {
+					//	position++;
+					//}
+					//else
+					position++;
+					return headers.getView(sectionnum, convertView, parent);
+				}
+				if(position < size) return adapter.getView(position - 1, convertView, parent);
+	
+				// otherwise jump into next section
+				position -= size + 1;
+			}
+			else {*/
+				if(position == 0) return headers.getView(sectionnum, convertView, parent);
+				if(position < size) return adapter.getView(position - 1, convertView, parent);
+	
+				// otherwise jump into next section
+				position -= size;
+			//}
 			sectionnum++;
 		}
 		return null;

@@ -72,6 +72,8 @@ public class GroupDetail extends ListActivity {
 		});
 		
 		mSendButton = (Button) findViewById(R.id.sendbutton);
+		if (mUsers.getCount() <= 1)
+			mSendButton.setEnabled(false);
 		mSendButton.setOnClickListener(new View.OnClickListener() {
 			public void onClick(View v) {
 				Intent i = new Intent(GroupDetail.this, MessageSender.class);

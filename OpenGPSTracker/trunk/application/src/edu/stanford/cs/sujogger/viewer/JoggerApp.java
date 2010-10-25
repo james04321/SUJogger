@@ -30,7 +30,7 @@ public class JoggerApp extends TabActivity {
 				setContent(new Intent(this, AchievementCatList.class)));
 		host.addTab(host.newTabSpec("groups").setIndicator("People").
 				setContent(new Intent(this, GroupList.class)));
-		host.addTab(host.newTabSpec("feed").setIndicator("Feed").
+		host.addTab(host.newTabSpec("feed").setIndicator("Inbox").
 				setContent(new Intent(this, Feed.class)));
 		
 		// Scale tab heights down to 40dip

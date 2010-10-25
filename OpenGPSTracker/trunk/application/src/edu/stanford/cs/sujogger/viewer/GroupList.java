@@ -22,7 +22,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
-import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -33,6 +32,7 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -434,6 +434,7 @@ public class GroupList extends ListActivity {
 			}
 			if (mGroupedAdapter == null) {
 				mGroupedAdapter = new SeparatedListAdapter(this);
+				//mGroupedAdapter.addSection("", new ArrayAdapter<String>(this, R.layout.trackitem));
 				mGroupedAdapter.addSection("Friends on Happy Feet", mUserAdapter);
 				mGroupedAdapter.addSection("Unregistered Friends  (Tap to invite)", mUnregFriendsAdapter);
 			}
@@ -441,7 +442,7 @@ public class GroupList extends ListActivity {
 		}
 		else {
 			if (mGroupAdapter == null) {
-				mCursor = mDbHelper.getGroups();
+				mCursor = mDbHelper.getGroups(false);
 				mGroupAdapter = new GroupListAdapter(this, mCursor, true);
 			}
 			setListAdapter(mGroupAdapter);
@@ -510,7 +511,7 @@ public class GroupList extends ListActivity {
 					
 					switch (appResponse.request_id) {
 					case USERREG_RID:
-						final int userId = (Integer) appResponse.object;
+						//final int userId = (Integer) appResponse.object;
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
 								Log.d(TAG, "onReceive(): user registered");

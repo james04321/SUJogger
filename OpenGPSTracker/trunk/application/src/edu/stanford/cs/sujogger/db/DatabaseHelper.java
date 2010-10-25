@@ -998,7 +998,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	 */
 	
 	//Get all groups along with the # of members
-	public Cursor getGroups() {
+	public Cursor getGroups(boolean excludeSingletonGroups) {
 		/**
 		 * SELECT groups._id, groups.group_id, groups.name, ifnull(subtotal.count,0) 
 		 * FROM groups LEFT JOIN 
@@ -1022,8 +1022,11 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		String innerQuery = "SELECT " + innerSelectClause + " FROM " + innerTables + 
 			" WHERE " + innerWhereClause;
 		
+		String outerWhereClause = excludeSingletonGroups ? 
+			" WHERE subtotal.count>1" : "";
+		
 		Cursor cursor = mDb.rawQuery("SELECT " + selectClause + " FROM " + Groups.TABLE + 
-				" LEFT JOIN (" + innerQuery + ") subtotal ON " + outerCondition, null);
+				" LEFT JOIN (" + innerQuery + ") subtotal ON " + outerCondition + outerWhereClause, null);
 		return cursor;
 	}
 	
