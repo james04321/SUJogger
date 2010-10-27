@@ -1,5 +1,8 @@
 package edu.stanford.cs.sujogger.viewer;
 
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
+
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -132,6 +135,10 @@ public class Feed extends ListActivity {
 			}
 		});
 		
+		if (Constants.AD_TEST) AdManager.setTestDevices(new String[] { "3468678E351E95A5F7A64D2271BCB7BF" });
+		AdView adView = (AdView)View.inflate(this, R.layout.adview, null);
+		getListView().addHeaderView(adView);
+		
 		updateFiltering();
 		fillData();
 		
@@ -189,6 +196,8 @@ public class Feed extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
+		
+		position--; //ignore ad header
 		
 		long gmId = (Long)mAdapter.getItem(position);
 		Intent i = new Intent(this, GameMessageDetail.class);

@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.admob.android.ads.AdView  
+	xmlns:android="http://schemas.android.com/apk/res/android"
+	xmlns:app="http://schemas.android.com/apk/res/edu.stanford.cs.sujogger"
+  	android:id="@+id/ad" 
+  	android:layout_width="fill_parent" 
+	android:layout_height="wrap_content"
+	app:backgroundColor="#000000"
+	app:primaryTextColor="#FFFFFF"
+	app:secondaryTextColor="#CCCCCC"
+	app:keywords="running walking exercise shoes"
+/>

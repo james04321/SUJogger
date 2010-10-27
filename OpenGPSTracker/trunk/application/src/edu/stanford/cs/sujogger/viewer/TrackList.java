@@ -73,6 +73,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
@@ -215,6 +217,10 @@ public class TrackList extends ListActivity {
 			}
 		}), 
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
+		
+		if (Constants.AD_TEST) AdManager.setTestDevices(new String[] { "3468678E351E95A5F7A64D2271BCB7BF" });
+		AdView adView = (AdView)View.inflate(this, R.layout.adview, null);
+		getListView().addHeaderView(adView);
 		
 		displayIntent(getIntent());
 
@@ -366,6 +372,8 @@ public class TrackList extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v("TrackList", "position = " + position + "; id = " + id);
+		
+		position--; //ignore ad header
 		
 		Intent intent = new Intent();
 		intent.setData(ContentUris.withAppendedId(Tracks.CONTENT_URI, id));

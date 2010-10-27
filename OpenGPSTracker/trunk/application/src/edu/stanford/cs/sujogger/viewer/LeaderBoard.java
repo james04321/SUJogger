@@ -1,5 +1,8 @@
 package edu.stanford.cs.sujogger.viewer;
 
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
+
 import android.app.ListActivity;
 import android.app.ProgressDialog;
 import android.content.BroadcastReceiver;
@@ -180,6 +183,11 @@ public class LeaderBoard extends ListActivity {
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 
 		setTitle("Leaderboards");
+		
+		if (Constants.AD_TEST) AdManager.setTestDevices(new String[] { "3468678E351E95A5F7A64D2271BCB7BF" });
+		AdView adView = (AdView)View.inflate(this, R.layout.adview, null);
+		getListView().addHeaderView(adView);
+		
 		fillData();
 		
 		mHandler.postDelayed(mRefreshTask, 100);
@@ -274,7 +282,7 @@ public class LeaderBoard extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
-		
+		position--;
 		if (mIsGroup) {
 			
 		}

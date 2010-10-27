@@ -5,5 +5,6 @@
 	<classpathentry kind="src" path="gen"/>
 	<classpathentry kind="lib" path="/Users/james04321/android_dev/Stanford-Gaming-SDK/gaming.jar"/>
 	<classpathentry kind="src" path="FacebookSDK"/>
+	<classpathentry kind="lib" path="/Users/james04321/android_dev/SUJogger/OpenGPSTracker/trunk/application/libs/admob-sdk-android.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

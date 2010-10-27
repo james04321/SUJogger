@@ -97,7 +97,7 @@ public class GameMessageDetail extends ListActivity {
 			if (!(mPeople.getCount() > 1))
 				mReplyButton.setText("Reply");
 		}
-		
+		setTitle("Message");
 		fillData();
 	}
 	

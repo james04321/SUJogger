@@ -22,6 +22,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -32,7 +33,6 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.LinearLayout;
@@ -41,6 +41,8 @@ import android.widget.TextView;
 import android.widget.Toast;
 import android.widget.LinearLayout.LayoutParams;
 
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
 import com.facebook.android.AsyncFacebookRunner;
 import com.facebook.android.DialogError;
 import com.facebook.android.Facebook;
@@ -190,6 +192,10 @@ public class GroupList extends ListActivity {
 		}), 
 				new LinearLayout.LayoutParams(LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		
+		if (Constants.AD_TEST) AdManager.setTestDevices(new String[] { "3468678E351E95A5F7A64D2271BCB7BF" });
+		AdView adView = (AdView)View.inflate(this, R.layout.adview, null);
+		getListView().addHeaderView(adView);
+		
 		fillData();
 		updateButton();
 		
@@ -260,6 +266,7 @@ public class GroupList extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
+		position--; //ignore ad header
 		if (mDisplayFriends) {
 			Object item = mGroupedAdapter.getItem(position);
 			if (item.getClass() == Integer.class) {
@@ -270,22 +277,6 @@ public class GroupList extends ListActivity {
 				startActivity(i);
 			}
 			else if (item.getClass() == Long.class) {
-				/*
-				long fbId = (Long) item;
-				Log.d(TAG, "fbId = " + fbId);
-				Intent viewIntent = new Intent("android.intent.action.VIEW", Uri.parse("http://m.facebook.com/inbox/?compose&ids=" + fbId));  
-				startActivity(viewIntent);
-				*/
-				
-				/*
-				int numChecked = mUnregFriendsAdapter.toggleItemAtPosition(position - mUserAdapter.getCount() - 2);
-				Log.d(TAG, "onListItemClicked(): numChecked = " + numChecked);
-				getListView().invalidateViews();
-				*/
-				//updateButton();
-				
-				
-				
 				User user = mUnregFriendsAdapter.getUser(position - mUserAdapter.getCount() - 2);
 				
 				String firstName = user.last_name;
@@ -297,15 +288,6 @@ public class GroupList extends ListActivity {
 				Bundle params = new Bundle();
 				params.putString("target_id", Long.toString(user.fb_id));
 				params.putString("message", "Hi " + firstName + ", I really like using Happy Feet. Check it out and join me on a run!");
-				/*
-				params.putString("attachment", 
-						"{\"name\":\"Happy Feet for Android\"," + 
-						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
-						"\"caption\":\"The premier social running app for Android.\"," +
-						"\"media\":[{\"type\":\"image\",\"src\":\"" + 
-						"http://happyfeet.heroku.com/Happy_Feet_files/logo.png" + 
-						"\",\"href\":\""+"http://happyfeet.heroku.com/"+"\"}]" + "}");
-				*/
 				params.putString("attachment", 
 						"{\"name\":\"Happy Feet for Android\"," + 
 						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
@@ -425,10 +407,12 @@ public class GroupList extends ListActivity {
 		if (mDisplayFriends) {
 			if (mUserAdapter == null) {
 				mCursor = mDbHelper.getAllUsers(true, true);
+				DatabaseUtils.dumpCursor(mCursor);
 				mUserAdapter = new UserListAdapter(this, mCursor, false, null);
 			}
 			if (mUnregFriendsAdapter == null) {
 				mUnregFriendsCursor = mDbHelper.getAllUsers(true, false);
+				DatabaseUtils.dumpCursor(mUnregFriendsCursor);
 				startManagingCursor(mUnregFriendsCursor);
 				mUnregFriendsAdapter = new UserListAdapter(this, mUnregFriendsCursor, true, null);
 			}
@@ -451,7 +435,7 @@ public class GroupList extends ListActivity {
 		startManagingCursor(mCursor);
 		
 		//Log.d(TAG, "fillData()");
-		//DatabaseUtils.dumpCursor(mCursor);
+		DatabaseUtils.dumpCursor(mCursor);
 	}
 
 	private void initializeStatsForGroup(int groupId) {
@@ -622,7 +606,9 @@ public class GroupList extends ListActivity {
 								if (users != null) {
 									mDbHelper.addFriends(users);
 									mCursor.requery();
+									mUnregFriendsCursor.requery();
 									mUserAdapter.notifyDataSetChanged();
+									mUnregFriendsAdapter.notifyDataSetChanged();
 									GroupList.this.getListView().invalidateViews();
 								}
 								Editor editor = mSharedPreferences.edit();
