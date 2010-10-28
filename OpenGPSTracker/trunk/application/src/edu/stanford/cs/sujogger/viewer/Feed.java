@@ -58,6 +58,7 @@ public class Feed extends ListActivity {
 	
 	private GamingServiceConnection mGameCon;
 	private FeedReceiver mReceiver;
+	private boolean isUpdating;
 	
 	//Request IDs
 	private static final int GET_MSG_RID = 1;
@@ -126,6 +127,7 @@ public class Feed extends ListActivity {
 		mGameCon.bind();
 		User user = Common.getRegisteredUser(this);
 		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
+		isUpdating = false;
 		
 		mComposeButton = (Button)findViewById(R.id.composebutton);
 		mComposeButton.setOnClickListener(new View.OnClickListener() {
@@ -147,6 +149,7 @@ public class Feed extends ListActivity {
 					Constants.UPDATE_INTERVAL)
 			//Wait 100ms before sending request, because sometimes, the activity doesn't
 			//bind to the service quickly enough
+			isUpdating = true;
 			mHandler.postDelayed(mRefreshTask, 100);
 	}
 	
@@ -230,7 +233,12 @@ public class Feed extends ListActivity {
 			handled = true;
 			break;*/
 		case MENU_REFRESH:
+			if (isUpdating) {
+				Log.d(TAG, "BLOCKING UPDATE REQUEST!!!!!!!!!!!");
+				break;
+			}
 			Log.d(TAG, "refreshing...");
+			isUpdating = true;
 			mHandler.post(mRefreshTask);
 			break;
 		case MENU_SETTINGS:
@@ -314,50 +322,60 @@ public class Feed extends ListActivity {
 					Log.d(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
-						Toast toast = Toast.makeText(Feed.this, 
-								R.string.connection_error_toast, Toast.LENGTH_SHORT);
-						toast.show();
-						return;
+						Feed.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Toast toast = Toast.makeText(Feed.this, 
+										R.string.connection_error_toast, Toast.LENGTH_SHORT);
+								toast.show();
+								isUpdating = false;
+							}
+						});
+						continue;
 					}
 					
 					switch(appResponse.request_id) {
 					case GET_MSG_RID:
-//						Message msg = (Message)appResponse.object;
-						if (appResponse.object == null) return;
-						Message[] msgs = (Message[]) appResponse.object;
-						for (int i=0; i < msgs.length; i++) {
-							Message msg = msgs[i];
-						if (msg != null) {
-							int lastConciergeId = appResponse.last_concierge_id;
-							Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
-							Editor editor = mSharedPreferences.edit();
-							editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
-							editor.commit();
-							
-							User fromUser = msg.fromUser;
-							Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
-							Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
-							Log.d(TAG, "onReceive(): msg = " + ((MessageObject) msg.msg).mBody);
-
-							
-							//Ignore messages that, for some reason, has come from the same person
-							if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
-							
-							mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
-									(MessageObject)msg.msg);
-							
-							mMessages.requery();
-							mAdapter.notifyDataSetChanged();
-							Feed.this.getListView().invalidateViews();
-							
-							editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
-							editor.commit();
-						}
-						}
+						final Message[] msgs = (Message[]) appResponse.object;
+						final int lastConciergeId = appResponse.last_concierge_id;
+						Feed.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (msgs != null) {
+									for (int i=0; i < msgs.length; i++) {
+										Message msg = msgs[i];
+										if (msg != null) {
+											Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
+											Editor editor = mSharedPreferences.edit();
+											editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
+											editor.commit();
+											
+											User fromUser = msg.fromUser;
+											Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
+											Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+											Log.d(TAG, "onReceive(): msg = " + ((MessageObject) msg.msg).mBody);
+				
+											
+											//Ignore messages that, for some reason, has come from the same person
+											if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;
+											
+											mDbHelper.insertGameMessage(fromUser, msg.toUsers, msg.dateTime, 
+													(MessageObject)msg.msg);
+											
+											mMessages.requery();
+											mAdapter.notifyDataSetChanged();
+											Feed.this.getListView().invalidateViews();
+											
+											editor.putLong(Constants.FEED_UPDATE_KEY, System.currentTimeMillis());
+											editor.commit();
+										}
+									}
+								}
 						
-						Toast toast = Toast.makeText(Feed.this, 
-								"Inbox up to date", Toast.LENGTH_SHORT);
-						toast.show();
+								Toast toast = Toast.makeText(Feed.this, 
+										"Inbox up to date", Toast.LENGTH_SHORT);
+								toast.show();
+								isUpdating = false;
+							}
+						});
 						break;
 					default: break;
 					}
