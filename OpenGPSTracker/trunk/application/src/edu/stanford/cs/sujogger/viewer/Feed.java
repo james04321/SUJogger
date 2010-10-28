@@ -170,6 +170,7 @@ public class Feed extends ListActivity {
 	protected void onResume() {
 		Log.d(TAG, "onResume()");
 		super.onResume();
+		mMessages.requery();
 		mAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
 		//DatabaseUtils.dumpCursor(mMessages);
