@@ -38,7 +38,7 @@ public class GameMessageDetail extends ListActivity {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.gamemessagedetail);
 		
 		mMessageId = savedInstanceState != null ? savedInstanceState.getLong(GameMessages.TABLE) : 0;
@@ -71,7 +71,7 @@ public class GameMessageDetail extends ListActivity {
 		for (int i = 0; i < mReplyRecipientIds.length; i++)
 			mReplyRecipientIds[i] = recipients.get(i);
 		
-		//Log.d(TAG, Arrays.toString(mReplyRecipientIds));
+		//Common.log(TAG, Arrays.toString(mReplyRecipientIds));
 		
 		mPeople.moveToFirst();
 		
@@ -103,16 +103,16 @@ public class GameMessageDetail extends ListActivity {
 	
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 	}
 	
 	@Override
 	protected void onResume() {
-		Log.d(TAG, "onResume()");
+		Common.log(TAG, "onResume()");
 		super.onResume();
-		Log.d(TAG, "onResume(): mMessageId = " + mMessageId);
+		Common.log(TAG, "onResume(): mMessageId = " + mMessageId);
 		DatabaseUtils.dumpCursor(mMessage);
 	}
 	
@@ -137,14 +137,14 @@ public class GameMessageDetail extends ListActivity {
 		
 		
 		int userId = (Integer)mGroupAdapter.getItem(position);
-		Log.d(TAG, "onListItemClick(): user id = " + userId);
+		Common.log(TAG, "onListItemClick(): user id = " + userId);
 		Intent i = new Intent(this, PeopleTrackList.class);
 		i.putExtra("userId", userId);
 		startActivity(i);
 	}
 	
 	private void startTrack() {
-		Log.d(TAG, "startTrack()");
+		Common.log(TAG, "startTrack()");
 		mDbHelper.setMessageToStarted(mMessageId);
 		
 		Intent intent = new Intent(this, LoggerMap.class);
@@ -153,7 +153,7 @@ public class GameMessageDetail extends ListActivity {
 	}
 	
 	private void startMessageSender() {
-		Log.d(TAG, "startMessageSender()");
+		Common.log(TAG, "startMessageSender()");
 		
 		Intent intent = new Intent(this, MessageSender.class);
 		intent.putExtra(Users.TABLE, mReplyRecipientIds);

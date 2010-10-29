@@ -21,9 +21,7 @@ public class AchievementList extends ListActivity {
 	private DatabaseHelper mDbHelper;
 	private Cursor mAchCursor;
 
-	public AchievementList() {
-		// TODO Auto-generated constructor stub
-	}
+	public AchievementList() {}
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {

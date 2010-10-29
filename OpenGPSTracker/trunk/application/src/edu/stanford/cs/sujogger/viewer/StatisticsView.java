@@ -31,7 +31,7 @@ public class StatisticsView extends ListActivity {
 	public void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		mGroupId = getIntent().getExtras().getLong("group_id");
-		Log.d(TAG, "mGroupId is " + mGroupId);
+		Common.log(TAG, "mGroupId is " + mGroupId);
 		mDb = new DatabaseHelper(this);
 		mStats = mDb.getStatistics(mGroupId);
 		setContentView(R.layout.list_simple);
@@ -66,7 +66,7 @@ public class StatisticsView extends ListActivity {
 			Statistic o = items.get(position);
 			if (o != null) {
 				TextView titleView = (TextView) v.findViewById(R.id.lb_name);
-				Log.d(TAG, "O.STAT_ID IS " + o.stat_id);
+				Common.log(TAG, "O.STAT_ID IS " + o.stat_id);
 				titleView.setText(GPStracking.Stats.ALL_STAT_TITLES[o.stat_id]);
 				double value = o.value;
 				TextView valueText = (TextView) v.findViewById(R.id.lb_value);

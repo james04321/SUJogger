@@ -160,7 +160,7 @@ public class TrackList extends ListActivity {
 	};
 	private OnClickListener mRenameOnClickListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
-			// Log.d( TAG,
+			// Common.log( TAG,
 			// "Context item selected: "+mDialogUri+" with name "+mDialogCurrentName
 			// );
 
@@ -174,17 +174,17 @@ public class TrackList extends ListActivity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.tracklist);
 		/*
-		 * Log.d(TAG, "DOWNLOADEDTRACKS BEFORE " + mDownloadedTracks); if
-		 * (savedInstanceState != null) { Log.d(TAG,
+		 * Common.log(TAG, "DOWNLOADEDTRACKS BEFORE " + mDownloadedTracks); if
+		 * (savedInstanceState != null) { Common.log(TAG,
 		 * "STATE OF DOWNLOADEDTRACK IS " +
 		 * savedInstanceState.getBoolean("mDownloadedTrack")); }
 		 */
 		mDownloadedTracks = savedInstanceState != null ? savedInstanceState
 				.getBoolean(DOWNLOADEDTRACKSFLAG) : false;
-		Log.d(TAG, "DOWNLOADEDTRACKS AFTER " + mDownloadedTracks);
+		Common.log(TAG, "DOWNLOADEDTRACKS AFTER " + mDownloadedTracks);
 
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 
@@ -196,7 +196,7 @@ public class TrackList extends ListActivity {
 				Constants.APP_API_KEY, TrackList.class.toString());
 		mGameCon.bind();
 		
-		Log.d(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
+		Common.log(TAG, "ONCREATE DOWNLOADEDTRACKS IS " + mDownloadedTracks);
 
 		mStartButton = (Button) findViewById(R.id.startbutton);
 		mStartButton.setOnClickListener(new View.OnClickListener() {
@@ -265,13 +265,13 @@ public class TrackList extends ListActivity {
 
 	@Override
 	public void onNewIntent(Intent newIntent) {
-		Log.d(TAG, "onNewIntent()");
+		Common.log(TAG, "onNewIntent()");
 		displayIntent(newIntent);
 	}
 
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 
 		trackAdapter.notifyDataSetChanged();
 		getListView().invalidate();
@@ -312,7 +312,7 @@ public class TrackList extends ListActivity {
 		mDialogUri = state.getParcelable("URI");
 		mDialogCurrentName = state.getString("NAME");
 		// mDownloadedTracks = state.getBoolean("mDownloadedTracks");
-		// Log.d(TAG, "RESTORING DOWNLOADED TRACKS " + mDownloadedTracks);
+		// Common.log(TAG, "RESTORING DOWNLOADED TRACKS " + mDownloadedTracks);
 
 		// setTrackList();
 
@@ -326,7 +326,7 @@ public class TrackList extends ListActivity {
 	 */
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		Log.d(TAG, "SAVING DOWNLOADED TRACKS " + mDownloadedTracks);
+		Common.log(TAG, "SAVING DOWNLOADED TRACKS " + mDownloadedTracks);
 
 		outState.putParcelable("URI", mDialogUri);
 		outState.putString("NAME", mDialogCurrentName);
@@ -411,7 +411,7 @@ public class TrackList extends ListActivity {
 		long trackId = trackAdapter.getItemId(info.position);
 		
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
-		Log.d(TAG, "onContextItemSelected(): trackUri=" + trackUri);
+		Common.log(TAG, "onContextItemSelected(): trackUri=" + trackUri);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 		Cursor trackCursor = null;
 		long remoteTrackId = 0;
@@ -536,7 +536,7 @@ public class TrackList extends ListActivity {
 	}
 
 	private void displayIntent(Intent intent) {
-		Log.d(TAG, "displayIntent()");
+		Common.log(TAG, "displayIntent()");
 		
 		TextView emptyView = (TextView)getListView().getEmptyView();
 		emptyView.setText(mDownloadedTracks ? 
@@ -565,12 +565,12 @@ public class TrackList extends ListActivity {
 				String whereClause = null;
 				whereClause = Tracks.USER_ID + (mDownloadedTracks ? "!=" : "=")
 						+ Common.getRegisteredUser(this).id + " AND " + Tracks.NAME + " <> ''";
-				Log.d(TAG, "WHERECLAUSE IS " + whereClause);
+				Common.log(TAG, "WHERECLAUSE IS " + whereClause);
 				tracksCursor = managedQuery(Tracks.CONTENT_URI, new String[] { Tracks._ID, Tracks.NAME,
 						Tracks.CREATION_TIME, Tracks.DURATION, Tracks.DISTANCE, Tracks.TRACK_ID, Tracks.USER_ID },
 						whereClause, null, null);
 			}
-			Log.d(TAG, "displayIntent(): displaying all tracks. count = "
+			Common.log(TAG, "displayIntent(): displaying all tracks. count = "
 							+ tracksCursor.getCount());
 			displayCursor(tracksCursor);
 		}
@@ -578,7 +578,7 @@ public class TrackList extends ListActivity {
 	}
 
 	private void displayCursor(Cursor tracksCursor) {
-		//Log.d(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
+		Common.log(TAG, "displayCursor(): " + DatabaseUtils.dumpCursorToString(tracksCursor));
 		trackAdapter = new TrackListAdapter(this, tracksCursor);
 		setListAdapter(trackAdapter);
 	}
@@ -616,11 +616,11 @@ public class TrackList extends ListActivity {
 
 	private class ScoreboardReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			Log.d(TAG, "onReceive()");
+			Common.log(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						TrackList.this.runOnUiThread(new Runnable() {
@@ -648,11 +648,11 @@ public class TrackList extends ListActivity {
 						TrackList.this.runOnUiThread(new Runnable() {
 							public void run() {
 								if (scores == null) {
-									Log.d(TAG, "onReceive(): no scores available");
+									Common.log(TAG, "onReceive(): no scores available");
 									initializeSelfStatistics();
 								}
 								else {
-									Log.d(TAG, "onReceive(): scores found");
+									Common.log(TAG, "onReceive(): scores found");
 									mDbHelper.updateSoloScoreboards(scores);
 		
 									Editor editorGetSb = mSharedPreferences.edit();
@@ -687,7 +687,7 @@ public class TrackList extends ListActivity {
 						final int userId = (Integer) appResponse.object;
 						TrackList.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Log.d(TAG, "onReceive(): user registered");
+								Common.log(TAG, "onReceive(): user registered");
 								Editor editorUser = mSharedPreferences.edit();
 								editorUser.putInt(Constants.USERREG_ID_KEY, userId);
 								editorUser.putLong(Constants.FB_UPDATE_KEY, System.currentTimeMillis());
@@ -719,7 +719,7 @@ public class TrackList extends ListActivity {
 	private final class LoginDialogListener implements DialogListener {
 		public void onComplete(Bundle values) {
 			// SessionEvents.onLoginSuccess();
-			Log.d(TAG, "Facebook login successfull!!!");
+			Common.log(TAG, "Facebook login successfull!!!");
 			if (mFacebook.getAccessToken() != null) {
 				Editor editor = mSharedPreferences.edit();
 				editor.putString(Constants.USERREG_TOKEN_KEY, mFacebook.getAccessToken());
@@ -749,7 +749,7 @@ public class TrackList extends ListActivity {
 		}
 
 		public void onCancel() {
-			Log.d(TAG, "onCancel()");
+			Common.log(TAG, "onCancel()");
 			if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
 				Toast toast = Toast.makeText(TrackList.this.getApplicationContext(),
 						"Facebook login is required", Toast.LENGTH_SHORT);
@@ -765,7 +765,7 @@ public class TrackList extends ListActivity {
 		public void onComplete(final String response) {
 			try {
 				// process the response here: executed in background thread
-				Log.d(TAG, "Response: " + response.toString());
+				Common.log(TAG, "Response: " + response.toString());
 				final JSONObject json = Util.parseJson(response);
 				
 				TrackList.this.runOnUiThread(new Runnable() {
@@ -826,7 +826,7 @@ public class TrackList extends ListActivity {
 								for (int i = 0; i < friends.length(); i++) {
 									friend = friends.getJSONObject(i);
 									fbIds[i] = friend.getLong("id");
-									Log.d(TAG, "fb_id = " + fbIds[i]);
+									Common.log(TAG, "fb_id = " + fbIds[i]);
 									
 									newFriend.fb_id = friend.getLong("id");
 									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
@@ -868,7 +868,7 @@ public class TrackList extends ListActivity {
 	/*
 	private final class LoginDialogListener implements DialogListener {
     	public void onComplete(Bundle values) {
-    		Log.d(TAG, values.toString());
+    		Common.log(TAG, values.toString());
     		
     		Editor editor = mSharedPreferences.edit();
 			editor.putLong(Constants.USERREG_FBID_KEY, 0);

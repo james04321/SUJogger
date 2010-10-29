@@ -100,7 +100,7 @@ public class LeaderBoard extends ListActivity {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.leaderboard);
 
 		mStatisticType = savedInstanceState != null ? savedInstanceState.getInt(STAT_TYPE_KEY) : 1;
@@ -194,7 +194,7 @@ public class LeaderBoard extends ListActivity {
 	}
 	
 	private void updateLBSelection(boolean retrieveScores) {
-		Log.d(TAG, "updateLBSelection(): statisticId = " + statisticId() + 
+		Common.log(TAG, "updateLBSelection(): statisticId = " + statisticId() + 
 				"; time scale = " + mTimeScale + "; is_group = " + mIsGroup);
 		if (mIsGroup) {
 			if (mStatisticType > 4)
@@ -235,7 +235,7 @@ public class LeaderBoard extends ListActivity {
 			}
 		}
 		
-		Log.d(TAG, "updateLBSelection(): statisticId = " + statisticId() + 
+		Common.log(TAG, "updateLBSelection(): statisticId = " + statisticId() + 
 				"; time scale = " + mTimeScale + "; is_group = " + mIsGroup);
 	}
 
@@ -245,20 +245,20 @@ public class LeaderBoard extends ListActivity {
 
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 	}
 
 	@Override
 	protected void onPause() {
-		Log.d(TAG, "onPause()");
+		Common.log(TAG, "onPause()");
 		super.onPause();
 	}
 
 	@Override
 	protected void onResume() {
-		Log.d(TAG, "onResume()");
+		Common.log(TAG, "onResume()");
 		super.onResume();
 	}
 
@@ -272,7 +272,7 @@ public class LeaderBoard extends ListActivity {
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
 		super.onSaveInstanceState(outState);
-		Log.d(TAG, "onSaveInstanceState(): mStatisticType = " + mStatisticType);
+		Common.log(TAG, "onSaveInstanceState(): mStatisticType = " + mStatisticType);
 		outState.putInt(STAT_TYPE_KEY, mStatisticType);
 		outState.putInt(STAT_TIME_KEY, mTimeScale);
 		outState.putBoolean(IS_GROUP_KEY, mIsGroup);
@@ -288,7 +288,7 @@ public class LeaderBoard extends ListActivity {
 		}
 		else {
 			int userId = (Integer) lbAdapter.getItem(position);
-			Log.d(TAG, "userID = " + userId);
+			Common.log(TAG, "userID = " + userId);
 			Intent i = new Intent(this, PeopleTrackList.class);
 			i.putExtra("userId", userId);
 			startActivity(i);
@@ -305,7 +305,7 @@ public class LeaderBoard extends ListActivity {
 		
 		startManagingCursor(mScores);
 		
-		Log.d(TAG, "fillData()");
+		Common.log(TAG, "fillData()");
 		DatabaseUtils.dumpCursor(mScores);
 		
 		if (lbAdapter == null) {
@@ -318,11 +318,11 @@ public class LeaderBoard extends ListActivity {
 
 	class LeaderBoardReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			Log.d(TAG, "onReceive()");
+			Common.log(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						LeaderBoard.this.runOnUiThread(new Runnable() {
 							public void run() {

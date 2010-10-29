@@ -41,6 +41,7 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.database.SQLException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteException;
@@ -116,7 +117,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		boolean dbExist = checkDatabase();
 		
 		if (!dbExist) {
-			Log.d(TAG, "createDatabase(): creating and copying database");
+			Common.log(TAG, "createDatabase(): creating and copying database");
 			this.getReadableDatabase();
 			try {
 				copyDatabase();
@@ -202,7 +203,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	        Statistic stat = null;
 	        for (int i = 0; i < count; i++) {
 	        	stat = new Statistic(cursor.getDouble(0), cursor.getInt(1));
-	        	Log.d("STATISTICS", "STAT IS " + cursor.getDouble(0) + " " + cursor.getInt(1) + " " + cursor.getInt(2)); 
+	        	Common.log("STATISTICS", "STAT IS " + cursor.getDouble(0) + " " + cursor.getInt(1) + " " + cursor.getInt(2)); 
 	        	stats.add(stat);
 	        	cursor.moveToNext();	  
 	        }
@@ -270,7 +271,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		args.put(WaypointsColumns.ALTITUDE, location.getAltitude());
 		args.put(WaypointsColumns.BEARING, location.getBearing());
 
-		// Log.d( TAG, "Waypoint time stored in the datebase"+
+		// Common.log( TAG, "Waypoint time stored in the datebase"+
 		// DateFormat.getInstance().format(new Date( args.getAsLong(
 		// Waypoints.TIME ) ) ) );
 
@@ -295,7 +296,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		args.put(MediaColumns.WAYPOINT, waypointId);
 		args.put(MediaColumns.URI, mediaUri);
 
-		// Log.d( TAG, "Media stored in the datebase: "+mediaUri );
+		// Common.log( TAG, "Media stored in the datebase: "+mediaUri );
 
 		long mediaId = mDb.insert(Media.TABLE, null, args);
 
@@ -304,7 +305,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 				+ "/waypoints/" + waypointId + "/media");
 		resolver.notifyChange(notifyUri, null);
 		resolver.notifyChange(ContentUris.withAppendedId(Media.CONTENT_URI, trackId), null);
-		Log.d(TAG, "Notify: " + ContentUris.withAppendedId(Media.CONTENT_URI, trackId).toString());
+		Common.log(TAG, "Notify: " + ContentUris.withAppendedId(Media.CONTENT_URI, trackId).toString());
 
 		return mediaId;
 	}
@@ -521,7 +522,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 			score.value = (int)scores.getDouble(4);
 			score.sb_type = scores.getString(1);
 			scoreArray[i] = score;
-			Log.d(TAG, "sb_type = " + score.sb_type + "; value = " + score.value);
+			Common.log(TAG, "sb_type = " + score.sb_type + "; value = " + score.value);
 			i++;
 		}
 		scores.close();
@@ -727,7 +728,7 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 	
 	public void applyStatDiffs() {
 		SharedPreferences prefs = PreferenceManager.getDefaultSharedPreferences(mContext);
-		Log.d(TAG, "applyStatDiffs(): num runs diff = " + prefs.getInt(Constants.DIFF_NUM_RUNS_KEY, 0));
+		Common.log(TAG, "applyStatDiffs(): num runs diff = " + prefs.getInt(Constants.DIFF_NUM_RUNS_KEY, 0));
 		increaseStatistic(Stats.DISTANCE_RAN_ID, -2, 
 				prefs.getFloat(Constants.DIFF_DISTANCE_RAN_KEY, 0f));
 		increaseStatistic(Stats.RUNNING_TIME_ID, -2, 
@@ -881,13 +882,13 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		if (updateEarnedWhereClause != "") {
-			Log.d(TAG, "updateEarnedWhereClause = " + updateEarnedWhereClause);
+			Common.log(TAG, "updateEarnedWhereClause = " + updateEarnedWhereClause);
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 1);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
 			int result = mDb.update(Achievements.TABLE, updateValues, 
 					Achievements._ID + " IN (" + updateEarnedWhereClause + ")", null);
-			Log.d(TAG, "num rows updated from updateEarned = " + result);
+			Common.log(TAG, "num rows updated from updateEarned = " + result);
 		}
 		
 		/**
@@ -907,17 +908,17 @@ public class DatabaseHelper extends SQLiteOpenHelper {
 		}
 		
 		if (updateLostWhereClause != "") {
-			Log.d(TAG, "updateLostWhereClause = " + updateLostWhereClause);
+			Common.log(TAG, "updateLostWhereClause = " + updateLostWhereClause);
 			ContentValues updateValues = new ContentValues();
 			updateValues.put(Achievements.COMPLETED, 0);
 			updateValues.put(Achievements.UPDATED_AT, System.currentTimeMillis());
 			int result = mDb.update(Achievements.TABLE, updateValues, 
 					Achievements._ID + " IN (" + updateLostWhereClause + ")", null);
-			Log.d(TAG, "num rows updated from updateLost = " + result);
+			Common.log(TAG, "num rows updated from updateLost = " + result);
 		}
 		
-		Log.d(TAG, "dumping new achievements");
-		//DatabaseUtils.dumpCursor(cursor);
+		Common.log(TAG, "dumping new achievements");
+		if (Constants.SHOW_DEBUG) DatabaseUtils.dumpCursor(cursor);
 		cursor.moveToPosition(-1);
 		return cursor;
 	}

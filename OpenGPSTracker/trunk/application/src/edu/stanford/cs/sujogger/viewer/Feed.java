@@ -1,8 +1,5 @@
 package edu.stanford.cs.sujogger.viewer;
 
-import com.admob.android.ads.AdManager;
-import com.admob.android.ads.AdView;
-
 import android.app.AlertDialog;
 import android.app.Dialog;
 import android.app.ListActivity;
@@ -13,6 +10,7 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
 import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.RemoteException;
@@ -27,6 +25,10 @@ import android.widget.Button;
 import android.widget.ListView;
 import android.widget.RadioGroup;
 import android.widget.Toast;
+
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Message;
 import edu.stanford.cs.gaming.sdk.model.User;
@@ -79,7 +81,7 @@ public class Feed extends ListActivity {
 		new RadioGroup.OnCheckedChangeListener() {
 			
 			public void onCheckedChanged(RadioGroup group, int checkedId) {
-				Log.d(TAG, "checkedId = " + checkedId);
+				Common.log(TAG, "checkedId = " + checkedId);
 				switch(checkedId) {
 				case R.id.filter_menu_all: mFilterMode = FILTER_MODE_ALL; break;
 				case R.id.filter_menu_msg: mFilterMode = FILTER_MODE_MSG; break;
@@ -96,7 +98,7 @@ public class Feed extends ListActivity {
 		public void run() {
 			int lastConciergeId = mSharedPreferences.getInt(
 					Constants.LAST_CONCIERGE_ID_KEY, 1);
-			Log.d(TAG, "lastConciergeId = " + lastConciergeId);
+			Common.log(TAG, "lastConciergeId = " + lastConciergeId);
 			int limit = lastConciergeId == 1 ? 10 : -1;
 			try {
 				mGameCon.getMessages(GET_MSG_RID, lastConciergeId, limit);
@@ -106,7 +108,7 @@ public class Feed extends ListActivity {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.feed);
 		
 		mFilterMode = savedInstanceState != null ? savedInstanceState.getInt(FILTER_MODE_KEY) : -1;
@@ -155,25 +157,25 @@ public class Feed extends ListActivity {
 	
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 	}
 
 	@Override
 	protected void onPause() {
-		Log.d(TAG, "onPause()");
+		Common.log(TAG, "onPause()");
 		super.onPause();
 	}
 
 	@Override
 	protected void onResume() {
-		Log.d(TAG, "onResume()");
+		Common.log(TAG, "onResume()");
 		super.onResume();
 		mMessages.requery();
 		mAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
-		//DatabaseUtils.dumpCursor(mMessages);
+		if (Constants.SHOW_DEBUG) DatabaseUtils.dumpCursor(mMessages);
 	}
 	
 	@Override
@@ -191,7 +193,7 @@ public class Feed extends ListActivity {
 	
 	@Override
 	protected void onSaveInstanceState(Bundle outState) {
-		Log.d(TAG, "onSaveInstanceState()");
+		Common.log(TAG, "onSaveInstanceState()");
 		super.onSaveInstanceState(outState);
 		outState.putInt(FILTER_MODE_KEY, mFilterMode);
 	}
@@ -212,7 +214,7 @@ public class Feed extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
-		Log.d(TAG, "onCreateOptionsMenu()");
+		Common.log(TAG, "onCreateOptionsMenu()");
 		
 		//menu.add(ContextMenu.NONE, MENU_FILTER, ContextMenu.NONE, R.string.feed_menu_filter)
 		//	.setIcon(R.drawable.ic_menu_agenda);
@@ -235,10 +237,10 @@ public class Feed extends ListActivity {
 			break;*/
 		case MENU_REFRESH:
 			if (isUpdating) {
-				Log.d(TAG, "BLOCKING UPDATE REQUEST!!!!!!!!!!!");
+				Common.log(TAG, "BLOCKING UPDATE REQUEST!!!!!!!!!!!");
 				break;
 			}
-			Log.d(TAG, "refreshing...");
+			Common.log(TAG, "refreshing...");
 			isUpdating = true;
 			mHandler.post(mRefreshTask);
 			break;
@@ -301,7 +303,7 @@ public class Feed extends ListActivity {
 	private void refresh() {
 		int lastConciergeId = mSharedPreferences.getInt(
 				Constants.LAST_CONCIERGE_ID_KEY, 1);
-		Log.d(TAG, "lastConciergeId = " + lastConciergeId);
+		Common.log(TAG, "lastConciergeId = " + lastConciergeId);
 		int limit = lastConciergeId == 1 ? 10 : -1;
 		try {
 			mGameCon.getMessages(GET_MSG_RID, lastConciergeId, limit);
@@ -309,18 +311,18 @@ public class Feed extends ListActivity {
 	}
 	
 	private void fillData() {
-		Log.d(TAG, "fillData()");
+		Common.log(TAG, "fillData()");
 		mAdapter = new GameMessageAdapter(this, mMessages, false);
 		setListAdapter(mAdapter);
 	}
 	
 	class FeedReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			Log.d(TAG, "onReceive()");
+			Common.log(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						Feed.this.runOnUiThread(new Runnable() {
@@ -344,16 +346,15 @@ public class Feed extends ListActivity {
 									for (int i=0; i < msgs.length; i++) {
 										Message msg = msgs[i];
 										if (msg != null) {
-											Log.d(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
+											Common.log(TAG, "onReceive(): lastConciergeId = " + lastConciergeId);
 											Editor editor = mSharedPreferences.edit();
 											editor.putInt(Constants.LAST_CONCIERGE_ID_KEY, lastConciergeId);
 											editor.commit();
 											
 											User fromUser = msg.fromUser;
-											Log.d(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
-											Log.d(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
-											Log.d(TAG, "onReceive(): msg = " + ((MessageObject) msg.msg).mBody);
-				
+											Common.log(TAG, "onReceive(): sender firstName = " + fromUser.first_name);
+											Common.log(TAG, "onReceive(): sender lastName = " + fromUser.last_name);
+											Common.log(TAG, "onReceive(): msg = " + ((MessageObject) msg.msg).mBody);
 											
 											//Ignore messages that, for some reason, has come from the same person
 											if (fromUser.id == Common.getRegisteredUser(Feed.this).id) continue;

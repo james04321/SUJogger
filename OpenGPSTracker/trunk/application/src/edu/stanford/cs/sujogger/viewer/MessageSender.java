@@ -119,7 +119,7 @@ public class MessageSender extends Activity {
 			mSubjectString = extras != null ? extras.getString(GameMessages.SUBJECT) : null;
 		}
 
-		Log.d(TAG, "onCreate(): groupId = " + mGroupId);
+		Common.log(TAG, "onCreate(): groupId = " + mGroupId);
 
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
@@ -147,7 +147,7 @@ public class MessageSender extends Activity {
 		msgSpinner.setAdapter(spinnerAdapter);
 		msgSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
 			public void onItemSelected(AdapterView<?> parent, View view, int pos, long id) {
-				Log.d(TAG, "spinner position = " + pos);
+				Common.log(TAG, "spinner position = " + pos);
 				switch(pos) {
 				case GameMessages.TYPE_GENERIC: 
 					mMessageType = GameMessages.TYPE_GENERIC;
@@ -183,7 +183,7 @@ public class MessageSender extends Activity {
 
 		subjectText = (EditText) findViewById(R.id.msg_subject);
 		if (mSubjectString != null) {
-			Log.d(TAG, "subjectString = " + mSubjectString);
+			Common.log(TAG, "subjectString = " + mSubjectString);
 			subjectText.setText(mSubjectString);
 			msgSpinner.setSelection(GameMessages.TYPE_GENERIC);
 			mMessageType = GameMessages.TYPE_GENERIC;
@@ -276,14 +276,14 @@ public class MessageSender extends Activity {
 
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 	}
 
 	@Override
 	protected void onResume() {
-		Log.d(TAG, "onResume()");
+		Common.log(TAG, "onResume()");
 		super.onResume();
 	}
 
@@ -326,7 +326,7 @@ public class MessageSender extends Activity {
 	}
 	
 	private void updateRecipients() {
-		Log.d(TAG, "updateRecipients()");
+		Common.log(TAG, "updateRecipients()");
 		if (mGroupId == 0 && mUsers == null) {
 			//if (mMessageType == GameMessages.TYPE_GENERIC)
 			//	msgRecipientText.setText("To: All");
@@ -387,7 +387,7 @@ public class MessageSender extends Activity {
 	}
 	
 	private void sendMessage() {
-		Log.d(TAG, "sendMessage(): sending message...");
+		Common.log(TAG, "sendMessage(): sending message...");
 		Calendar c = Calendar.getInstance();
 		c.set(mYear, mMonth, mDay, mHour, mMinute);
 		long now = System.currentTimeMillis();
@@ -411,13 +411,13 @@ public class MessageSender extends Activity {
 		switch(requestCode) {
 		case ACTIVITY_GROUPPICKER: 
 			mGroupId = extras.getLong(Groups.TABLE);
-			Log.d(TAG, "onActivityResult(): groupId = " + mGroupId);
+			Common.log(TAG, "onActivityResult(): groupId = " + mGroupId);
 			mUsers = null;
 			updateRecipients();
 			break;
 		case ACTIVITY_FRIENDPICKER: 
 			mUserIds = extras.getLongArray(Users.TABLE);
-			Log.d(TAG, "onActivityResult(): groupIds = " + Arrays.toString(mUserIds));
+			Common.log(TAG, "onActivityResult(): groupIds = " + Arrays.toString(mUserIds));
 			mUsers = mDbHelper.getUserArrayForUserIds(mUserIds);
 			mGroupId = 0;
 			updateRecipients();
@@ -432,7 +432,7 @@ public class MessageSender extends Activity {
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						MessageSender.this.runOnUiThread(new Runnable() {
 							public void run() {

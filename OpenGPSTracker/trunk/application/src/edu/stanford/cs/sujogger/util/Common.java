@@ -9,20 +9,23 @@ import android.content.Context;
 import android.content.SharedPreferences;
 import android.os.Environment;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Gravity;
 import android.view.View;
-import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 import edu.stanford.cs.gaming.sdk.model.User;
 import edu.stanford.cs.sujogger.R;
-import edu.stanford.cs.sujogger.db.GPStracking.Achievements;
 
 public class Common {
 	public static final String ITEM_TITLE = "title";
 	public static final String CACHE_DIRECTORY = Environment.getExternalStorageDirectory() + 
 		"/.sujogger-user-image-cache/";
+	
+	public static void log(String tag, String msg) {
+		if (Constants.SHOW_DEBUG) Log.d(tag, msg);
+	}
 	
 	public static Map<String, ?> createItem(String title) {
 		Map<String, String> item = new HashMap<String, String>();

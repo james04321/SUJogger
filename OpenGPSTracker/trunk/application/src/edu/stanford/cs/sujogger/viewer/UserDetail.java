@@ -41,7 +41,7 @@ public class UserDetail extends ListActivity {
 	
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		
 		mUserId = savedInstanceState != null ? savedInstanceState.getLong(Users.USER_ID) : 0;
 		if (mUserId == 0) {
@@ -80,7 +80,7 @@ public class UserDetail extends ListActivity {
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					
 					switch (appResponse.request_id) {
 					case GRP_GET_RID:

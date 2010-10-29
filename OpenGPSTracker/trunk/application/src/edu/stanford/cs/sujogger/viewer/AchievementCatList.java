@@ -78,7 +78,7 @@ public class AchievementCatList extends ListActivity {
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.ach_list);
 		
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
@@ -138,7 +138,7 @@ public class AchievementCatList extends ListActivity {
 
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 		getListView().invalidateViews();
@@ -146,16 +146,16 @@ public class AchievementCatList extends ListActivity {
 
 	@Override
 	protected void onPause() {
-		Log.d(TAG, "onPause()");
+		Common.log(TAG, "onPause()");
 		super.onPause();
 
 	}
 
 	@Override
 	protected void onResume() {
-		Log.d(TAG, "onResume()");
+		Common.log(TAG, "onResume()");
 		super.onResume();
-		//Log.d(TAG, "fillData(): dumping recent achievements cursor");
+		//Common.log(TAG, "fillData(): dumping recent achievements cursor");
 		//DatabaseUtils.dumpCursor(mRecAchEarned);
 	}
 
@@ -173,7 +173,7 @@ public class AchievementCatList extends ListActivity {
 		position--; //ignore ad header
 		Object item = mGroupedAdapter.getItem(position);
 		if (item.getClass() == Integer.class) {
-			Log.d(TAG, "starting AchGridView for cat = " + (Integer) item);
+			Common.log(TAG, "starting AchGridView for cat = " + (Integer) item);
 
 			Intent i = new Intent(this, AchievementList.class);
 			i.putExtra(Categories.TABLE, (Integer) item);
@@ -184,7 +184,7 @@ public class AchievementCatList extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
-		Log.d(TAG, "onCreateOptionsMenu()");
+		Common.log(TAG, "onCreateOptionsMenu()");
 		
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh).setIcon(
 				R.drawable.ic_menu_refresh);
@@ -262,11 +262,11 @@ public class AchievementCatList extends ListActivity {
 
 	private class AchievementCatListReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			Log.d(TAG, "onReceive()");
+			Common.log(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						AchievementCatList.this.runOnUiThread(new Runnable() {

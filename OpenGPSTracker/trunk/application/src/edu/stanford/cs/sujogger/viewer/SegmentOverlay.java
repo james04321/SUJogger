@@ -51,7 +51,6 @@ import android.graphics.PorterDuff.Mode;
 import android.graphics.Shader.TileMode;
 import android.location.Location;
 import android.net.Uri;
-import android.util.Log;
 import android.widget.Toast;
 
 import com.google.android.maps.GeoPoint;
@@ -63,6 +62,7 @@ import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.GPStracking;
 import edu.stanford.cs.sujogger.db.GPStracking.Media;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
+import edu.stanford.cs.sujogger.util.Common;
 
 /**
  * Creates an overlay that can draw a single segment of connected waypoints
@@ -158,7 +158,7 @@ public class SegmentOverlay extends Overlay
       super.draw( canvas, mapView, shadow );
       if( shadow )
       {
-         //         Log.d( TAG, "No shadows to draw" );
+         //         Common.log( TAG, "No shadows to draw" );
       }
       else
       {
@@ -303,7 +303,7 @@ public class SegmentOverlay extends Overlay
 
    private synchronized void calculatePath()
    {
-	  // Log.d(TAG, "CALCULATING PATH");
+	  // Common.log(TAG, "CALCULATING PATH");
       mDotPath = null;
       if( this.mPath == null )
       {
@@ -337,7 +337,7 @@ public class SegmentOverlay extends Overlay
 
             do
             {
-               //               Log.d(TAG, "Moving the loop of: moveToNextWayPoint() at cursor position: "+trackCursor.getPosition() ) ;
+               //               Common.log(TAG, "Moving the loop of: moveToNextWayPoint() at cursor position: "+trackCursor.getPosition() ) ;
                geoPoint = extractGeoPoint();
                double speed = -1d;
                switch( mTrackColoringMethod )
@@ -386,8 +386,8 @@ public class SegmentOverlay extends Overlay
             mWaypointsCursor.close();
          }
       }
-      //      Log.d( TAG, "transformSegmentToPath stop: points "+mCalculatedPoints+" from "+moves+" moves" );
-	   //Log.d(TAG, "CALCULATING PATH DONE");
+      //      Common.log( TAG, "transformSegmentToPath stop: points "+mCalculatedPoints+" from "+moves+" moves" );
+	   //Common.log(TAG, "CALCULATING PATH DONE");
  
    }
 
@@ -436,7 +436,7 @@ public class SegmentOverlay extends Overlay
       Cursor mediaCursor = null;
       try
       {
-         //         Log.d( TAG, "Searching for media on " + this.mMediaUri );
+         //         Common.log( TAG, "Searching for media on " + this.mMediaUri );
          mediaCursor = this.mResolver.query( this.mMediaUri, new String[] { Media.WAYPOINT, Media.URI }, null, null, null );
          if( mProjection != null && mediaCursor.moveToFirst() )
          {
@@ -446,7 +446,7 @@ public class SegmentOverlay extends Overlay
                mediaVO.waypointId = mediaCursor.getLong( 0 );
                mediaVO.uri = Uri.parse( mediaCursor.getString( 1 ) );
 
-//               Log.d( TAG, mediaVO.uri.toString() );
+//               Common.log( TAG, mediaVO.uri.toString() );
                
                Uri mediaWaypoint = ContentUris.withAppendedId( mWaypointsUri, mediaVO.waypointId );
                Cursor waypointCursor = null;
@@ -579,12 +579,12 @@ public class SegmentOverlay extends Overlay
    private void lineToGeoPoint( GeoPoint geoPoint, double speed )
    {
 
-      //      Log.d( TAG, "Drawing line to " + geoPoint + " with speed " + speed );
+      //      Common.log( TAG, "Drawing line to " + geoPoint + " with speed " + speed );
       setScreenPoint( geoPoint );
 
       //      Bitmap bitmap = BitmapFactory.decodeResource( this.mContext.getResources(), R.drawable.stip2 );
       //      this.mCanvas.drawBitmap( bitmap, this.mScreenPoint.x - 8, this.mScreenPoint.y - 8, new Paint() );
-      Log.d(TAG, "speed = " + speed);
+      Common.log(TAG, "speed = " + speed);
       if( speed >= 0.0 ) {
          int greenfactor = (int) Math.min( ( 127 * speed ) / mAvgSpeed, 255 );
          int redfactor = 255 - greenfactor;
@@ -603,9 +603,9 @@ public class SegmentOverlay extends Overlay
             //                  y_circle, 
             //                  distance*radius_factor, 
             //                  foo );
-            //            Log.d( TAG, "mPrevScreenPoint"+ mPrevScreenPoint );
-            //            Log.d( TAG, "mScreenPoint"+ mScreenPoint );
-            //            Log.d( TAG, "Created shader for speed " + speed + " on "+x_circle+","+y_circle);
+            //            Common.log( TAG, "mPrevScreenPoint"+ mPrevScreenPoint );
+            //            Common.log( TAG, "mScreenPoint"+ mScreenPoint );
+            //            Common.log( TAG, "Created shader for speed " + speed + " on "+x_circle+","+y_circle);
             if( this.mShader != null )
             {
                this.mShader = new ComposeShader( this.mShader, lastShader, Mode.SRC_OVER );
@@ -678,7 +678,7 @@ public class SegmentOverlay extends Overlay
          //         evalPoint = extractGeoPoint( trackCursor );
          //         if( !isOnScreen( evalPoint ) )
          //         {
-         //            //               Log.d(TAG, "first out screen "+trackCursor.getPosition() );
+         //            //               Common.log(TAG, "first out screen "+trackCursor.getPosition() );
          //            return true;
          //         }
 
@@ -700,7 +700,7 @@ public class SegmentOverlay extends Overlay
       {
          if( mWaypointsCursor.isLast() )
          {
-            //               Log.d(TAG, "last off screen "+trackCursor.getPosition() );
+            //               Common.log(TAG, "last off screen "+trackCursor.getPosition() );
             return true;
          }
 
@@ -709,7 +709,7 @@ public class SegmentOverlay extends Overlay
          {
             mLastOnscreen = true;
             moveToGeoPoint( lastPoint );
-            //               Log.d(TAG, "first in screen "+trackCursor.getPosition() );
+            //               Common.log(TAG, "first in screen "+trackCursor.getPosition() );
             return true;
          }
          lastPoint = evalPoint;
@@ -793,7 +793,7 @@ public class SegmentOverlay extends Overlay
          float distance = startLocation.distanceTo( endLocation );
          float seconds = ( endLocation.getTime() - startLocation.getTime() ) / 1000f;
          speed = distance / seconds;
-         //         Log.d( TAG, "Found a speed of "+speed+ " over a distance of "+ distance+" in a time of "+seconds);
+         //         Common.log( TAG, "Found a speed of "+speed+ " over a distance of "+ distance+" in a time of "+seconds);
       }
       if( speed > 0 )
       {
@@ -889,7 +889,7 @@ public class SegmentOverlay extends Overlay
       }
       if(  minScreendistance < 15 )
       {
-         Log.d( TAG, String.format( "Tapped at a distance of %f which is %f on screen", distance[0], minScreendistance ) );
+         Common.log( TAG, String.format( "Tapped at a distance of %f which is %f on screen", distance[0], minScreendistance ) );
          return handleMediaTap( tappedMedia.uri );
       }
       return super.onTap( geoPoint, mapView );

@@ -115,7 +115,7 @@ public class GroupList extends ListActivity {
 	private final DialogInterface.OnClickListener mGroupNameDialogListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
 			String groupName = mGroupNameView.getText().toString();
-			Log.d(TAG, "mGroupNameDialogListener: " + groupName);
+			Common.log(TAG, "mGroupNameDialogListener: " + groupName);
 			mCreateDialog = ProgressDialog.show(GroupList.this, "", "Creating group...", true);
 			Group newGroup = new Group(groupName);
 			newGroup.owner_id = Common.getRegisteredUser(GroupList.this).id;
@@ -147,7 +147,7 @@ public class GroupList extends ListActivity {
 
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		this.setContentView(R.layout.grouplist);
 		
 		mDisplayFriends = savedInstanceState != null ? savedInstanceState.getBoolean(IS_FRIEND_KEY) : false;
@@ -206,7 +206,7 @@ public class GroupList extends ListActivity {
 
 	@Override
 	protected void onRestart() {
-		Log.d(TAG, "onRestart()");
+		Common.log(TAG, "onRestart()");
 		mDbHelper.openAndGetDb();
 		super.onRestart();
 		if (mGroupAdapter != null)
@@ -232,7 +232,7 @@ public class GroupList extends ListActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
-		Log.d(TAG, "onCreateOptionsMenu()");
+		Common.log(TAG, "onCreateOptionsMenu()");
 
 		menu.add(ContextMenu.NONE, MENU_REFRESH, ContextMenu.NONE, R.string.refresh)
 			.setIcon(R.drawable.ic_menu_refresh);
@@ -271,7 +271,7 @@ public class GroupList extends ListActivity {
 			Object item = mGroupedAdapter.getItem(position);
 			if (item.getClass() == Integer.class) {
 				int userId = (Integer) item;
-				Log.d(TAG, "userID = " + userId);
+				Common.log(TAG, "userID = " + userId);
 				Intent i = new Intent(this, PeopleTrackList.class);
 				i.putExtra("userId", userId);
 				startActivity(i);
@@ -284,7 +284,7 @@ public class GroupList extends ListActivity {
 				if (st.hasMoreTokens())
 					firstName = st.nextToken();
 				
-				Log.d(TAG, "fb_id: " + user.fb_id);
+				Common.log(TAG, "fb_id: " + user.fb_id);
 				Bundle params = new Bundle();
 				params.putString("target_id", Long.toString(user.fb_id));
 				params.putString("message", "Hi " + firstName + ", I really like using Happy Feet. Check it out and join me on a run!");
@@ -298,7 +298,7 @@ public class GroupList extends ListActivity {
 		}
 		else {
 			Object item = mGroupAdapter.getItem(position);
-			Log.d(TAG, "starting GroupDetail for group_id = " + (Integer) item);
+			Common.log(TAG, "starting GroupDetail for group_id = " + (Integer) item);
 			long groupId = ((Integer) item).longValue();
 			startGroupDetail(groupId);
 		}
@@ -434,7 +434,7 @@ public class GroupList extends ListActivity {
 		
 		startManagingCursor(mCursor);
 		
-		//Log.d(TAG, "fillData()");
+		//Common.log(TAG, "fillData()");
 		DatabaseUtils.dumpCursor(mCursor);
 	}
 
@@ -464,7 +464,7 @@ public class GroupList extends ListActivity {
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
@@ -498,7 +498,7 @@ public class GroupList extends ListActivity {
 						//final int userId = (Integer) appResponse.object;
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Log.d(TAG, "onReceive(): user registered");
+								Common.log(TAG, "onReceive(): user registered");
 								Editor editor = mSharedPreferences.edit();
 								editor.putLong(Constants.FB_UPDATE_KEY, System.currentTimeMillis());
 								editor.commit();
@@ -517,7 +517,7 @@ public class GroupList extends ListActivity {
 										GroupList.this.mCursor.requery();
 										GroupList.this.mGroupAdapter.notifyDataSetChanged();
 										GroupList.this.getListView().invalidateViews();
-										Log.d(TAG, "onReceive(): getting scoreboards for new groups");
+										Common.log(TAG, "onReceive(): getting scoreboards for new groups");
 										try {
 											//Get ScoreBoards for each previously unseen group
 											for (int i = 0; i < newGroups.size(); i++)
@@ -556,7 +556,7 @@ public class GroupList extends ListActivity {
 						final Group newGroup = (Group) (appResponse.appRequest.object);
 						GroupList.this.runOnUiThread(new Runnable() {
 							public void run() {
-								Log.d(TAG, "onReceive(): groupId = " + groupId + "; groupName = "
+								Common.log(TAG, "onReceive(): groupId = " + groupId + "; groupName = "
 										+ newGroup.name);
 								GroupList.this.mDbHelper.addGroup(groupId.longValue(), newGroup.name, 1);
 								GroupList.this.mDbHelper.addUsersToGroup(groupId, new long[] { Common
@@ -636,7 +636,7 @@ public class GroupList extends ListActivity {
 		public void onComplete(final String response) {
 			try {
 				// process the response here: executed in background thread
-				Log.d(TAG, "Response: " + response.toString());
+				Common.log(TAG, "Response: " + response.toString());
 				JSONObject json = Util.parseJson(response);
 
 				final JSONArray friends = json.getJSONArray("data");
@@ -654,7 +654,7 @@ public class GroupList extends ListActivity {
 								for (int i = 0; i < friends.length(); i++) {
 									friend = friends.getJSONObject(i);
 									fbIds[i] = friend.getLong("id");
-									Log.d(TAG, "fb_id = " + fbIds[i]);
+									Common.log(TAG, "fb_id = " + fbIds[i]);
 									
 									newFriend.fb_id = friend.getLong("id");
 									newFriend.fb_photo = Constants.GRAPH_BASE_URL+ newFriend.fb_id + "/picture";
@@ -691,7 +691,7 @@ public class GroupList extends ListActivity {
 		public void onFacebookError(FacebookError e) {}
 
 		public void onFileNotFoundException(FileNotFoundException e) {
-			Log.d(TAG, "onFileNotFoundException");
+			Common.log(TAG, "onFileNotFoundException");
 		}
 
 		public void onIOException(IOException e) {

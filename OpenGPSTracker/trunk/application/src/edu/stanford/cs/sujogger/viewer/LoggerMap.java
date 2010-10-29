@@ -196,10 +196,10 @@ public class LoggerMap extends MapActivity {
 		int state = GPSLoggerServiceManager.getLoggingState();
 		if (mTrackIds.size() > 0 && Track.visibleExists(mTrackIds)) {
 			if (state == Constants.LOGGING || state == Constants.PAUSED)   {
-				Log.d(TAG, "ASLAI: GOING TO LAST TRACK POINT");
+				Common.log(TAG, "ASLAI: GOING TO LAST TRACK POINT");
 				mMapView.getController().animateTo(getLastTrackPoint());
 			} else { 
-				Log.d(TAG, "ASLAI: GOING TO FIRST TRACK POINT");
+				Common.log(TAG, "ASLAI: GOING TO FIRST TRACK POINT");
 
 				mMapView.getController().animateTo(getFirstTrackPoint());
 			}
@@ -237,7 +237,7 @@ public class LoggerMap extends MapActivity {
 			}
 		}
 		int state = GPSLoggerServiceManager.getLoggingState();
-		Log.d(TAG, "ADDTRACKIDS STATE IS " + state);
+		Common.log(TAG, "ADDTRACKIDS STATE IS " + state);
 		long loggingTrackId = GPSLoggerServiceManager.isLogging();
 		if (loggingTrackId != -1 && val != loggingTrackId) 
             mTrackIds.add(mTrackIds.size()-1, new Track(val));
@@ -247,15 +247,15 @@ public class LoggerMap extends MapActivity {
 /*
         if ((state == Constants.LOGGING || state == Constants.PAUSED) && !startLogging
         		&& mTrackIds.size() > 0) {        
-        	Log.d(TAG, "ASLAI: Adding track while logging");
+        	Common.log(TAG, "ASLAI: Adding track while logging");
             mTrackIds.add(mTrackIds.size()-1, new Track(val));
         } else {
-        	Log.d(TAG, "ASLAI: Adding track while not logging");
+        	Common.log(TAG, "ASLAI: Adding track while not logging");
 
 		  mTrackIds.add(new Track(val));
          }
          */
-		  Log.d(TAG, "ASLAI1: " + getTrackIdsString());
+		  Common.log(TAG, "ASLAI1: " + getTrackIdsString());
         
 	}
 	private String getTrackIdsString() {
@@ -269,7 +269,7 @@ public class LoggerMap extends MapActivity {
 	private long getLastTrackId() {
 		long trackId = -1;
 		if ((trackId = GPSLoggerServiceManager.isLogging()) != -1) {
-			Log.d(TAG, "LastTrackId: " + trackId);
+			Common.log(TAG, "LastTrackId: " + trackId);
 			return trackId;
 		}
 		if (mTrackIds.size() == 0) {
@@ -282,7 +282,7 @@ public class LoggerMap extends MapActivity {
 		   trackId = mTrackIds.get(mTrackIds.size()-i).id;
 		else
 			trackId = -1;
-		Log.d(TAG, "LastTrackId: " + trackId);
+		Common.log(TAG, "LastTrackId: " + trackId);
 			
 		return trackId;
 	}
@@ -302,7 +302,7 @@ public class LoggerMap extends MapActivity {
 //		return new ArrayList<Long>();
 		try {
 		String value = sharedPreferences.getString("mTrackIds", "");
-		Log.d(TAG, "VALUE IS: " + value);
+		Common.log(TAG, "VALUE IS: " + value);
 		if ("".equals(value)) {
 			return new ArrayList<Track>();
 		}
@@ -310,13 +310,13 @@ public class LoggerMap extends MapActivity {
 		String[] strArray = value.split("zxcvbnmlkjh");
 		for (int i=0; i < strArray.length; i++) {
 			String[] trackArray = strArray[i].split("qwertyuioplkjh");
-			Log.d(TAG, "TRACKARRAY[0]: " + trackArray[0] + " TRACKARRAY[1]: " + trackArray[1]);
+			Common.log(TAG, "TRACKARRAY[0]: " + trackArray[0] + " TRACKARRAY[1]: " + trackArray[1]);
 			arrList.add(new Track(new Long(trackArray[0]), new Boolean(trackArray[1])));
 		}
 		return arrList;
 		} catch (Exception e)	{
 			e.printStackTrace();
-			Log.d(TAG, "ASLAI: EXCEPTION CONVERTING TO TRACKS");
+			Common.log(TAG, "ASLAI: EXCEPTION CONVERTING TO TRACKS");
 			return new ArrayList<Track>();
 		}
 	}
@@ -324,11 +324,11 @@ public class LoggerMap extends MapActivity {
 		@Override
 		public void onChange(boolean selfUpdate) {
 			if (!selfUpdate) {
-				Log.d(TAG, "mTrackSegmentsObserver " + getTrackIdsString());
+				Common.log(TAG, "mTrackSegmentsObserver " + getTrackIdsString());
 				LoggerMap.this.updateDataOverlays();
 			}
 			else {
-				Log.d(TAG, "mTrackSegmentsObserver skipping change on " + mLastSegment);
+				Common.log(TAG, "mTrackSegmentsObserver skipping change on " + mLastSegment);
 			}
 		}
 	};
@@ -336,7 +336,7 @@ public class LoggerMap extends MapActivity {
 		@Override
 		public void onChange(boolean selfUpdate) {
 			if (!selfUpdate) {
-				Log.d(TAG, "mSegmentWaypointsObserver " + mLastSegment);
+				Common.log(TAG, "mSegmentWaypointsObserver " + mLastSegment);
 				LoggerMap.this.createSpeedDisplayNumbers();
 				if (mLastSegmentOverlay != null) {
 					moveActiveViewWindow();
@@ -345,7 +345,7 @@ public class LoggerMap extends MapActivity {
 				}
 			}
 			else {
-				Log.d(TAG, "mSegmentWaypointsObserver skipping change on " + mLastSegment);
+				Common.log(TAG, "mSegmentWaypointsObserver skipping change on " + mLastSegment);
 			}
 		}
 	};
@@ -353,21 +353,21 @@ public class LoggerMap extends MapActivity {
 		@Override
 		public void onChange(boolean selfUpdate) {
 			if (!selfUpdate) {
-				Log.d(TAG, "mTrackMediasObserver " + getTrackIdsString());
+				Common.log(TAG, "mTrackMediasObserver " + getTrackIdsString());
 				if (mLastSegmentOverlay != null) {
 					mLastSegmentOverlay.calculateMedia();
 					mMapView.postInvalidate();
 				}
 			}
 			else {
-				Log.d(TAG, "mTrackMediasObserver skipping change on " + mLastSegment);
+				Common.log(TAG, "mTrackMediasObserver skipping change on " + mLastSegment);
 			}
 		}
 	};
 	private final View.OnClickListener mTrackNameDialogListener = new View.OnClickListener() {
 		public void onClick(View view) {
 			String trackName = mTrackNameView.getText().toString();
-			Log.d(TAG, "mTrackNameDialogListener: " + trackName);
+			Common.log(TAG, "mTrackNameDialogListener: " + trackName);
 			
 			if (trackName == null || trackName.trim().equals("")) {
 				Toast toast = Toast.makeText(LoggerMap.this.getApplicationContext(), 
@@ -522,31 +522,31 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected void onCreate(Bundle load) {
-		Log.d(TAG, "onCreate()");
+		Common.log(TAG, "onCreate()");
 		super.onCreate(load);
 		this.startService(new Intent(Constants.SERVICENAME));
 		/*
 		if (load != null) {
-			Log.d(TAG, "BUNDLE IS NOT NULL");
+			Common.log(TAG, "BUNDLE IS NOT NULL");
           mTrackIds = toTrackIdsLongArray(load.getLongArray("trackIds"));
 		} else {
-			Log.d(TAG, "BUNDLE IS NULL");
+			Common.log(TAG, "BUNDLE IS NULL");
 		  mTrackIds = new ArrayList<Long>();
 		}
 		*/
 		mSharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
 		
 		mTrackIds = preferenceToTrackIds(mSharedPreferences);
-		Log.d(TAG, "ASLAI: GETTRACKIDSSTRING" + getTrackIdsString());
+		Common.log(TAG, "ASLAI: GETTRACKIDSSTRING" + getTrackIdsString());
 		/*
 		Object previousInstanceData = getLastNonConfigurationInstance();
 		if (previousInstanceData != null && previousInstanceData instanceof GPSLoggerServiceManager) {
 			GPSLoggerServiceManager = (GPSLoggerServiceManager) previousInstanceData;
-			Log.d(TAG, "getting previous GPSLoggerServiceManager");
+			Common.log(TAG, "getting previous GPSLoggerServiceManager");
 		}
 		else {
 			GPSLoggerServiceManager = new GPSLoggerServiceManager((Context) this);
-			Log.d(TAG, "creating new GPSLoggerServiceManager");
+			Common.log(TAG, "creating new GPSLoggerServiceManager");
 		}
 		*/
 		GPSLoggerServiceManager.setContext(this);
@@ -597,7 +597,7 @@ public class LoggerMap extends MapActivity {
 				int state = GPSLoggerServiceManager.getLoggingState();
 				switch (state) {
 				case Constants.STOPPED:					
-					Log.d(TAG, "mLoggingControlListener: start GPS logging...");
+					Common.log(TAG, "mLoggingControlListener: start GPS logging...");
 					long loggerTrackId = GPSLoggerServiceManager.startGPSLogging(null);
 					moveToTrack(loggerTrackId, true, true);
 					//showDialog(DIALOG_TRACKNAME);
@@ -605,7 +605,7 @@ public class LoggerMap extends MapActivity {
 				case Constants.LOGGING:
 				case Constants.PAUSED:
 					GPSLoggerServiceManager.stopGPSLogging();
-					Log.d(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
+					Common.log(TAG, "stopped GPS logging!!!!!!!!!!!!!!!!!!!!");
 					if (calculateTrackStatistics()) {
 						mTrackNameDialogShowing = true;
 						showDialog(DIALOG_TRACKNAME);
@@ -654,7 +654,7 @@ public class LoggerMap extends MapActivity {
 		onRestoreInstanceState(load);
 		
 		//ASLAI: Added
-		Log.d(TAG, "ASLAI: Enabling my location");
+		Common.log(TAG, "ASLAI: Enabling my location");
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.clear();
 
@@ -665,12 +665,12 @@ public class LoggerMap extends MapActivity {
 		mMylocation.enableCompass();
 		overlays.add(mMylocation);
 		mMapView.invalidate();
-		Log.d(TAG, "ASLAI: Enabled my location");
+		Common.log(TAG, "ASLAI: Enabled my location");
 	}
 
 	protected void onPause() {
 		super.onPause();
-		Log.d(TAG, "onPause()");
+		Common.log(TAG, "onPause()");
 		
 		mDbHelper.close();
 		
@@ -690,7 +690,7 @@ public class LoggerMap extends MapActivity {
 
 	protected void onResume() {
 		super.onResume();
-		Log.d(TAG, "onResume");
+		Common.log(TAG, "onResume");
 		mDbHelper.openAndGetDb();
 		updateTitleBar();
 		updateSpeedbarVisibility();
@@ -725,7 +725,7 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	protected void onDestroy() {
-		Log.d(TAG, "onDestroy");
+		Common.log(TAG, "onDestroy");
 		if (mMylocation != null)
 		mMylocation.disableMyLocation();		
 		Editor editor = mSharedPreferences.edit();
@@ -753,7 +753,7 @@ public class LoggerMap extends MapActivity {
 	 */
 	@Override
 	public void onNewIntent(Intent newIntent) {
-		Log.d(TAG, "ASLAI: ONNEWINTENT");
+		Common.log(TAG, "ASLAI: ONNEWINTENT");
 		Uri data = newIntent.getData();
 		if (data != null) {
 			moveToTrack(Long.parseLong(data.getLastPathSegment()), true, false);
@@ -763,7 +763,7 @@ public class LoggerMap extends MapActivity {
 	@Override
 	protected void onRestoreInstanceState(Bundle load) {
 		if (load != null) {
-			Log.d(TAG, "Restoring the previous map ");
+			Common.log(TAG, "Restoring the previous map ");
 			super.onRestoreInstanceState(load);
 		}
 //ASLAI TODO
@@ -772,24 +772,24 @@ public class LoggerMap extends MapActivity {
 														// previous instance of
 														// this activity
 		{
-			Log.d(TAG, "FIRST TRACK RESTORE");
+			Common.log(TAG, "FIRST TRACK RESTORE");
 			long loadTrackId = load.getLong("track");
-			Log.d(TAG, "Moving to restored track " + loadTrackId);
+			Common.log(TAG, "Moving to restored track " + loadTrackId);
 			moveToTrack(loadTrackId, false, false);
 		}
 		else if (data != null) // 2nd track ordered to make
 		{
-			Log.d(TAG, "SECOND TRACK RESTORE");
+			Common.log(TAG, "SECOND TRACK RESTORE");
 
 			long loadTrackId = Long.parseLong(data.getLastPathSegment());
-			Log.d(TAG, "Moving to intented track " + loadTrackId);
+			Common.log(TAG, "Moving to intented track " + loadTrackId);
 			moveToTrack(loadTrackId, true, false);
             setIntent(new Intent());
 
 		}
 		else {
 			
-			Log.d(TAG, "Moving to last track ");
+			Common.log(TAG, "Moving to last track ");
 //			moveToLastTrack(); // 3rd just try the last track
 		}
 		
@@ -805,7 +805,7 @@ public class LoggerMap extends MapActivity {
 
 		if (load != null && load.containsKey("e6lat") && load.containsKey("e6long")) {
 			GeoPoint storedPoint = new GeoPoint(load.getInt("e6lat"), load.getInt("e6long"));
-			Log.d(TAG, "ASLAI: ANIMATING TO STORED POINT");
+			Common.log(TAG, "ASLAI: ANIMATING TO STORED POINT");
 			this.mMapView.getController().animateTo(storedPoint);
 		}
 		else {
@@ -814,13 +814,13 @@ public class LoggerMap extends MapActivity {
 //			this.mMapView.getController().animateTo(lastPoint);
 		}
 		redrawOverlays();
-		Log.d(TAG, "onRestoreInstanceState(): mIsPartnerRun = " + mIsPartnerRun);
+		Common.log(TAG, "onRestoreInstanceState(): mIsPartnerRun = " + mIsPartnerRun);
 	}
 
 	@Override
 	protected void onSaveInstanceState(Bundle save) {
 		super.onSaveInstanceState(save);
-		Log.d(TAG, "ONSAVEINSTANCESTATE: " + getTrackIdsString());
+		Common.log(TAG, "ONSAVEINSTANCESTATE: " + getTrackIdsString());
 		save.putLongArray("trackIds", this.getTrackIdsLongArray());
 //		save.putLong("track", this.mTrackId);
 		save.putInt("zoom", this.mMapView.getZoomLevel());
@@ -911,7 +911,7 @@ public class LoggerMap extends MapActivity {
 	@Override
 	public boolean onCreateOptionsMenu(Menu menu) {
 		boolean result = super.onCreateOptionsMenu(menu);
-		Log.d(TAG, "onCreateOptionsMenu()");
+		Common.log(TAG, "onCreateOptionsMenu()");
 		//menu.add(ContextMenu.NONE, MENU_TRACKING, ContextMenu.NONE, R.string.menu_tracking)
 		//		.setIcon(R.drawable.ic_menu_movie).setAlphabeticShortcut('T');
 		menu.add(ContextMenu.NONE, MENU_LAYERS, ContextMenu.NONE, R.string.menu_showLayers)
@@ -991,13 +991,13 @@ public class LoggerMap extends MapActivity {
 
 			builder.setTitle(R.string.dialog_layer_title).setIcon(android.R.drawable.ic_dialog_map)
 					.setPositiveButton(R.string.btn_okay, null).setView(view);
-			Log.d(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
+			Common.log(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
 			int state = GPSLoggerServiceManager.getLoggingState();
 	        if (state == Constants.LOGGING || state == Constants.PAUSED) {  
-	        	Log.d(TAG, "ASLAI: COPYING WHEN WE ARE TRACKING");
+	        	Common.log(TAG, "ASLAI: COPYING WHEN WE ARE TRACKING");
 				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, true);
 	        } else {
-	        	Log.d(TAG, "ASLAI: COPYING WHEN WE ARE NOT TRACKING");
+	        	Common.log(TAG, "ASLAI: COPYING WHEN WE ARE NOT TRACKING");
 
 				mTrackIdsForDialog = Track.shadowCopy(mTrackIds, false);
 	        }
@@ -1008,11 +1008,11 @@ public class LoggerMap extends MapActivity {
                         boolean isChecked) {
 					Track track = mTrackIdsForDialog.get(whichButton);
 					if (isChecked) {
-						Log.d(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
+						Common.log(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
 						track.visible = true;
 						LoggerMap.this.moveToTrack(track.id, true, false);
 					} else {
-						Log.d(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
+						Common.log(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
 						LoggerMap.this.setTrackInvisible(Track.findTrackPosById(mTrackIds, track.id));
 					}
 						
@@ -1089,7 +1089,7 @@ public class LoggerMap extends MapActivity {
 			actionIntent.setDataAndType(trackUri, Tracks.CONTENT_ITEM_TYPE);
 			actionIntent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
 			actionIntent.putExtra("name", trackName);
-			Log.d(TAG, "MENU_TRACKLIST " + this.getTitle());
+			Common.log(TAG, "MENU_TRACKLIST " + this.getTitle());
 			startActivity(Intent.createChooser(actionIntent, getString(R.string.chooser_title)));
 
 			handled = true;			
@@ -1171,7 +1171,7 @@ public class LoggerMap extends MapActivity {
 			// mLocation.setOnCheckedChangeListener( mCheckedChangeListener );
 			builder.setTitle(R.string.dialog_layer_title).setIcon(android.R.drawable.ic_dialog_map)
 					.setPositiveButton(R.string.btn_okay, null).setView(view);
-			Log.d(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
+			Common.log(TAG, "" + Track.tracksToCharSequence(mTrackIds, this) + "===" + Track.tracksToVisibleBoolArray(mTrackIds));
 			if (mTrackIds.size() > 0) {
 			builder.setMultiChoiceItems(Track.tracksToCharSequence(mTrackIds, this), Track.tracksToVisibleBoolArray(mTrackIds), new OnMultiChoiceClickListener() {
 				
@@ -1179,11 +1179,11 @@ public class LoggerMap extends MapActivity {
                         boolean isChecked) {
 					Track track = mTrackIds.get(whichButton);
 					if (isChecked) {
-						Log.d(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
+						Common.log(TAG, "SETTING TRACK VISIBLE FOR POSITION: " + whichButton);
 						track.visible = true;
 						LoggerMap.this.moveToTrack(track.id, true, false);
 					} else {
-						Log.d(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
+						Common.log(TAG, "SETTING TRACK INVISIBLE FOR POSITION: " + whichButton);
 						LoggerMap.this.setTrackInvisible(whichButton);
 					}
 						
@@ -1343,7 +1343,7 @@ public class LoggerMap extends MapActivity {
 	// OnDoubleTapListener methods
 	
 	public boolean onDoubleTap(MotionEvent e) {
-		Log.d(TAG, "onDoubleTap()");
+		Common.log(TAG, "onDoubleTap()");
 		return true;
 	}
 	
@@ -1461,7 +1461,7 @@ public class LoggerMap extends MapActivity {
 	 * @see SegmentOverlay
 	 */
 	private void createDataOverlays() {
-		Log.d(TAG, "CREATEDATAOVERLAYS");
+		Common.log(TAG, "CREATEDATAOVERLAYS");
 		mLastSegmentOverlay = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		//ASLAI HERE
@@ -1480,7 +1480,7 @@ public class LoggerMap extends MapActivity {
 		for (Track track: mTrackIds) {
 			if (track.visible) {
 				long trackId = track.id;
-				Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+				Common.log(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 				try {
 
 					Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
@@ -1521,12 +1521,12 @@ public class LoggerMap extends MapActivity {
 				+ mLastSegment + "/waypoints");
 		resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
 		resolver.registerContentObserver(lastSegmentUri, false, this.mSegmentWaypointsObserver);
-		Log.d(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
+		Common.log(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
 
 	}
 /*
 	private void createDataOverlays(long trackId) {
-		Log.d(TAG, "CREATEDATAOVERLAYS");
+		Common.log(TAG, "CREATEDATAOVERLAYS");
 		mLastSegmentOverlay = null;
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		//ASLAI HERE
@@ -1542,7 +1542,7 @@ public class LoggerMap extends MapActivity {
 																// Constants.TRACKCOLORING,
 																// "2" )
 																// ).intValue();
-			Log.d(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+			Common.log(TAG, "CREATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 		try {
 
 			Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
@@ -1582,7 +1582,7 @@ public class LoggerMap extends MapActivity {
 				+ mLastSegment + "/waypoints");
 		resolver.unregisterContentObserver(this.mSegmentWaypointsObserver);
 		resolver.registerContentObserver(lastSegmentUri, false, this.mSegmentWaypointsObserver);
-		Log.d(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
+		Common.log(TAG, "LAST SEGMENT URI IS " + lastSegmentUri);
 
 	}
 	
@@ -1593,7 +1593,7 @@ public class LoggerMap extends MapActivity {
 		for (Track track: mTrackIds) {
 			if (track.visible) {
 				long trackId = track.id;
-				Log.d(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
+				Common.log(TAG, "UPDATEDATAOVERLAYS FOR TRACK ID: " + trackId);
 
 				Uri segmentsUri = Uri.withAppendedPath(Tracks.CONTENT_URI, trackId + "/segments");
 				Cursor segmentsCursor = null;
@@ -1609,11 +1609,11 @@ public class LoggerMap extends MapActivity {
 					segmentsCursor = resolver.query(segmentsUri, new String[] { Segments._ID }, null, null,
 							null);
 					if (segmentsCursor != null && segmentsCursor.getCount() == segmentOverlaysCount) {
-						Log.d(TAG, "UPDATEDATAOVERLAYS SAME SEGMENT COUNT");
-						// Log.d( TAG, "Alignment of segments" );
+						Common.log(TAG, "UPDATEDATAOVERLAYS SAME SEGMENT COUNT");
+						// Common.log( TAG, "Alignment of segments" );
 					}
 					else {
-						Log.d(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
+						Common.log(TAG, "CREATEDATAOVERLAYS FROM UPDATEOVERLAYS");
 						createDataOverlays();
 						break;
 					}
@@ -1639,14 +1639,14 @@ public class LoggerMap extends MapActivity {
 
 				this.mMapView.clearAnimation();
 				this.mMapView.getController().setCenter(lastPoint);
-				// Log.d( TAG, "mMapView.setCenter()" );
+				// Common.log( TAG, "mMapView.setCenter()" );
 			}
 			else if (out.x < width / 4 || out.y < height / 4 || out.x > (width / 4) * 3
 					|| out.y > (height / 4) * 3) {
 				this.mMapView.clearAnimation();
 				animateTo();
 //				this.mMapView.getController().animateTo(lastPoint);
-				// Log.d( TAG, "mMapView.animateTo()" );
+				// Common.log( TAG, "mMapView.animateTo()" );
 			}
 		}
 	}
@@ -1657,7 +1657,7 @@ public class LoggerMap extends MapActivity {
 	 */
 	private void drawSpeedTexts(double avgSpeed) {
 		avgSpeed = mUnits.conversionFromMetersPerSecond(avgSpeed);
-		Log.d(TAG, "drawSpeedTexts(): avgSpeed = " + avgSpeed);
+		Common.log(TAG, "drawSpeedTexts(): avgSpeed = " + avgSpeed);
 		
 		mSpeedtexts[0].setVisibility(View.VISIBLE);
 		mSpeedtexts[0].setText(String.format("%.0f %s", 0d, mUnits.getSpeedUnit()));
@@ -1675,7 +1675,7 @@ public class LoggerMap extends MapActivity {
 	}
     private void redrawOverlays() {
     	//ASLAI DIAGNOSTICS TILL HERE
-    	Log.d(TAG, "ASLAI: REDRAW OVERLAYS");
+    	Common.log(TAG, "ASLAI: REDRAW OVERLAYS");
 		mMapView.getOverlays().clear();
 		List<Overlay> overlays = this.mMapView.getOverlays();
 		overlays.add(mMylocation);
@@ -1700,13 +1700,13 @@ public class LoggerMap extends MapActivity {
 // ASLAI
 	private void clearOverlays() {	
 		int state = GPSLoggerServiceManager.getLoggingState();
-		Log.d("TAG", "ASLAI STATE IS: " + state);
+		Common.log("TAG", "ASLAI STATE IS: " + state);
 		ArrayList<Track> tmpTrackIds = new ArrayList<Track>();
         if (state == Constants.LOGGING || state == Constants.PAUSED) {        	
             tmpTrackIds.add(mTrackIds.get(mTrackIds.size()-1));
         }
         mTrackIds = tmpTrackIds;
-        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
+        Common.log(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
 		editor.commit();        
@@ -1725,12 +1725,12 @@ public class LoggerMap extends MapActivity {
 	
 	private void setTrackInvisible(int trackPosition) {	
 		int state = GPSLoggerServiceManager.getLoggingState();
-		Log.d("TAG", "ASLAI STATE IS: " + state);
+		Common.log("TAG", "ASLAI STATE IS: " + state);
         if (trackPosition == mTrackIds.size()-1 && (state == Constants.LOGGING || state == Constants.PAUSED)) {        	
         	return;
         }
         mTrackIds.get(trackPosition).visible = false;
-        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
+        Common.log(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
 		editor.commit();        
@@ -1748,7 +1748,7 @@ public class LoggerMap extends MapActivity {
 	}	
 	private void setAllTracksInvisible(ArrayList<Track> tracks) {
 		Track.setAllInvisible(tracks);
-        Log.d(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
+        Common.log(TAG, "ASLAI: TRACKIDSTOPREFERENCE IS: " + trackIdsToPreference());
 		Editor editor = mSharedPreferences.edit();
 		editor.putString("mTrackIds", trackIdsToPreference());
 		editor.commit();        
@@ -1767,7 +1767,7 @@ public class LoggerMap extends MapActivity {
 	 *            center on the end of the track
 	 */
 	private void moveToTrack(long trackId, boolean center, boolean startLogging) {
-		Log.d(TAG, "ASLAI: MOVE TO TRACK: " + trackId);
+		Common.log(TAG, "ASLAI: MOVE TO TRACK: " + trackId);
 		Cursor track = null;
 		try {
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
@@ -1817,12 +1817,12 @@ public class LoggerMap extends MapActivity {
 		updateDataOverlays();
 		updateSpeedbarVisibility();					
 		if (center) {
-			Log.d(TAG, "ASLAI: Animating to track: " + trackId);
+			Common.log(TAG, "ASLAI: Animating to track: " + trackId);
 			GeoPoint lastPoint = getLastTrackPoint(trackId);
 //ASLAI CHANGED			GeoPoint lastPoint = getLastTrackPoint();
 			animateTo();
 //			this.mMapView.getController().animateTo(lastPoint);
-			Log.d(TAG, "ASLAI: Animating to :" + lastPoint.getLatitudeE6() + " " + lastPoint.getLongitudeE6());
+			Common.log(TAG, "ASLAI: Animating to :" + lastPoint.getLatitudeE6() + " " + lastPoint.getLongitudeE6());
 			//ASLAI ADDED BELOW
 			this.mMapView.invalidate();
 		}	
@@ -1975,7 +1975,7 @@ public class LoggerMap extends MapActivity {
 				if (waypoint != null && waypoint.moveToLast()) {
 					int microLatitude = (int) (waypoint.getDouble(0) * 1E6d);
 					int microLongitude = (int) (waypoint.getDouble(1) * 1E6d);
-					Log.d(TAG, "FIRST TRACK POINT IS : " + waypoint.getDouble(0) + ", "
+					Common.log(TAG, "FIRST TRACK POINT IS : " + waypoint.getDouble(0) + ", "
 							+ waypoint.getDouble(1));
 					lastPoint = new GeoPoint(microLatitude, microLongitude);
 				}
@@ -2002,9 +2002,9 @@ public class LoggerMap extends MapActivity {
 			/*
 		if (waypoint != null) {
 			waypoint.moveToFirst();
-			Log.d(TAG, "WAYPOINTS ARE: \n");
+			Common.log(TAG, "WAYPOINTS ARE: \n");
 			while (!waypoint.isAfterLast()) {
-				Log.d(TAG, waypoint.getDouble(0) + ", "
+				Common.log(TAG, waypoint.getDouble(0) + ", "
 						+ waypoint.getDouble(1) + "\n");
 				waypoint.moveToNext();
 
@@ -2026,19 +2026,19 @@ public class LoggerMap extends MapActivity {
 					+ "/waypoints"), new String[] { Waypoints.LATITUDE, Waypoints.LONGITUDE,
 					"max(" + Waypoints.TABLE + "." + Waypoints._ID + ")" }, null, null, null);
 			if (waypoint != null && waypoint.moveToLast()) {
-				Log.d(TAG, "ASLAI HERE1");
+				Common.log(TAG, "ASLAI HERE1");
 				int microLatitude = (int) (waypoint.getDouble(0) * 1E6d);
 				int microLongitude = (int) (waypoint.getDouble(1) * 1E6d);
 				lastPoint = new GeoPoint(microLatitude, microLongitude);
 			}
 			if (lastPoint == null || lastPoint.getLatitudeE6() == 0
 					|| lastPoint.getLongitudeE6() == 0) {
-				Log.d(TAG, "ASLAI HERE2");
+				Common.log(TAG, "ASLAI HERE2");
 				
 				lastPoint = getLastKnowGeopointLocation();
 			}
 			else {
-				Log.d(TAG, "ASLAI HERE3");
+				Common.log(TAG, "ASLAI HERE3");
 //ASLAI PROBLEM HERE
 				mLastWaypoint = waypoint.getLong(2);
 			}
@@ -2052,7 +2052,7 @@ public class LoggerMap extends MapActivity {
 	}
 
 	private void moveToLastTrack() {
-		Log.d(TAG, "ASLAI: MOVETOLASTTRACK");
+		Common.log(TAG, "ASLAI: MOVETOLASTTRACK");
 		int trackId = -1;
 		Cursor track = null;
 		try {
@@ -2092,13 +2092,13 @@ public class LoggerMap extends MapActivity {
 	private boolean calculateTrackStatistics() {
 		if (statisticsPresent)
 			return false;
-		Log.d(TAG, "calculateTrackStatistics()");
+		Common.log(TAG, "calculateTrackStatistics()");
 		long starttime = 0;
 		double distanceTraveled = 0f;
 		long duration = 0;
 
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
-		Log.d(TAG, "trackUri = " + trackUri);
+		Common.log(TAG, "trackUri = " + trackUri);
 		ContentResolver resolver = this.getApplicationContext().getContentResolver();
 
 		Cursor segments = null;
@@ -2157,7 +2157,7 @@ public class LoggerMap extends MapActivity {
 		mCalculatedDistance = distanceTraveled;
 		if (mIsPartnerRun)
 			values.put(Tracks.IS_PARTNER, 1);
-		Log.d(TAG, "calculateTrackStatistics(): duration = " + duration
+		Common.log(TAG, "calculateTrackStatistics(): duration = " + duration
 				+ "; distanceTraveled = " + distanceTraveled);
 		resolver.update(trackUri, values, null, null);
 		// resolver.notifyChange(trackUri, null);
@@ -2174,7 +2174,7 @@ public class LoggerMap extends MapActivity {
 	private void updateUserStats() {
 		double dist = mCalculatedDistance;
 		long duration = mCalculatedDuration;
-		Log.d(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
+		Common.log(TAG, "updateUserStats(): dist = " + dist + "; duration = " + duration);
 		int selfId = Common.getRegisteredUser(this).id;
 		
 		Editor editor = mSharedPreferences.edit();
@@ -2277,7 +2277,7 @@ public class LoggerMap extends MapActivity {
 		Intent i = new Intent(android.provider.MediaStore.ACTION_IMAGE_CAPTURE);
 		File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 				+ Constants.TMPICTUREFILE_PATH);
-		// Log.d( TAG, "Picture requested at: " + file );
+		// Common.log( TAG, "Picture requested at: " + file );
 		i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
 		i.putExtra(android.provider.MediaStore.EXTRA_VIDEO_QUALITY, 1);
 		startActivityForResult(i, MENU_PICTURE);
@@ -2290,7 +2290,7 @@ public class LoggerMap extends MapActivity {
 		Intent i = new Intent(android.provider.MediaStore.ACTION_VIDEO_CAPTURE);
 		File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath()
 				+ Constants.TMPICTUREFILE_PATH);
-		// Log.d( TAG, "Video requested at: " + file );
+		// Common.log( TAG, "Video requested at: " + file );
 		i.putExtra(android.provider.MediaStore.EXTRA_OUTPUT, Uri.fromFile(file));
 		i.putExtra(android.provider.MediaStore.EXTRA_VIDEO_QUALITY, 1);
 		startActivityForResult(i, MENU_VIDEO);
@@ -2303,11 +2303,11 @@ public class LoggerMap extends MapActivity {
 	
 	private class ScoreboardUpdateReceiver extends BroadcastReceiver {
 		public void onReceive(Context context, Intent intent) {
-			Log.d(TAG, "onReceive()");
+			Common.log(TAG, "onReceive()");
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGameCon.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
+					Common.log(TAG, appResponse.toString());
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
 						final int requestId = appResponse.request_id;
@@ -2380,7 +2380,7 @@ public class LoggerMap extends MapActivity {
 
 		public void onComplete(final String response) {
 			// process the response here: executed in background thread
-			Log.d(TAG, "Wall Post Response: " + response.toString());
+			Common.log(TAG, "Wall Post Response: " + response.toString());
 		}
 
 		public void onFacebookError(FacebookError e) {}

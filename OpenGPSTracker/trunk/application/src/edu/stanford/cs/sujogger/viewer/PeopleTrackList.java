@@ -96,8 +96,8 @@ public class PeopleTrackList extends ListActivity {
 			try {
 				AppResponse appResponse = null;
 				while ((appResponse = mGamingServiceConn.getNextPendingNotification()) != null) {
-					Log.d(TAG, appResponse.toString());
-					Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id:"
+					Common.log(TAG, appResponse.toString());
+					Common.log(TAG, "PUBLISHGPXReceiver: Response received with request id:"
 							+ appResponse.request_id);
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_ERROR)) {
@@ -118,19 +118,19 @@ public class PeopleTrackList extends ListActivity {
 						PeopleTrackList.this.runOnUiThread(new Runnable() {
 							public void run() {
 								setListAdapter(adapter);
-								Log.d(TAG, "HERE 3");
+								Common.log(TAG, "HERE 3");
 								mProgressDialog.dismiss();
 							}
 						});
 						break;
 					case 101:
-						Log.d(TAG, "PUBLISHGPXReceiver: Response received with request id: "
+						Common.log(TAG, "PUBLISHGPXReceiver: Response received with request id: "
 								+ appResponse.request_id);
-						Log.d(TAG, "Response is: " + appResponse);
+						Common.log(TAG, "Response is: " + appResponse);
 						Obj[] objArray = (Obj[]) appResponse.object;
 						for (int i = 0; i < objArray.length; i++) {
 							for (int j = 0; j < objArray[i].object_properties.length; j++) {
-								Log.d(TAG, "STRING_VAL IS: "
+								Common.log(TAG, "STRING_VAL IS: "
 										+ objArray[i].object_properties[j].string_val);
 							}
 						}
@@ -148,7 +148,7 @@ public class PeopleTrackList extends ListActivity {
 	/** Called when the activity is first created. */
 	@Override
 	public void onCreate(Bundle savedInstanceState) {
-		Log.d(TAG, "HERE1");
+		Common.log(TAG, "HERE1");
 		super.onCreate(savedInstanceState);
 		this.setContentView(R.layout.list_simple);
 		
@@ -183,7 +183,7 @@ public class PeopleTrackList extends ListActivity {
 	}
 
 	protected PeopleTrackListAdapter createAdapter(ObjProperty[] objProp) {
-		Log.d("TAG", "HERE5");
+		Common.log("TAG", "HERE5");
 		// String[] testValues = new String[0];
 		if (objProp != null && objProp.length > 0) {
 			// testValues = new String[objProp.length];
@@ -194,7 +194,7 @@ public class PeopleTrackList extends ListActivity {
 					trackHash.put(track.id, track);
 				}
 				Track track = trackHash.get(objProp[i].obj_id);
-				Log.d(TAG, "ASLAI OBJPROP[i].NAME is " + objProp[i].name);
+				Common.log(TAG, "ASLAI OBJPROP[i].NAME is " + objProp[i].name);
 				if ("name".equals(objProp[i].name)) {
 					trackList.add(0, track);
 					track.name = objProp[i].string_val;
@@ -208,7 +208,7 @@ public class PeopleTrackList extends ListActivity {
 				}
 			}
 		}
-		Log.d("TAG", "HERE6");
+		Common.log("TAG", "HERE6");
 
 		/*
 		 * // Create some mock data String[] testValues = new String[] {
@@ -229,7 +229,7 @@ public class PeopleTrackList extends ListActivity {
 
 		int objId = trackList.get(position).id;
 		String name = trackHash.get(objId).name;
-		Log.d(TAG, "objId = " + objId);
+		Common.log(TAG, "objId = " + objId);
 		if (mDbHelper.getIdFromTrackId(objId) == -1) {
 		TrackCreator trackCreator = new TrackCreator(this);
 		trackCreator.downloadTrack(objId, name);
