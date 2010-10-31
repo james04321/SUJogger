@@ -306,7 +306,7 @@ public class LeaderBoard extends ListActivity {
 		startManagingCursor(mScores);
 		
 		Common.log(TAG, "fillData()");
-		DatabaseUtils.dumpCursor(mScores);
+		if (Constants.SHOW_DEBUG) DatabaseUtils.dumpCursor(mScores);
 		
 		if (lbAdapter == null) {
 			lbAdapter = new LeaderBoardAdapter(this, mScores, statisticId(), mIsGroup);

@@ -163,12 +163,6 @@ public class Feed extends ListActivity {
 	}
 
 	@Override
-	protected void onPause() {
-		Common.log(TAG, "onPause()");
-		super.onPause();
-	}
-
-	@Override
 	protected void onResume() {
 		Common.log(TAG, "onResume()");
 		super.onResume();
@@ -176,12 +170,6 @@ public class Feed extends ListActivity {
 		mAdapter.notifyDataSetChanged();
 		getListView().invalidateViews();
 		if (Constants.SHOW_DEBUG) DatabaseUtils.dumpCursor(mMessages);
-	}
-	
-	@Override
-	protected void onStop() {
-		
-		super.onStop();
 	}
 
 	@Override
