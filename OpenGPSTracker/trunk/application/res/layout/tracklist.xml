@@ -43,12 +43,29 @@
           android:layout_height="fill_parent"
           android:layout_above="@id/bottom_control_bar"
           android:layout_below="@id/top_control_bar"/>
-          
-    <TextView android:id="@+id/android:empty"
+    
+    <LinearLayout android:id="@+id/android:empty"
+    	 android:layout_width="fill_parent"
+         android:layout_height="fill_parent"
+         android:orientation="vertical"
+         android:layout_above="@id/bottom_control_bar"
+         android:layout_below="@id/top_control_bar">
+    	
+    	<com.admob.android.ads.AdView  
+			xmlns:app="http://schemas.android.com/apk/res/edu.stanford.cs.sujogger"
+		  	android:id="@+id/ad" 
+		  	android:layout_width="fill_parent" 
+			android:layout_height="48dip"
+			app:backgroundColor="#000000"
+			app:primaryTextColor="#FFFFFF"
+			app:secondaryTextColor="#CCCCCC"
+			app:keywords="running walking exercise shoes"
+		/>
+		
+    	<TextView android:id="@+id/empty_textview"
           android:layout_width="fill_parent"
           android:layout_height="fill_parent"
           android:text="@string/no_tracks"
-          android:gravity="center"
-          android:layout_above="@id/bottom_control_bar"
-          android:layout_below="@id/top_control_bar"/>
+          android:gravity="center"/>
+    </LinearLayout>
 </RelativeLayout>

@@ -401,7 +401,7 @@ public class GroupList extends ListActivity {
 	}
 
 	private void fillData() {
-		TextView emptyView = (TextView)getListView().getEmptyView();
+		TextView emptyView = (TextView)findViewById(R.id.empty_textview);
 		emptyView.setText(mDisplayFriends ? 
 				R.string.no_friends : R.string.no_groups);
 		if (mDisplayFriends) {

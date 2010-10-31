@@ -155,6 +155,8 @@ public class TrackList extends ListActivity {
 	private OnClickListener mDeleteOnClickListener = new DialogInterface.OnClickListener() {
 		public void onClick(DialogInterface dialog, int which) {
 			getContentResolver().delete(mDialogUri, null, null);
+			trackAdapter.getCursor().requery();
+			trackAdapter.notifyDataSetChanged();
 			getListView().invalidateViews();
 		}
 	};
@@ -168,6 +170,10 @@ public class TrackList extends ListActivity {
 			ContentValues values = new ContentValues();
 			values.put(Tracks.NAME, trackName);
 			TrackList.this.getContentResolver().update(mDialogUri, values, null, null);
+			trackAdapter.getCursor().requery();
+			trackAdapter.notifyDataSetChanged();
+			getListView().invalidate();
+			getListView().invalidateViews();
 		}
 	};
 
@@ -408,7 +414,8 @@ public class TrackList extends ListActivity {
 			return handled;
 		}
 		
-		long trackId = trackAdapter.getItemId(info.position);
+		// Subtract 1 from position because of ad header
+		long trackId = trackAdapter.getItemId(info.position-1);
 		
 		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
 		Common.log(TAG, "onContextItemSelected(): trackUri=" + trackUri);
@@ -538,7 +545,7 @@ public class TrackList extends ListActivity {
 	private void displayIntent(Intent intent) {
 		Common.log(TAG, "displayIntent()");
 		
-		TextView emptyView = (TextView)getListView().getEmptyView();
+		TextView emptyView = (TextView)findViewById(R.id.empty_textview);
 		emptyView.setText(mDownloadedTracks ? 
 				R.string.no_downloaded_tracks : R.string.no_tracks);
 		
