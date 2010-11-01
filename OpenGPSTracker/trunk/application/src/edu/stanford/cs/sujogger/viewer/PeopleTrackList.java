@@ -19,6 +19,9 @@ package edu.stanford.cs.sujogger.viewer;
 import java.util.ArrayList;
 import java.util.Hashtable;
 
+import com.admob.android.ads.AdManager;
+import com.admob.android.ads.AdView;
+
 import edu.stanford.cs.gaming.sdk.model.AppResponse;
 import edu.stanford.cs.gaming.sdk.model.Obj;
 import edu.stanford.cs.gaming.sdk.model.ObjProperty;
@@ -166,6 +169,11 @@ public class PeopleTrackList extends ListActivity {
 		trackHash = new Hashtable<Integer, Track>();
 		mDbHelper = new DatabaseHelper(this);
 		mDbHelper.openAndGetDb();
+		
+		if (Constants.AD_TEST) AdManager.setTestDevices(new String[] { "3468678E351E95A5F7A64D2271BCB7BF" });
+		AdView adView = (AdView)View.inflate(this, R.layout.adview, null);
+		getListView().addHeaderView(adView);
+		
 		mHandler.postDelayed(mRefreshTask, 100);
 	}
 
@@ -226,7 +234,7 @@ public class PeopleTrackList extends ListActivity {
 	protected void onListItemClick(ListView l, View v, int position, long id) {
 		super.onListItemClick(l, v, position, id);
 		Log.v(TAG, "position = " + position + "; id = " + id);
-
+		position--; //ignore ad header
 		int objId = trackList.get(position).id;
 		String name = trackHash.get(objId).name;
 		Common.log(TAG, "objId = " + objId);

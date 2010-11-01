@@ -33,6 +33,7 @@ import edu.stanford.cs.sujogger.actions.utils.GraphCanvas;
 import edu.stanford.cs.sujogger.db.GPStracking.Segments;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.db.GPStracking.Waypoints;
+import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.UnitsI18n;
 import edu.stanford.cs.sujogger.viewer.TrackList;
 
@@ -531,8 +532,8 @@ public class Statistics extends Activity
       overallavgSpeedView.setText( overallavgSpeedText );
       avgSpeedView.setText( avgSpeedText );
       distanceView.setText( distanceText );
-      starttimeView.setText( Long.toString( starttime ) );
-      endtimeView.setText( Long.toString( endtime ) );
+      starttimeView.setText(Common.dateString(starttime));
+      endtimeView.setText(Common.dateString(endtime));
       String titleFormat = getString( R.string.stat_title );
       setTitle( String.format( titleFormat, tracknameText ) );
       waypointsView.setText( waypointsText );
