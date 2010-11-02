@@ -9,102 +9,52 @@
    <TableRow
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
+      android:paddingLeft="10dip"
+      android:paddingTop="10dip"
    >
-      <TextView
-         android:text="@string/stat_distance"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_distance" />
+      <TextView android:text="Distance" 
+      	android:layout_weight="1" />
+      <TextView android:text="Time" 
+      	android:layout_weight="1"/>
    </TableRow>
    
    <TableRow
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
+      android:paddingLeft="10dip"
+      android:paddingBottom="10dip"
    >
-      <TextView
-         android:text="@string/stat_overallaveragespeed"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_overallaveragespeed" />
+      <TextView android:id="@+id/stat_distance"
+      	android:layout_weight="1"
+      	android:textSize="24dip" />
+      <TextView android:id="@+id/stat_time"
+      	android:layout_weight="1" 
+      	android:textSize="24dip" />
    </TableRow>
 
    <TableRow
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
+      android:paddingLeft="10dip"
    >
-      <TextView
-         android:text="@string/stat_averagespeed"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_averagespeed" />
+      <TextView android:text="Avg Speed"  android:layout_weight="1" />
+      <TextView android:text="Pace"  android:layout_weight="1" />
    </TableRow>
    
    <TableRow
       android:layout_width="fill_parent"
       android:layout_height="wrap_content"
+      android:paddingLeft="10dip"
+      android:paddingBottom="10dip"
    >
-      <TextView
-         android:text="@string/stat_maximumspeed"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_maximumspeed" />
+      <TextView android:id="@+id/stat_avgspeed"
+      	android:layout_weight="1"
+      	android:textSize="24dip"/>
+      <TextView android:id="@+id/stat_pace"  
+      	android:layout_weight="1" 
+      	android:textSize="24dip"/>
    </TableRow>
    
-   <TableRow
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-   >
-      <TextView
-         android:text="@string/stat_waypoints"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_waypoints" />
-   </TableRow>
-   
-   <TableRow
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-   >
-      <TextView
-         android:text="@string/stat_starttime"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_starttime" />
-   </TableRow>
-
-   <TableRow
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-   >
-      <TextView
-         android:text="@string/stat_endtime"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_endtime" />
-   </TableRow>
-
-   <TableRow
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-   >
-      <TextView
-         android:text="@string/stat_minimalaltitide"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_minimalaltitide" />
-   </TableRow>
-   
-   <TableRow
-      android:layout_width="fill_parent"
-      android:layout_height="wrap_content"
-   >
-      <TextView
-         android:text="@string/stat_maximumaltitude"
-         android:paddingRight="15dp" />
-      <TextView
-         android:id="@+id/stat_maximumaltitude" />
-   </TableRow>
-
    <ViewFlipper 
         android:id="@+id/flipper"
         android:layout_width="fill_parent"

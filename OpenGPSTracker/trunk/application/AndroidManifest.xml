@@ -211,7 +211,8 @@
                 android:readPermission="com.android.launcher.permission.WRITE_SETTINGS" />
 		</provider>
       
-        <activity android:label="@string/menu_statistics" android:name=".actions.Statistics">
+        <activity android:label="@string/menu_statistics" android:name=".actions.Statistics"
+        	android:screenOrientation="portrait">
         </activity> 
 
 		<activity android:label="@string/receive_filewriter" 

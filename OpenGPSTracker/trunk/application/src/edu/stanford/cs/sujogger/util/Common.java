@@ -121,6 +121,28 @@ public class Common {
 		return String.format("%.2f %s", speed, mUnits.getSpeedUnit());
 	}
 	
+	public static String paceString(Context context, long duration, double distance) {
+		UnitsI18n mUnits = new UnitsI18n(context, null);
+		double mDistance = mUnits.conversionFromMeter(distance);
+		double time = duration / mDistance;
+		long timeSec = (long)time / 1000;
+		long hours, minutes, seconds;
+		hours = timeSec / 3600;
+		timeSec = timeSec - (hours * 3600);
+		minutes = timeSec / 60;
+		timeSec = timeSec - (minutes * 60);
+		seconds = timeSec;
+		
+		String text = "";
+		if (hours > 0)
+			text += String.format("%02d", hours) + ":";
+		text += String.format("%02d", minutes) + ":";
+		text += String.format("%02d", seconds);
+		text += "/" + mUnits.getDistanceUnit();
+		
+		return text;
+	}
+	
 	public static void displayAchievementToast(String title, int imgRes, boolean earned, Context context, View toastLayout) {
 		ImageView image = (ImageView) toastLayout.findViewById(R.id.toast_ach_image);
 		image.setImageResource(imgRes);
