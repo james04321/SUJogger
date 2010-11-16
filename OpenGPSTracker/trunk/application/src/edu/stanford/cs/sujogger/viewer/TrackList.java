@@ -462,6 +462,8 @@ public class TrackList extends ListActivity {
 				break;
 			}
 			case MENU_SHARE: {
+				// Don't really need to check whether the remoteTrackId exists, 
+				// as we now checking it in onCreateContextMenu
 				Intent actionIntent;
 				if (remoteTrackId == 0)
 					actionIntent = new Intent("android.intent.action.PUBLISH");

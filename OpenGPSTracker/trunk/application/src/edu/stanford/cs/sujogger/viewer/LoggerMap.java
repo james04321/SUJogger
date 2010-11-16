@@ -1081,6 +1081,8 @@ public class LoggerMap extends MapActivity {
 			handled = true;
 			break;
 		case MENU_SHARE:
+			// Don't really need to check whether the remoteTrackId exists, 
+			// as we now checking it in onCreateMenu
 			long remoteTrackId = 0;
 			Intent actionIntent = null;
 			ContentResolver resolver = this.getApplicationContext().getContentResolver();
