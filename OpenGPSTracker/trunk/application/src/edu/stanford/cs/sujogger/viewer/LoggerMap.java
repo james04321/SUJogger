@@ -961,8 +961,26 @@ public class LoggerMap extends MapActivity {
 		// MenuItem notemenu = menu.findItem( MENU_NOTE );
 		// notemenu.setEnabled( GPSLoggerServiceManager.isMediaPrepared() );
 		long loggingTrackId = GPSLoggerServiceManager.isLogging();		
+		
+		long remoteTrackId = 0;
+		Intent actionIntent = null;
+		ContentResolver resolver = this.getApplicationContext().getContentResolver();
+		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, this.getLastTrackId());
+		Cursor trackCursor = null;			
+		try {
+			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.TRACK_ID }, null, null, null);
+			if (trackCursor != null && trackCursor.moveToLast()) {
+				remoteTrackId = trackCursor.getLong(1);
+			}	
+		}	finally {
+				if (trackCursor != null) {
+					trackCursor.close();
+				}
+			}	
+		
 		MenuItem sharemenu = menu.findItem(MENU_SHARE);
-		sharemenu.setEnabled(mTrackIds.size() > 0 && loggingTrackId == -1);
+		sharemenu.setEnabled(mTrackIds.size() > 0 && loggingTrackId == -1 && remoteTrackId == 0);
+		
 		MenuItem layermenu = menu.findItem(MENU_LAYERS);
 		layermenu.setEnabled(mTrackIds.size() > 1 || (mTrackIds.size() == 1 && loggingTrackId == -1));	
 		MenuItem statsmenu = menu.findItem(MENU_STATS);

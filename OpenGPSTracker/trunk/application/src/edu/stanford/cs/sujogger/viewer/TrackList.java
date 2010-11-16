@@ -394,15 +394,36 @@ public class TrackList extends ListActivity {
 
 	@Override
 	public void onCreateContextMenu(ContextMenu menu, View v, ContextMenu.ContextMenuInfo menuInfo) {
+		long trackId = 0;
 		if (menuInfo instanceof AdapterView.AdapterContextMenuInfo) {
 			AdapterView.AdapterContextMenuInfo itemInfo = (AdapterView.AdapterContextMenuInfo) menuInfo;
 			TextView textView = (TextView) itemInfo.targetView.findViewById(android.R.id.text1);
 			if (textView != null) {
 				menu.setHeaderTitle(textView.getText());
 			}
+			trackId = trackAdapter.getItemId(itemInfo.position-1);
+
 		}
 		menu.add(0, MENU_STATS, 0, R.string.menu_statistics);
-		menu.add(0, MENU_SHARE, 0, R.string.menu_shareTrack);
+
+		
+		// Subtract 1 from position because of ad header
+		
+		Uri trackUri = ContentUris.withAppendedId(Tracks.CONTENT_URI, trackId);
+		Common.log(TAG, "onContextItemSelected(): trackUri=" + trackUri);
+		ContentResolver resolver = this.getApplicationContext().getContentResolver();
+		Cursor trackCursor = null;
+		long remoteTrackId = 0;
+		try {
+			trackCursor = resolver.query(trackUri, new String[] { Tracks.NAME, Tracks.TRACK_ID }, null, null, null);
+			if (trackCursor != null && trackCursor.moveToLast())
+				remoteTrackId = trackCursor.getLong(1);
+			if (remoteTrackId == 0)
+				menu.add(0, MENU_SHARE, 0, R.string.menu_shareTrack);
+		} catch (Exception e) {
+			
+		}
+
 		menu.add(0, MENU_RENAME, 0, R.string.menu_renameTrack);
 		menu.add(0, MENU_DETELE, 0, R.string.menu_deleteTrack);
 	}
