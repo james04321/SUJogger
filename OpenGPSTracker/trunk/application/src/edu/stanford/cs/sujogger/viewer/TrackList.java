@@ -93,11 +93,11 @@ import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
 import edu.stanford.cs.sujogger.db.GPStracking.Tracks;
 import edu.stanford.cs.sujogger.logger.GPSLoggerServiceManager;
+import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
 import edu.stanford.cs.sujogger.util.SegmentedControl;
 import edu.stanford.cs.sujogger.util.TrackListAdapter;
-import edu.stanford.cs.sujogger.logger.SettingsDialog;
 
 /**
  * Show a list view of all tracks, also doubles for showing search results
@@ -235,11 +235,10 @@ public class TrackList extends ListActivity {
 		
 		//TODO: Facebook
 		if (!mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
-			mFacebook = new Facebook();
+			mFacebook = new Facebook(Constants.FB_APP_ID);
 			mAsyncRunner = new AsyncFacebookRunner(mFacebook);
 
-			mFacebook.authorize(this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
-					new LoginDialogListener());
+			mFacebook.authorize(this, Constants.FB_PERMISSIONS, new LoginDialogListener());
 		}
 		
 		/*
@@ -346,6 +345,12 @@ public class TrackList extends ListActivity {
 		mDbHelper.close();
 		mGameCon.unbind();
 		super.onDestroy();
+	}
+	
+	@Override
+	public void onActivityResult(int requestCode, int resultCode, Intent data) {
+	  super.onActivityResult(requestCode, resultCode, data);
+	  mFacebook.authorizeCallback(requestCode, resultCode, data);
 	}
 	
 	@Override
@@ -638,7 +643,7 @@ public class TrackList extends ListActivity {
 								.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
 									public void onClick(DialogInterface dialog, int which) {
 										//TODO:Facebook
-										mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+										mFacebook.authorize(TrackList.this, Constants.FB_PERMISSIONS,
 												new LoginDialogListener());
 										
 										//mWa.authorize(TrackList.this, new LoginDialogListener());
@@ -749,7 +754,7 @@ public class TrackList extends ListActivity {
 				.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
 				
 				public void onClick(DialogInterface dialog, int which) {
-					mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+					mFacebook.authorize(TrackList.this, Constants.FB_PERMISSIONS,
 							new LoginDialogListener());
 				}
 			}).show();
@@ -761,7 +766,7 @@ public class TrackList extends ListActivity {
 				Toast toast = Toast.makeText(TrackList.this.getApplicationContext(),
 						"Facebook login is required", Toast.LENGTH_SHORT);
 				toast.show();
-				mFacebook.authorize(TrackList.this, Constants.FB_APP_ID, Constants.FB_PERMISSIONS,
+				mFacebook.authorize(TrackList.this, Constants.FB_PERMISSIONS,
 						new LoginDialogListener());
 			}
 		}

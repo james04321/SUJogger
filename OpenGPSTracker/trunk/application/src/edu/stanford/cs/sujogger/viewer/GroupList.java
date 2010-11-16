@@ -168,7 +168,7 @@ public class GroupList extends ListActivity {
 		mFacebook = null;
 		mAsyncRunner = null;
 		if (mSharedPreferences.getBoolean(Constants.USER_REGISTERED, false)) {
-			mFacebook = new Facebook();
+			mFacebook = new Facebook(Constants.FB_APP_ID);
 			String accessToken = mSharedPreferences.getString(Constants.USERREG_TOKEN_KEY, null);
 			mFacebook.setAccessToken(accessToken);
 			

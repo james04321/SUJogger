@@ -561,7 +561,7 @@ public class LoggerMap extends MapActivity {
 		User user = Common.getRegisteredUser(this);
 		mGameCon.setUserId(user.id, user.fb_id, user.fb_token);
 		
-		mFacebook = new Facebook();
+		mFacebook = new Facebook(Constants.FB_APP_ID);
 		mAsyncRunner = new AsyncFacebookRunner(mFacebook);
 		mFacebook.setAccessToken(mSharedPreferences.getString(Constants.USERREG_TOKEN_KEY, null));
 		
