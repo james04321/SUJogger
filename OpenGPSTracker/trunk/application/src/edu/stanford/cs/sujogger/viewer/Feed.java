@@ -323,6 +323,15 @@ public class Feed extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						Feed.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Common.displayUpgradeDialog(Feed.this);
+								isUpdating = false;
+							}
+						});
+						continue;
+					}
 					
 					switch(appResponse.request_id) {
 					case GET_MSG_RID:

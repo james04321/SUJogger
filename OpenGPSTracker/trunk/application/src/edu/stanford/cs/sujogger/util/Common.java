@@ -5,8 +5,13 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
+import android.app.AlertDialog;
+import android.content.ActivityNotFoundException;
 import android.content.Context;
+import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
+import android.net.Uri;
 import android.os.Environment;
 import android.preference.PreferenceManager;
 import android.util.Log;
@@ -156,5 +161,31 @@ public class Common {
 		achToast.setDuration(Toast.LENGTH_LONG);
 		achToast.setView(toastLayout);
 		achToast.show();
+	}
+	
+	public static void displayUpgradeDialog(Context context) {
+		final Context newContext = context;
+		AlertDialog.Builder builder = new AlertDialog.Builder(newContext);
+		
+		builder.setTitle("Upgrade notice");
+		builder.setMessage(R.string.app_upgrade_message);
+		builder.setIcon(R.drawable.market_icon);
+		
+		builder.setNegativeButton(R.string.btn_cancel, null);
+		
+		builder.setPositiveButton(R.string.upgrade_button, new DialogInterface.OnClickListener() {
+			public void onClick(DialogInterface dialog, int which) {
+				try {
+					Uri uri = Uri.parse(Constants.APP_MARKET_URI);
+					Intent intent = new Intent(Intent.ACTION_VIEW, uri);
+					intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_WHEN_TASK_RESET);
+					newContext.startActivity(intent);
+				} catch (ActivityNotFoundException e) {
+					e.printStackTrace();
+				}
+			}
+		});
+		
+		builder.show();
 	}
 }

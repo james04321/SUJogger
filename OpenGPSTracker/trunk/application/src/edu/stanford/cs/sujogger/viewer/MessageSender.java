@@ -444,6 +444,15 @@ public class MessageSender extends Activity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						MessageSender.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mSendDialog != null) mSendDialog.dismiss();
+								Common.displayUpgradeDialog(MessageSender.this);
+							}
+						});
+						continue;
+					}
 					
 					switch (appResponse.request_id) {
 					case MSG_SEND_RID:

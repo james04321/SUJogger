@@ -79,6 +79,8 @@
     <string name="graphtype_distancespeed">Speed against distance</string>
     <string name="graphtype_distancealtitude">Altitude against distance</string>
 
+	<string name="app_upgrade_message">The current version of this app is no longer able to communicate with the Happy Feet server. Please upgrade to the most recent version of the app as soon as possible.</string>
+
     <string name="chooser_title">How to share this track?</string>
 	<string name="receive_filewriter">Store to GPX on SDcard</string>
     <string name="receive_kmzfilewriter">Store to KMZ on SDcard</string>

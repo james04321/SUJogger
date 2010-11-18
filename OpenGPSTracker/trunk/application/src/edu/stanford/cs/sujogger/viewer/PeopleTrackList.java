@@ -114,6 +114,15 @@ public class PeopleTrackList extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						PeopleTrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mProgressDialog != null) mProgressDialog.dismiss();
+								Common.displayUpgradeDialog(PeopleTrackList.this);
+							}
+						});
+						continue;
+					}
 					
 					switch (appResponse.request_id) {
 					case OBJ_PROPS_RID:

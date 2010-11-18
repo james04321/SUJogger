@@ -476,6 +476,15 @@ public class GroupList extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						GroupList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mCreateDialog != null) mCreateDialog.dismiss();
+								Common.displayUpgradeDialog(GroupList.this);
+							}
+						});
+						continue;
+					}
 					
 					if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_FAILURE)) {
 						final String errorMsg;

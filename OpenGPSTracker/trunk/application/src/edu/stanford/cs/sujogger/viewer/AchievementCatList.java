@@ -278,6 +278,14 @@ public class AchievementCatList extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						AchievementCatList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								Common.displayUpgradeDialog(AchievementCatList.this);
+							}
+						});
+						continue;
+					}
 					
 					switch (appResponse.request_id) {
 					case GET_GRP_SBS_RID:

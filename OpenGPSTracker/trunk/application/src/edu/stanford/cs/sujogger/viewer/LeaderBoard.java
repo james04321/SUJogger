@@ -336,6 +336,17 @@ public class LeaderBoard extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						LeaderBoard.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mUserGroupWaitDialog != null) mUserGroupWaitDialog.dismiss();
+								if (mScoreWaitDialog != null) mScoreWaitDialog.dismiss();
+								fillData();
+								Common.displayUpgradeDialog(LeaderBoard.this);
+							}
+						});
+						continue;
+					}
 					
 					final ScoreBoard[] scores;
 					switch (appResponse.request_id) {

@@ -14,6 +14,8 @@ public class Constants {
 	public static final boolean AD_TEST = true; //set to false for release (to show real Admob ads)
 	public static final boolean SHOW_DEBUG = true;
 	
+	public static final String APP_MARKET_URI = "http://market.android.com/search?q=pname:edu.stanford.cs.sujogger";
+	
 	public static final String DISABLEBLANKING = "disableblanking";
 	public static final String SATELLITE = "SATELLITE";
 	public static final String TRAFFIC = "TRAFFIC";

@@ -676,6 +676,15 @@ public class TrackList extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						TrackList.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mDialogUserInit != null) mDialogUserInit.dismiss();
+								Common.displayUpgradeDialog(TrackList.this);
+							}
+						});
+						continue;
+					}
 					
 					switch (appResponse.request_id) {
 					case GET_SBS_RID:

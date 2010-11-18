@@ -232,6 +232,15 @@ public class FriendPicker extends ListActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						FriendPicker.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mUserWaitDialog != null) mUserWaitDialog.dismiss();
+								Common.displayUpgradeDialog(FriendPicker.this);
+							}
+						});
+						continue;
+					}
 					
 					switch(appResponse.request_id) {
 					case GRP_ADDUSER_RID:

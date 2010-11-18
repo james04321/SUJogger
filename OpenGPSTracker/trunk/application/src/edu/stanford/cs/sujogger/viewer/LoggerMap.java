@@ -2352,6 +2352,15 @@ public class LoggerMap extends MapActivity {
 						});
 						continue;
 					}
+					else if (appResponse.result_code.equals(GamingServiceConnection.RESULT_CODE_VERSION_ERROR)) {
+						LoggerMap.this.runOnUiThread(new Runnable() {
+							public void run() {
+								if (mDialogUpdate != null) mDialogUpdate.dismiss();
+								Common.displayUpgradeDialog(LoggerMap.this);
+							}
+						});
+						continue;
+					}
 					
 					switch(appResponse.request_id) {
 					case GET_SBS_RID:
