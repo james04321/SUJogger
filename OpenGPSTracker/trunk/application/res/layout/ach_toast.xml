@@ -14,7 +14,8 @@
                />
     <TextView android:id="@+id/toast_ach_desc"
               android:layout_width="wrap_content"
-              android:layout_height="fill_parent"
+              android:layout_height="36dip"
+              android:gravity="center_vertical"
               android:textColor="#FFF"
               />
 </LinearLayout>
