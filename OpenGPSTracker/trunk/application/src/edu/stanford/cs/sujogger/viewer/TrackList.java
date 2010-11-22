@@ -777,6 +777,15 @@ public class TrackList extends ListActivity {
 
 		public void onFacebookError(FacebookError error) {
 			// SessionEvents.onLoginError(error.getMessage());
+			new AlertDialog.Builder(TrackList.this).setMessage(error.getMessage())
+				.setCancelable(false)
+				.setPositiveButton("Retry", new DialogInterface.OnClickListener() {
+				
+				public void onClick(DialogInterface dialog, int which) {
+					mFacebook.authorize(TrackList.this, Constants.FB_PERMISSIONS,
+							new LoginDialogListener());
+				}
+			}).show();
 		}
 
 		public void onError(DialogError error) {

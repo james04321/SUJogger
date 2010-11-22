@@ -56,7 +56,8 @@ public class Constants {
 
 	// Facebook integration
 	public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";
-	public static final String FB_APP_ID = "127241693959042";
+	//public static final String FB_APP_ID = "127241693959042"; //release
+	public static final String FB_APP_ID = "176696635689614"; //test
 	public static final String[] FB_PERMISSIONS = new String[] { "read_friendlists", "email",
 			"offline_access", "publish_stream" };
 
