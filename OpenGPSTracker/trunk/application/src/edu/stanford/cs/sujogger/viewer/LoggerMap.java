@@ -2267,7 +2267,7 @@ public class LoggerMap extends MapActivity {
 			//TODO:Snaptic integration
 			if (mSharedPreferences.getBoolean(Constants.POST_CATCH_KEY, false)) {
 				IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-				notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!\n\n#HappyFeet", true);
+				notesIntent.createNote("I just ran " + Common.distanceString(this, mCalculatedDistance) + ". Got the \"" + title + "\" badge!\n\n#Moovy", true);
 			}
 		}
 		else {
@@ -2284,7 +2284,7 @@ public class LoggerMap extends MapActivity {
 			
 			if (mSharedPreferences.getBoolean(Constants.POST_CATCH_KEY, false)) {
 				IntentIntegrator notesIntent = new IntentIntegrator(LoggerMap.this);
-				notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + "!\n\n#HappyFeet", true);
+				notesIntent.createNote("Just ran " + Common.distanceString(this, mCalculatedDistance) + "!\n\n#Moovy", true);
 			}
 		}
 		newAchCursor.close();

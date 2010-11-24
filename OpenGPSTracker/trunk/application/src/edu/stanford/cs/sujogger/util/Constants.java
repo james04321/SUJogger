@@ -35,7 +35,7 @@ public class Constants {
 	public static final int UNITS_DEFAULT = 0;
 	public static final int UNITS_IMPERIAL = 1;
 	public static final int UNITS_METRIC = 2;
-	public static final String EXTERNAL_DIR = "/HappyFeet/";
+	public static final String EXTERNAL_DIR = "/Moovy/";
 	public static final String TMPICTUREFILE_PATH = EXTERNAL_DIR + "media_tmp";
 	public static final Uri NAME_URI = Uri.parse("content://" + GPStracking.AUTHORITY + ".string");
 
@@ -48,11 +48,11 @@ public class Constants {
 	public static final String POST_FB_KEY = "post_fb";
 	public static final String POST_CATCH_KEY = "post_catch";
 
-	public static final String SITE_URL = "http://happyfeet.heroku.com/";
-	public static final String SITE_LOGO = "http://happyfeet.heroku.com/Happy_Feet_files/logo.png";
-	public static final String SITE_TITLE = "Happy Feet for Android";
+	public static final String SITE_URL = "http://moovyapp.com/";
+	public static final String SITE_LOGO = "http://moovyapp.com/Moovy_files/logo.png";
+	public static final String SITE_TITLE = "Moovy for Android";
 	public static final String SITE_SLOGAN = "The premier social running app for Android";
-	public static final String SITE_EMAIL = "happyfeetdev@gmail.com";
+	public static final String SITE_EMAIL = "moovydev@gmail.com";
 
 	// Facebook integration
 	public static final String GRAPH_BASE_URL = "http://graph.facebook.com/";

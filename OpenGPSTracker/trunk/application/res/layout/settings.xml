@@ -105,7 +105,7 @@
         <Preference
         	android:key="settings_feedback"
         	android:title="Feedback"
-        	android:summary="Email us feedback on Happy Feet"
+        	android:summary="Email us feedback on Moovy"
         />
         <Preference
         	android:key="settings_website"

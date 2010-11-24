@@ -60,6 +60,7 @@ import edu.stanford.cs.sujogger.R;
 import edu.stanford.cs.sujogger.db.DatabaseHelper;
 import edu.stanford.cs.sujogger.db.GPStracking.Groups;
 import edu.stanford.cs.sujogger.db.GPStracking.Stats;
+import edu.stanford.cs.sujogger.db.GPStracking.Users;
 import edu.stanford.cs.sujogger.logger.SettingsDialog;
 import edu.stanford.cs.sujogger.util.Common;
 import edu.stanford.cs.sujogger.util.Constants;
@@ -72,6 +73,7 @@ public class GroupList extends ListActivity {
 	private static final String TAG = "OGT.GroupList";
 
 	private static final int DIALOG_GRPNAME = 1;
+	private static final int DIALOG_INVITE = 2;
 	public static final String IS_FRIEND_KEY = "is_friend";
 
 	private DatabaseHelper mDbHelper;
@@ -84,6 +86,8 @@ public class GroupList extends ListActivity {
 	private int mGroupIdTemp;
 	private SharedPreferences mSharedPreferences;
 	private boolean mDisplayFriends;
+	
+	private Bundle mSelectedUserInfo;
 	
 	private Button mBottomButton;
 	private LinearLayout mBottomControlBar;
@@ -109,6 +113,7 @@ public class GroupList extends ListActivity {
 
 	// Views
 	private EditText mGroupNameView;
+	private EditText mInviteMsgView;
 	private ProgressDialog mCreateDialog;
 
 	// Listeners
@@ -124,6 +129,19 @@ public class GroupList extends ListActivity {
 				mGameCon.createGroup(GRP_CREATE_RID, newGroup);
 			}
 			catch (RemoteException e) {}
+		}
+	};
+	
+	private final DialogInterface.OnClickListener mInviteDialogListener = new DialogInterface.OnClickListener() {
+		public void onClick(DialogInterface dialog, int which) {
+			String inviteMsg = mInviteMsgView.getText().toString();
+			Bundle params = new Bundle();
+			params.putString("message", inviteMsg);
+			params.putString("link", Constants.SITE_URL);
+			params.putString("name", Constants.SITE_TITLE);
+			params.putString("caption", Constants.SITE_SLOGAN);
+			params.putString("picture", Constants.SITE_LOGO);
+			mAsyncRunner.request(mSelectedUserInfo.getLong(Users.FB_ID) + "/feed", params, "POST", new WallPostListener());
 		}
 	};
 	
@@ -285,15 +303,11 @@ public class GroupList extends ListActivity {
 					firstName = st.nextToken();
 				
 				Common.log(TAG, "fb_id: " + user.fb_id);
-				Bundle params = new Bundle();
-				params.putString("target_id", Long.toString(user.fb_id));
-				params.putString("message", "Hi " + firstName + ", I really like using Happy Feet. Check it out and join me on a run!");
-				params.putString("attachment", 
-						"{\"name\":\"Happy Feet for Android\"," + 
-						"\"href\":\""+"http://happyfeet.heroku.com/" + "\"," + 
-						"\"caption\":\"The premier social running app for Android.\"}");
-				params.putString("privacy", "{\"value\": \"ALL_FRIENDS\"}");
-				mFacebook.dialog(this, "stream.publish", params, new PostDialogListener());
+				
+				mSelectedUserInfo = new Bundle();
+				mSelectedUserInfo.putLong(Users.FB_ID, user.fb_id);
+				mSelectedUserInfo.putString(Users.FIRST_NAME, firstName);
+				showDialog(DIALOG_INVITE);
 			}
 		}
 		else {
@@ -351,6 +365,16 @@ public class GroupList extends ListActivity {
 					view);
 			dialog = builder.create();
 			return dialog;
+		case DIALOG_INVITE:
+			builder = new AlertDialog.Builder(this);
+			factory = LayoutInflater.from(this);
+			view = factory.inflate(R.layout.invitedialog, null);
+			mInviteMsgView = (EditText) view.findViewById(R.id.msgField);
+			builder.setTitle("Post invitation to wall").setPositiveButton(R.string.btn_okay,
+					mInviteDialogListener).setNegativeButton(R.string.btn_cancel, null).setView(
+					view);
+			dialog = builder.create();
+			return dialog;
 		default:
 			return super.onCreateDialog(id);
 		}
@@ -361,6 +385,9 @@ public class GroupList extends ListActivity {
 		switch (id) {
 		case DIALOG_GRPNAME:
 			mGroupNameView.setText("");
+			break;
+		case DIALOG_INVITE:
+			mInviteMsgView.setText("Hi " + mSelectedUserInfo.getString(Users.FIRST_NAME) + ", I really like using Moovy. Check it out and join me on a run!");
 			break;
 		default:
 			break;
@@ -419,7 +446,7 @@ public class GroupList extends ListActivity {
 			if (mGroupedAdapter == null) {
 				mGroupedAdapter = new SeparatedListAdapter(this);
 				//mGroupedAdapter.addSection("", new ArrayAdapter<String>(this, R.layout.trackitem));
-				mGroupedAdapter.addSection("Friends on Happy Feet", mUserAdapter);
+				mGroupedAdapter.addSection("Friends on Moovy", mUserAdapter);
 				mGroupedAdapter.addSection("Unregistered Friends  (Tap to invite)", mUnregFriendsAdapter);
 			}
 			setListAdapter(mGroupedAdapter);
@@ -716,18 +743,58 @@ public class GroupList extends ListActivity {
 		public void onMalformedURLException(MalformedURLException e) {}
 	}
 	
-	private final class PostDialogListener implements DialogListener {
-		public void onComplete(Bundle values) {
-			
-		}
-		
-		public void onFacebookError(FacebookError error) {
+	private class WallPostListener implements RequestListener {
+
+		public void onComplete(final String response) {
+			try {
+				Common.log(TAG, "Wall Post Response: " + response.toString());
+				final JSONObject json = Util.parseJson(response);
+				
+				GroupList.this.runOnUiThread(new Runnable() {
+					public void run() {
+						if (json.has("id")) {
+							Toast toast = Toast.makeText(GroupList.this, "Invitation posted", 
+									Toast.LENGTH_SHORT);
+							toast.show();
+						}
+						else {
+							Toast toast = Toast.makeText(GroupList.this, "Invitation post error", 
+									Toast.LENGTH_SHORT);
+							toast.show();
+						}
+					}
+				});
+			}
+			catch (JSONException e) {
+				Log.w("Facebook-Example", "JSON Error in response");
+			}
+			catch (FacebookError e) {
+				Log.w("Facebook-Example", "Facebook Error: " + e.getMessage());
+			}
 		}
 
-		public void onError(DialogError error) {
+		public void onFacebookError(FacebookError e) {
+			GroupList.this.runOnUiThread(new Runnable() {
+				public void run() {
+					Toast toast = Toast.makeText(GroupList.this, "Invitation post error", 
+							Toast.LENGTH_SHORT);
+					toast.show();
+				}
+			});
 		}
 
-		public void onCancel() {
+		public void onFileNotFoundException(FileNotFoundException e) {}
+
+		public void onIOException(IOException e) {
+			GroupList.this.runOnUiThread(new Runnable() {
+				public void run() {
+					Toast toast = Toast.makeText(GroupList.this, "Invitation post error", 
+							Toast.LENGTH_SHORT);
+					toast.show();
+				}
+			});
 		}
+
+		public void onMalformedURLException(MalformedURLException e) {}
 	}
 }
